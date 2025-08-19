@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "230919296068",
+    "project_id": "app-toko-retail",
+    "storage_bucket": "app-toko-retail.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:230919296068:android:c87dbddcb990747c561811",
+        "android_client_info": {
+          "package_name": "com.example.app_brimob_user"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBgjVaJy3kaEnc2PRzlq97EqVf5DcB6_o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
