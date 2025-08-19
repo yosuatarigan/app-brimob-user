@@ -22,8 +22,6 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
   final _contentController = TextEditingController();
   
   String _selectedCategory = 'korbrimob';
-  bool _isPublic = true;
-  bool _isPublished = false;
   List<String> _imageUrls = [];
   List<File> _newImages = [];
   bool _isLoading = false;
@@ -41,8 +39,6 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
       _titleController.text = content.title;
       _contentController.text = content.content;
       _selectedCategory = content.category;
-      _isPublic = content.isPublic;
-      _isPublished = content.isPublished;
       _imageUrls = List.from(content.images);
     }
   }
@@ -105,18 +101,16 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AdminSizes.paddingL),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildBasicInfo(),
-            const SizedBox(height: AdminSizes.paddingL),
+            const SizedBox(height: 16),
             _buildContentEditor(),
-            const SizedBox(height: AdminSizes.paddingL),
+            const SizedBox(height: 16),
             _buildImageSection(),
-            const SizedBox(height: AdminSizes.paddingL),
-            _buildSettings(),
-            const SizedBox(height: AdminSizes.paddingXXL),
+            const SizedBox(height: 80), // Bottom padding
           ],
         ),
       ),
@@ -125,24 +119,24 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
 
   Widget _buildBasicInfo() {
     return Card(
-      elevation: 4,
+      elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AdminSizes.paddingL),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Informasi Dasar',
               style: GoogleFonts.roboto(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: AdminColors.adminDark,
               ),
             ),
-            const SizedBox(height: AdminSizes.paddingL),
+            const SizedBox(height: 16),
             
             // Title field
             TextFormField(
@@ -151,9 +145,13 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
                 labelText: 'Judul Konten',
                 hintText: 'Masukkan judul konten',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 prefixIcon: const Icon(Icons.title),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 16,
+                ),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -163,7 +161,7 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
               },
             ),
             
-            const SizedBox(height: AdminSizes.paddingL),
+            const SizedBox(height: 16),
             
             // Category selection
             Text(
@@ -174,14 +172,18 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
                 color: AdminColors.adminDark,
               ),
             ),
-            const SizedBox(height: AdminSizes.paddingS),
+            const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               value: _selectedCategory,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 prefixIcon: const Icon(Icons.category),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 16,
+                ),
               ),
               items: AdminMenus.contentCategories.map<DropdownMenuItem<String>>((category) {
                 return DropdownMenuItem<String>(
@@ -196,7 +198,7 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(width: AdminSizes.paddingS),
+                      const SizedBox(width: 8),
                       Text(category['title']),
                     ],
                   ),
@@ -216,92 +218,55 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
 
   Widget _buildContentEditor() {
     return Card(
-      elevation: 4,
+      elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AdminSizes.paddingL),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Text(
-                  'Konten',
-                  style: GoogleFonts.roboto(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AdminColors.adminDark,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: _showFormattingHelp,
-                  icon: const Icon(Icons.help_outline),
-                  tooltip: 'Bantuan Formatting',
-                ),
-              ],
-            ),
-            const SizedBox(height: AdminSizes.paddingL),
-            
-            // Content editor with toolbar
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: AdminColors.borderColor),
-                borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            Text(
+              'Deskripsi Konten',
+              style: GoogleFonts.roboto(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AdminColors.adminDark,
               ),
-              child: Column(
-                children: [
-                  // Formatting toolbar
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AdminSizes.paddingM,
-                      vertical: AdminSizes.paddingS,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AdminColors.background,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(AdminSizes.radiusM),
-                        topRight: Radius.circular(AdminSizes.radiusM),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        _buildToolbarButton(Icons.format_bold, 'Bold', () => _insertText('**', '**')),
-                        _buildToolbarButton(Icons.format_italic, 'Italic', () => _insertText('*', '*')),
-                        _buildToolbarButton(Icons.format_list_bulleted, 'List', () => _insertText('\n• ', '')),
-                        _buildToolbarButton(Icons.format_quote, 'Quote', () => _insertText('\n> ', '')),
-                        _buildToolbarButton(Icons.link, 'Link', _insertLink),
-                        const Spacer(),
-                        Text(
-                          '${_contentController.text.length} karakter',
-                          style: GoogleFonts.roboto(
-                            fontSize: 12,
-                            color: AdminColors.lightGray,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  // Text editor
-                  TextFormField(
-                    controller: _contentController,
-                    maxLines: 15,
-                    decoration: const InputDecoration(
-                      hintText: 'Tulis konten di sini...\n\nGunakan markdown untuk formatting:\n**Bold** *Italic* \n• List item\n> Quote',
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.all(AdminSizes.paddingM),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Konten tidak boleh kosong';
-                      }
-                      return null;
-                    },
-                  ),
-                ],
+            ),
+            const SizedBox(height: 16),
+            
+            // Simple text area
+            TextFormField(
+              controller: _contentController,
+              maxLines: 12,
+              decoration: InputDecoration(
+                hintText: 'Tulis deskripsi konten di sini...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.all(16),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Deskripsi tidak boleh kosong';
+                }
+                return null;
+              },
+            ),
+            
+            const SizedBox(height: 8),
+            
+            // Character counter
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '${_contentController.text.length} karakter',
+                style: GoogleFonts.roboto(
+                  fontSize: 12,
+                  color: AdminColors.lightGray,
+                ),
               ),
             ),
           ],
@@ -310,23 +275,14 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
     );
   }
 
-  Widget _buildToolbarButton(IconData icon, String tooltip, VoidCallback onPressed) {
-    return IconButton(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 20),
-      tooltip: tooltip,
-      constraints: const BoxConstraints(minWidth: 40),
-    );
-  }
-
   Widget _buildImageSection() {
     return Card(
-      elevation: 4,
+      elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AdminSizes.paddingL),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -335,7 +291,7 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
                 Text(
                   'Gambar',
                   style: GoogleFonts.roboto(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AdminColors.adminDark,
                   ),
@@ -348,11 +304,18 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AdminColors.primaryBlue,
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AdminSizes.paddingM),
+            const SizedBox(height: 16),
             
             if (_imageUrls.isEmpty && _newImages.isEmpty)
               Container(
@@ -360,7 +323,7 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
                 height: 120,
                 decoration: BoxDecoration(
                   color: AdminColors.background,
-                  borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: AdminColors.borderColor,
                     style: BorderStyle.solid,
@@ -374,7 +337,7 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
                       size: 40,
                       color: AdminColors.lightGray,
                     ),
-                    const SizedBox(height: AdminSizes.paddingS),
+                    const SizedBox(height: 8),
                     Text(
                       'Belum ada gambar',
                       style: GoogleFonts.roboto(
@@ -403,8 +366,8 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        crossAxisSpacing: AdminSizes.paddingS,
-        mainAxisSpacing: AdminSizes.paddingS,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
         childAspectRatio: 1,
       ),
       itemCount: allImages.length,
@@ -420,11 +383,11 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
       children: [
         Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AdminSizes.radiusS),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AdminColors.borderColor),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(AdminSizes.radiusS),
+            borderRadius: BorderRadius.circular(8),
             child: image['type'] == 'url'
                 ? Image.network(
                     image['data'],
@@ -473,238 +436,6 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
     );
   }
 
-  Widget _buildSettings() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AdminSizes.radiusM),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AdminSizes.paddingL),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Pengaturan',
-              style: GoogleFonts.roboto(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AdminColors.adminDark,
-              ),
-            ),
-            const SizedBox(height: AdminSizes.paddingL),
-            
-            // Public/Private toggle
-            Row(
-              children: [
-                Icon(
-                  _isPublic ? Icons.public : Icons.lock,
-                  color: _isPublic ? AdminColors.success : AdminColors.warning,
-                ),
-                const SizedBox(width: AdminSizes.paddingM),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _isPublic ? 'Konten Publik' : 'Konten Terbatas',
-                        style: GoogleFonts.roboto(
-                          fontWeight: FontWeight.w600,
-                          color: AdminColors.adminDark,
-                        ),
-                      ),
-                      Text(
-                        _isPublic 
-                            ? 'Dapat diakses oleh semua pengguna'
-                            : 'Hanya untuk pengguna dengan akses khusus',
-                        style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          color: AdminColors.darkGray,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  value: _isPublic,
-                  onChanged: (value) {
-                    setState(() {
-                      _isPublic = value;
-                    });
-                  },
-                  activeColor: AdminColors.success,
-                ),
-              ],
-            ),
-            
-            const Divider(height: AdminSizes.paddingXL),
-            
-            // Published toggle
-            Row(
-              children: [
-                Icon(
-                  _isPublished ? Icons.visibility : Icons.visibility_off,
-                  color: _isPublished ? AdminColors.success : AdminColors.lightGray,
-                ),
-                const SizedBox(width: AdminSizes.paddingM),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _isPublished ? 'Published' : 'Draft',
-                        style: GoogleFonts.roboto(
-                          fontWeight: FontWeight.w600,
-                          color: AdminColors.adminDark,
-                        ),
-                      ),
-                      Text(
-                        _isPublished 
-                            ? 'Konten sudah dipublikasikan dan dapat dilihat user'
-                            : 'Konten masih dalam draft, belum dipublikasikan',
-                        style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          color: AdminColors.darkGray,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  value: _isPublished,
-                  onChanged: (value) {
-                    setState(() {
-                      _isPublished = value;
-                    });
-                  },
-                  activeColor: AdminColors.success,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _insertText(String before, String after) {
-    final text = _contentController.text;
-    final selection = _contentController.selection;
-    final newText = text.replaceRange(
-      selection.start,
-      selection.end,
-      '$before${text.substring(selection.start, selection.end)}$after',
-    );
-    _contentController.text = newText;
-    _contentController.selection = TextSelection.collapsed(
-      offset: selection.start + before.length + (selection.end - selection.start) + after.length,
-    );
-  }
-
-  void _insertLink() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final urlController = TextEditingController();
-        final textController = TextEditingController();
-        
-        return AlertDialog(
-          title: const Text('Insert Link'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: textController,
-                decoration: const InputDecoration(
-                  labelText: 'Link Text',
-                  hintText: 'Enter link text',
-                ),
-              ),
-              const SizedBox(height: AdminSizes.paddingM),
-              TextField(
-                controller: urlController,
-                decoration: const InputDecoration(
-                  labelText: 'URL',
-                  hintText: 'https://example.com',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final linkText = textController.text.isNotEmpty 
-                    ? textController.text 
-                    : urlController.text;
-                _insertText('[${linkText}](', '${urlController.text})');
-                Navigator.pop(context);
-              },
-              child: const Text('Insert'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showFormattingHelp() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Formatting Help'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHelpItem('**Bold text**', 'Bold formatting'),
-            _buildHelpItem('*Italic text*', 'Italic formatting'),
-            _buildHelpItem('• List item', 'Bullet point'),
-            _buildHelpItem('> Quote text', 'Quote block'),
-            _buildHelpItem('[Link text](URL)', 'Hyperlink'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHelpItem(String syntax, String description) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              syntax,
-              style: GoogleFonts.roboto(
-                // fontFamily: 'monospace',
-                fontSize: 12,
-                color: AdminColors.primaryBlue,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Text(
-              description,
-              style: GoogleFonts.roboto(fontSize: 12),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFiles = await picker.pickMultiImage();
@@ -750,12 +481,12 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
         content: _contentController.text.trim(),
         category: _selectedCategory,
         images: allImageUrls,
-        isPublic: _isPublic,
+        isPublic: true, // Default to public
         createdAt: widget.content?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
         createdBy: widget.content?.createdBy ?? AdminFirebaseService.currentUser!.uid,
         updatedBy: AdminFirebaseService.currentUser!.uid,
-        isPublished: _isPublished,
+        isPublished: true, // Default to published
         viewCount: widget.content?.viewCount ?? 0,
       );
 
@@ -771,8 +502,8 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
           SnackBar(
             content: Text(
               widget.content == null 
-                  ? 'Content created successfully!' 
-                  : 'Content updated successfully!',
+                  ? 'Konten berhasil dibuat!' 
+                  : 'Konten berhasil diperbarui!',
             ),
             backgroundColor: AdminColors.success,
           ),
@@ -783,7 +514,7 @@ class _ContentEditorPageState extends State<ContentEditorPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving content: ${e.toString()}'),
+            content: Text('Error menyimpan konten: ${e.toString()}'),
             backgroundColor: AdminColors.error,
           ),
         );

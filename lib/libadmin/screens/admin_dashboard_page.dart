@@ -21,7 +21,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  
+
   AppAnalytics? _analytics;
   bool _isLoading = true;
   String? _error;
@@ -39,13 +39,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
 
     _animationController.forward();
   }
@@ -58,7 +54,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
       });
 
       final analytics = await AdminFirebaseService.getAnalytics();
-      
+
       setState(() {
         _analytics = analytics;
         _isLoading = false;
@@ -117,7 +113,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   _buildHeader(),
                   _buildStatsSection(),
                   _buildQuickActionsSection(),
-                  _buildAnalyticsSection(),
+
                   _buildRecentActivitySection(),
                   const SizedBox(height: 80), // Bottom padding
                 ],
@@ -148,18 +144,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             width: double.infinity,
             height: double.infinity,
             fit: BoxFit.cover,
-            placeholder: (context, url) => Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: AdminColors.adminGradient),
-              ),
-            ),
-            errorWidget: (context, url, error) => Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: AdminColors.adminGradient),
-              ),
-            ),
+            placeholder:
+                (context, url) => Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: AdminColors.adminGradient),
+                  ),
+                ),
+            errorWidget:
+                (context, url, error) => Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: AdminColors.adminGradient),
+                  ),
+                ),
           ),
-          
+
           // Gradient overlay
           Container(
             decoration: BoxDecoration(
@@ -173,7 +171,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
               ),
             ),
           ),
-          
+
           // Content
           Padding(
             padding: const EdgeInsets.all(12), // Very small padding
@@ -202,16 +200,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                         child: CachedNetworkImage(
                           imageUrl: AdminImages.polriLogo,
                           fit: BoxFit.contain,
-                          placeholder: (context, url) => const Icon(
-                            Icons.admin_panel_settings,
-                            color: AdminColors.primaryBlue,
-                            size: 16,
-                          ),
-                          errorWidget: (context, url, error) => const Icon(
-                            Icons.admin_panel_settings,
-                            color: AdminColors.primaryBlue,
-                            size: 16,
-                          ),
+                          placeholder:
+                              (context, url) => const Icon(
+                                Icons.admin_panel_settings,
+                                color: AdminColors.primaryBlue,
+                                size: 16,
+                              ),
+                          errorWidget:
+                              (context, url, error) => const Icon(
+                                Icons.admin_panel_settings,
+                                color: AdminColors.primaryBlue,
+                                size: 16,
+                              ),
                         ),
                       ),
                     ),
@@ -250,9 +250,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // Welcome message
                 Text(
                   'Selamat datang, Administrator',
@@ -273,28 +273,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // Quick stats
-                if (_analytics != null)
-                  SizedBox(
-                    height: 30,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _buildQuickStat('Users', '${_analytics!.totalUsers}'),
-                          const SizedBox(width: 16),
-                          _buildQuickStat('Content', '${_analytics!.totalContent}'),
-                          const SizedBox(width: 16),
-                          _buildQuickStat('Media', '${_analytics!.totalMedia}'),
-                          const SizedBox(width: 16),
-                          _buildQuickStat('Storage', _formatFileSize(_analytics!.storageUsed)),
-                        ],
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
@@ -353,7 +335,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
             ),
-            itemCount: 4,
+            itemCount: 2,
             itemBuilder: (context, index) {
               final stats = [
                 {
@@ -361,28 +343,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   'value': '${_analytics!.totalContent}',
                   'icon': Icons.article,
                   'color': AdminColors.primaryBlue,
-                  'change': '+12%',
+                  // 'change': '+12%',
                 },
                 {
                   'title': 'Total Users',
                   'value': '${_analytics!.totalUsers}',
                   'icon': Icons.people,
                   'color': AdminColors.adminGreen,
-                  'change': '+8%',
-                },
-                {
-                  'title': 'Media Files',
-                  'value': '${_analytics!.totalMedia}',
-                  'icon': Icons.perm_media,
-                  'color': AdminColors.adminPurple,
-                  'change': '+15%',
-                },
-                {
-                  'title': 'Storage',
-                  'value': _formatFileSize(_analytics!.storageUsed),
-                  'icon': Icons.storage,
-                  'color': AdminColors.adminGold,
-                  'change': '+5%',
+                  // 'change': '+8%',
                 },
               ];
 
@@ -392,7 +360,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 value: stat['value'] as String,
                 icon: stat['icon'] as IconData,
                 color: stat['color'] as Color,
-                change: stat['change'] as String,
+                // change: stat['change'] as String,
               );
             },
           ),
@@ -406,24 +374,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     required String value,
     required IconData icon,
     required Color color,
-    String? change,
+    // String? change,
   }) {
     return Card(
       elevation: 2,
       shadowColor: color.withOpacity(0.2),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.white,
-              color.withOpacity(0.05),
-            ],
+            colors: [Colors.white, color.withOpacity(0.05)],
           ),
         ),
         child: Padding(
@@ -436,11 +399,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 16,
-                ),
+                child: Icon(icon, color: color, size: 16),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -468,25 +427,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   ],
                 ),
               ),
-              if (change != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AdminColors.success.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    change,
-                    style: GoogleFonts.roboto(
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      color: AdminColors.success,
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
@@ -547,9 +487,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     return Card(
       elevation: 3,
       shadowColor: color.withOpacity(0.2),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
@@ -559,10 +497,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Colors.white,
-                color.withOpacity(0.05),
-              ],
+              colors: [Colors.white, color.withOpacity(0.05)],
             ),
           ),
           child: Stack(
@@ -576,15 +511,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                     width: double.infinity,
                     height: double.infinity,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: color.withOpacity(0.1),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: color.withOpacity(0.1),
-                    ),
+                    placeholder:
+                        (context, url) =>
+                            Container(color: color.withOpacity(0.1)),
+                    errorWidget:
+                        (context, url, error) =>
+                            Container(color: color.withOpacity(0.1)),
                   ),
                 ),
-              
+
               // Gradient overlay
               Container(
                 decoration: BoxDecoration(
@@ -592,14 +527,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      color.withOpacity(0.6),
-                    ],
+                    colors: [Colors.transparent, color.withOpacity(0.6)],
                   ),
                 ),
               ),
-              
+
               // Content
               Padding(
                 padding: const EdgeInsets.all(8),
@@ -615,23 +547,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                           color: Colors.white.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: Icon(
-                          icon,
-                          size: 14,
-                          color: color,
-                        ),
+                        child: Icon(icon, size: 14, color: color),
                       ),
                     ),
-                    
+
                     const Spacer(),
-                    
+
                     // Text content
                     Text(
                       title,
                       style: GoogleFonts.roboto(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: imageUrl != null ? Colors.white : AdminColors.adminDark,
+                        color:
+                            imageUrl != null
+                                ? Colors.white
+                                : AdminColors.adminDark,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -640,9 +571,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                       subtitle,
                       style: GoogleFonts.roboto(
                         fontSize: 10,
-                        color: imageUrl != null 
-                            ? Colors.white.withOpacity(0.9) 
-                            : AdminColors.darkGray,
+                        color:
+                            imageUrl != null
+                                ? Colors.white.withOpacity(0.9)
+                                : AdminColors.darkGray,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -657,44 +589,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     );
   }
 
-  Widget _buildAnalyticsSection() {
-    if (_analytics == null) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Analytics Overview',
-            style: GoogleFonts.roboto(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: AdminColors.adminDark,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Column(
-            children: [
-              _buildUserRoleChart(),
-              const SizedBox(height: 8),
-              _buildContentCategoryChart(),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildUserRoleChart() {
     final usersByRole = _analytics!.usersByRole;
     final total = usersByRole.values.fold(0, (sum, count) => sum + count);
-    
+
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Column(
@@ -716,52 +617,59 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   height: 60,
                   child: PieChart(
                     PieChartData(
-                      sections: usersByRole.entries.map((entry) {
-                        final percentage = total > 0 ? (entry.value / total) * 100 : 0;
-                        return PieChartSectionData(
-                          color: _getRoleColor(entry.key),
-                          value: percentage.toDouble(),
-                          title: '${percentage.toStringAsFixed(0)}%',
-                          radius: 25,
-                          titleStyle: GoogleFonts.roboto(
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        );
-                      }).toList(),
+                      sections:
+                          usersByRole.entries.map((entry) {
+                            final percentage =
+                                total > 0 ? (entry.value / total) * 100 : 0;
+                            return PieChartSectionData(
+                              color: _getRoleColor(entry.key),
+                              value: percentage.toDouble(),
+                              title: '${percentage.toStringAsFixed(0)}%',
+                              radius: 25,
+                              titleStyle: GoogleFonts.roboto(
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            );
+                          }).toList(),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
-                    children: usersByRole.entries.map((entry) => Padding(
-                      padding: const EdgeInsets.only(bottom: 2),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: _getRoleColor(entry.key),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              '${entry.key}: ${entry.value}',
-                              style: GoogleFonts.roboto(
-                                fontSize: 10,
-                                color: AdminColors.darkGray,
+                    children:
+                        usersByRole.entries
+                            .map(
+                              (entry) => Padding(
+                                padding: const EdgeInsets.only(bottom: 2),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: _getRoleColor(entry.key),
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        '${entry.key}: ${entry.value}',
+                                        style: GoogleFonts.roboto(
+                                          fontSize: 10,
+                                          color: AdminColors.darkGray,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )).toList(),
+                            )
+                            .toList(),
                   ),
                 ),
               ],
@@ -774,12 +682,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
 
   Widget _buildContentCategoryChart() {
     final contentByCategory = _analytics!.contentByCategory;
-    
+
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Column(
@@ -799,9 +705,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
-                  maxY: contentByCategory.values.isNotEmpty 
-                      ? contentByCategory.values.reduce((a, b) => a > b ? a : b).toDouble() + 1
-                      : 10,
+                  maxY:
+                      contentByCategory.values.isNotEmpty
+                          ? contentByCategory.values
+                                  .reduce((a, b) => a > b ? a : b)
+                                  .toDouble() +
+                              1
+                          : 10,
                   barTouchData: BarTouchData(enabled: false),
                   titlesData: FlTitlesData(
                     show: true,
@@ -813,7 +723,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                           if (value.toInt() < categories.length) {
                             final category = categories[value.toInt()];
                             return Text(
-                              category.length > 4 ? category.substring(0, 4).toUpperCase() : category.toUpperCase(),
+                              category.length > 4
+                                  ? category.substring(0, 4).toUpperCase()
+                                  : category.toUpperCase(),
                               style: GoogleFonts.roboto(
                                 fontSize: 8,
                                 color: AdminColors.darkGray,
@@ -835,19 +747,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                     ),
                   ),
                   borderData: FlBorderData(show: false),
-                  barGroups: contentByCategory.entries.toList().asMap().entries.map((entry) {
-                    return BarChartGroupData(
-                      x: entry.key,
-                      barRods: [
-                        BarChartRodData(
-                          toY: entry.value.value.toDouble(),
-                          color: _getCategoryColor(entry.value.key),
-                          width: 12,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ],
-                    );
-                  }).toList(),
+                  barGroups:
+                      contentByCategory.entries.toList().asMap().entries.map((
+                        entry,
+                      ) {
+                        return BarChartGroupData(
+                          x: entry.key,
+                          barRods: [
+                            BarChartRodData(
+                              toY: entry.value.value.toDouble(),
+                              color: _getCategoryColor(entry.value.key),
+                              width: 12,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ],
+                        );
+                      }).toList(),
                 ),
               ),
             ),
@@ -907,22 +822,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 color: AdminColors.primaryBlue,
                 onTap: () => _handleMenuTap('user_management'),
               ),
-              const SizedBox(height: 6),
-              _buildCompactActionButton(
-                title: 'Upload Media',
-                subtitle: 'Kelola file',
-                icon: Icons.cloud_upload,
-                color: AdminColors.adminPurple,
-                onTap: () => _handleMenuTap('media_library'),
-              ),
-              const SizedBox(height: 6),
-              _buildCompactActionButton(
-                title: 'Pengaturan',
-                subtitle: 'Konfigurasi app',
-                icon: Icons.settings,
-                color: AdminColors.adminGold,
-                onTap: () => _handleMenuTap('settings'),
-              ),
             ],
           ),
         ],
@@ -939,9 +838,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
   }) {
     return Card(
       elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
@@ -955,11 +852,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 16,
-                ),
+                child: Icon(icon, color: color, size: 16),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -984,11 +877,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                color: AdminColors.lightGray,
-                size: 16,
-              ),
+              Icon(Icons.chevron_right, color: AdminColors.lightGray, size: 16),
             ],
           ),
         ),
@@ -1009,17 +898,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
       case 'user_management':
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const UserManagementPage(),
-          ),
+          MaterialPageRoute(builder: (context) => const UserManagementPage()),
         );
         break;
       case 'media_library':
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const MediaLibraryPage(),
-          ),
+          MaterialPageRoute(builder: (context) => const MediaLibraryPage()),
         );
         break;
       default:
@@ -1035,54 +920,51 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
   void _showLogoutDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        title: Text(
-          'Logout',
-          style: GoogleFonts.roboto(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          'Apakah Anda yakin ingin keluar dari panel admin?',
-          style: GoogleFonts.roboto(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Batal',
-              style: GoogleFonts.roboto(
-                color: AdminColors.darkGray,
-              ),
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await AdminFirebaseService.signOut();
-              if (mounted) {
-                Navigator.pushReplacementNamed(context, '/login');
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AdminColors.error,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ),
-            child: Text(
+            title: Text(
               'Logout',
-              style: GoogleFonts.roboto(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+              style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
             ),
+            content: Text(
+              'Apakah Anda yakin ingin keluar dari panel admin?',
+              style: GoogleFonts.roboto(),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Batal',
+                  style: GoogleFonts.roboto(color: AdminColors.darkGray),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await AdminFirebaseService.signOut();
+                  if (mounted) {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AdminColors.error,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                child: Text(
+                  'Logout',
+                  style: GoogleFonts.roboto(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -1119,7 +1001,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    if (bytes < 1024 * 1024 * 1024)
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
 }
