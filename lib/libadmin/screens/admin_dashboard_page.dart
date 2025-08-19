@@ -119,6 +119,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   _buildQuickActionsSection(),
                   _buildAnalyticsSection(),
                   _buildRecentActivitySection(),
+                  const SizedBox(height: 80), // Bottom padding
                 ],
               ),
             ),
@@ -131,9 +132,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
-      height: 200,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      height: 140, // Much smaller
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: AdminColors.adminGradient,
@@ -149,16 +150,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             fit: BoxFit.cover,
             placeholder: (context, url) => Container(
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: AdminColors.adminGradient,
-                ),
+                gradient: LinearGradient(colors: AdminColors.adminGradient),
               ),
             ),
             errorWidget: (context, url, error) => Container(
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: AdminColors.adminGradient,
-                ),
+                gradient: LinearGradient(colors: AdminColors.adminGradient),
               ),
             ),
           ),
@@ -179,7 +176,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           
           // Content
           Padding(
-            padding: const EdgeInsets.all(AdminSizes.paddingL),
+            padding: const EdgeInsets.all(12), // Very small padding
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -187,36 +184,38 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 Row(
                   children: [
                     Container(
-                      width: 50,
-                      height: 50,
+                      width: 35,
+                      height: 35,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(4),
                         child: CachedNetworkImage(
                           imageUrl: AdminImages.polriLogo,
                           fit: BoxFit.contain,
                           placeholder: (context, url) => const Icon(
                             Icons.admin_panel_settings,
                             color: AdminColors.primaryBlue,
+                            size: 16,
                           ),
                           errorWidget: (context, url, error) => const Icon(
                             Icons.admin_panel_settings,
                             color: AdminColors.primaryBlue,
+                            size: 16,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: AdminSizes.paddingM),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,17 +223,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                           Text(
                             'Admin Dashboard',
                             style: GoogleFonts.roboto(
-                              fontSize: 24,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             'SDM Korbrimob Management',
                             style: GoogleFonts.roboto(
-                              fontSize: 14,
+                              fontSize: 10,
                               color: Colors.white.withOpacity(0.9),
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -244,43 +245,55 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                       icon: const Icon(
                         Icons.logout,
                         color: Colors.white,
+                        size: 18,
                       ),
                     ),
                   ],
                 ),
                 
-                const Spacer(),
+                const SizedBox(height: 8),
                 
                 // Welcome message
                 Text(
                   'Selamat datang, Administrator',
                   style: GoogleFonts.roboto(
-                    fontSize: 28,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: AdminSizes.paddingS),
+                const SizedBox(height: 2),
                 Text(
                   'Kelola dan pantau aplikasi SDM Rorenminops Korbrimob Polri',
                   style: GoogleFonts.roboto(
-                    fontSize: 16,
+                    fontSize: 11,
                     color: Colors.white.withOpacity(0.9),
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 
-                const SizedBox(height: AdminSizes.paddingM),
+                const SizedBox(height: 8),
                 
                 // Quick stats
                 if (_analytics != null)
-                  Row(
-                    children: [
-                      _buildQuickStat('Total Users', '${_analytics!.totalUsers}'),
-                      const SizedBox(width: AdminSizes.paddingL),
-                      _buildQuickStat('Content', '${_analytics!.totalContent}'),
-                      const SizedBox(width: AdminSizes.paddingL),
-                      _buildQuickStat('Media Files', '${_analytics!.totalMedia}'),
-                    ],
+                  SizedBox(
+                    height: 30,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildQuickStat('Users', '${_analytics!.totalUsers}'),
+                          const SizedBox(width: 16),
+                          _buildQuickStat('Content', '${_analytics!.totalContent}'),
+                          const SizedBox(width: 16),
+                          _buildQuickStat('Media', '${_analytics!.totalMedia}'),
+                          const SizedBox(width: 16),
+                          _buildQuickStat('Storage', _formatFileSize(_analytics!.storageUsed)),
+                        ],
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -293,11 +306,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
   Widget _buildQuickStat(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           value,
           style: GoogleFonts.roboto(
-            fontSize: 24,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
             color: AdminColors.adminGold,
           ),
@@ -305,7 +319,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
         Text(
           label,
           style: GoogleFonts.roboto(
-            fontSize: 12,
+            fontSize: 9,
             color: Colors.white.withOpacity(0.8),
           ),
         ),
@@ -317,27 +331,27 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     if (_analytics == null) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.all(AdminSizes.paddingL),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Statistik Aplikasi',
             style: GoogleFonts.roboto(
-              fontSize: 20,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: AdminColors.adminDark,
             ),
           ),
-          const SizedBox(height: AdminSizes.paddingM),
+          const SizedBox(height: 8),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 1.5,
-              crossAxisSpacing: AdminSizes.paddingM,
-              mainAxisSpacing: AdminSizes.paddingM,
+              childAspectRatio: 2.2, // Much wider
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
             ),
             itemCount: 4,
             itemBuilder: (context, index) {
@@ -373,7 +387,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
               ];
 
               final stat = stats[index];
-              return AdminStatsCard(
+              return _buildCompactStatsCard(
                 title: stat['title'] as String,
                 value: stat['value'] as String,
                 icon: stat['icon'] as IconData,
@@ -387,34 +401,127 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     );
   }
 
+  Widget _buildCompactStatsCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+    String? change,
+  }) {
+    return Card(
+      elevation: 2,
+      shadowColor: color.withOpacity(0.2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              color.withOpacity(0.05),
+            ],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      value,
+                      style: GoogleFonts.roboto(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AdminColors.adminDark,
+                      ),
+                    ),
+                    Text(
+                      title,
+                      style: GoogleFonts.roboto(
+                        fontSize: 10,
+                        color: AdminColors.darkGray,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              if (change != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AdminColors.success.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    change,
+                    style: GoogleFonts.roboto(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: AdminColors.success,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildQuickActionsSection() {
     return Padding(
-      padding: const EdgeInsets.all(AdminSizes.paddingL),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Menu Utama',
             style: GoogleFonts.roboto(
-              fontSize: 20,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: AdminColors.adminDark,
             ),
           ),
-          const SizedBox(height: AdminSizes.paddingM),
+          const SizedBox(height: 8),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 1.2,
-              crossAxisSpacing: AdminSizes.paddingM,
-              mainAxisSpacing: AdminSizes.paddingM,
+              childAspectRatio: 1.6, // Much wider
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
             ),
             itemCount: AdminMenus.adminMenus.length,
             itemBuilder: (context, index) {
               final menu = AdminMenus.adminMenus[index];
-              return AdminMenuCard(
+              return _buildCompactMenuCard(
                 title: menu['title'],
                 subtitle: menu['subtitle'],
                 icon: menu['icon'],
@@ -429,32 +536,149 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     );
   }
 
+  Widget _buildCompactMenuCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    String? imageUrl,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      elevation: 3,
+      shadowColor: color.withOpacity(0.2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white,
+                color.withOpacity(0.05),
+              ],
+            ),
+          ),
+          child: Stack(
+            children: [
+              // Background image
+              if (imageUrl != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: color.withOpacity(0.1),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: color.withOpacity(0.1),
+                    ),
+                  ),
+                ),
+              
+              // Gradient overlay
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      color.withOpacity(0.6),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Icon
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Icon(
+                          icon,
+                          size: 14,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                    
+                    const Spacer(),
+                    
+                    // Text content
+                    Text(
+                      title,
+                      style: GoogleFonts.roboto(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: imageUrl != null ? Colors.white : AdminColors.adminDark,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.roboto(
+                        fontSize: 10,
+                        color: imageUrl != null 
+                            ? Colors.white.withOpacity(0.9) 
+                            : AdminColors.darkGray,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildAnalyticsSection() {
     if (_analytics == null) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.all(AdminSizes.paddingL),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Analytics Overview',
             style: GoogleFonts.roboto(
-              fontSize: 20,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: AdminColors.adminDark,
             ),
           ),
-          const SizedBox(height: AdminSizes.paddingM),
-          Row(
+          const SizedBox(height: 8),
+          Column(
             children: [
-              Expanded(
-                child: _buildUserRoleChart(),
-              ),
-              const SizedBox(width: AdminSizes.paddingM),
-              Expanded(
-                child: _buildContentCategoryChart(),
-              ),
+              _buildUserRoleChart(),
+              const SizedBox(height: 8),
+              _buildContentCategoryChart(),
             ],
           ),
         ],
@@ -467,69 +691,81 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     final total = usersByRole.values.fold(0, (sum, count) => sum + count);
     
     return Card(
-      elevation: 4,
+      elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AdminSizes.paddingM),
+        padding: const EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Users by Role',
               style: GoogleFonts.roboto(
-                fontSize: 16,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: AdminColors.adminDark,
               ),
             ),
-            const SizedBox(height: AdminSizes.paddingM),
-            SizedBox(
-              height: 120,
-              child: PieChart(
-                PieChartData(
-                  sections: usersByRole.entries.map((entry) {
-                    final percentage = total > 0 ? (entry.value / total) * 100 : 0;
-                    return PieChartSectionData(
-                      color: _getRoleColor(entry.key),
-                      value: percentage.toDouble(),
-                      title: '${percentage.toStringAsFixed(1)}%',
-                      radius: 50,
-                      titleStyle: GoogleFonts.roboto(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    );
-                  }).toList(),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: PieChart(
+                    PieChartData(
+                      sections: usersByRole.entries.map((entry) {
+                        final percentage = total > 0 ? (entry.value / total) * 100 : 0;
+                        return PieChartSectionData(
+                          color: _getRoleColor(entry.key),
+                          value: percentage.toDouble(),
+                          title: '${percentage.toStringAsFixed(0)}%',
+                          radius: 25,
+                          titleStyle: GoogleFonts.roboto(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    children: usersByRole.entries.map((entry) => Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: _getRoleColor(entry.key),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              '${entry.key}: ${entry.value}',
+                              style: GoogleFonts.roboto(
+                                fontSize: 10,
+                                color: AdminColors.darkGray,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )).toList(),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: AdminSizes.paddingM),
-            ...usersByRole.entries.map((entry) => Padding(
-              padding: const EdgeInsets.only(bottom: AdminSizes.paddingXS),
-              child: Row(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: _getRoleColor(entry.key),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: AdminSizes.paddingS),
-                  Text(
-                    '${entry.key}: ${entry.value}',
-                    style: GoogleFonts.roboto(
-                      fontSize: 12,
-                      color: AdminColors.darkGray,
-                    ),
-                  ),
-                ],
-              ),
-            )),
           ],
         ),
       ),
@@ -538,29 +774,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
 
   Widget _buildContentCategoryChart() {
     final contentByCategory = _analytics!.contentByCategory;
-    final total = contentByCategory.values.fold(0, (sum, count) => sum + count);
     
     return Card(
-      elevation: 4,
+      elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AdminSizes.paddingM),
+        padding: const EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Content by Category',
               style: GoogleFonts.roboto(
-                fontSize: 16,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: AdminColors.adminDark,
               ),
             ),
-            const SizedBox(height: AdminSizes.paddingM),
+            const SizedBox(height: 8),
             SizedBox(
-              height: 120,
+              height: 80,
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
@@ -576,10 +811,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                         getTitlesWidget: (double value, TitleMeta meta) {
                           final categories = contentByCategory.keys.toList();
                           if (value.toInt() < categories.length) {
+                            final category = categories[value.toInt()];
                             return Text(
-                              categories[value.toInt()].toUpperCase(),
+                              category.length > 4 ? category.substring(0, 4).toUpperCase() : category.toUpperCase(),
                               style: GoogleFonts.roboto(
-                                fontSize: 10,
+                                fontSize: 8,
                                 color: AdminColors.darkGray,
                               ),
                             );
@@ -606,8 +842,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                         BarChartRodData(
                           toY: entry.value.value.toDouble(),
                           color: _getCategoryColor(entry.value.key),
-                          width: 16,
-                          borderRadius: BorderRadius.circular(4),
+                          width: 12,
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ],
                     );
@@ -623,7 +859,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
 
   Widget _buildRecentActivitySection() {
     return Padding(
-      padding: const EdgeInsets.all(AdminSizes.paddingL),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -633,7 +869,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
               Text(
                 'Quick Actions',
                 style: GoogleFonts.roboto(
-                  fontSize: 20,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: AdminColors.adminDark,
                 ),
@@ -647,60 +883,115 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   style: GoogleFonts.roboto(
                     color: AdminColors.primaryBlue,
                     fontWeight: FontWeight.w600,
+                    fontSize: 11,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AdminSizes.paddingM),
-          Row(
+          const SizedBox(height: 8),
+          Column(
             children: [
-              Expanded(
-                child: AdminActionButton(
-                  title: 'Tambah Konten',
-                  subtitle: 'Buat konten baru',
-                  icon: Icons.add_circle,
-                  color: AdminColors.adminGreen,
-                  onTap: () => _handleMenuTap('content_management'),
-                ),
+              _buildCompactActionButton(
+                title: 'Tambah Konten',
+                subtitle: 'Buat konten baru',
+                icon: Icons.add_circle,
+                color: AdminColors.adminGreen,
+                onTap: () => _handleMenuTap('content_management'),
               ),
-              const SizedBox(width: AdminSizes.paddingM),
-              Expanded(
-                child: AdminActionButton(
-                  title: 'Kelola User',
-                  subtitle: 'Tambah/edit user',
-                  icon: Icons.person_add,
-                  color: AdminColors.primaryBlue,
-                  onTap: () => _handleMenuTap('user_management'),
-                ),
+              const SizedBox(height: 6),
+              _buildCompactActionButton(
+                title: 'Kelola User',
+                subtitle: 'Tambah/edit user',
+                icon: Icons.person_add,
+                color: AdminColors.primaryBlue,
+                onTap: () => _handleMenuTap('user_management'),
               ),
-            ],
-          ),
-          const SizedBox(height: AdminSizes.paddingM),
-          Row(
-            children: [
-              Expanded(
-                child: AdminActionButton(
-                  title: 'Upload Media',
-                  subtitle: 'Kelola file',
-                  icon: Icons.cloud_upload,
-                  color: AdminColors.adminPurple,
-                  onTap: () => _handleMenuTap('media_library'),
-                ),
+              const SizedBox(height: 6),
+              _buildCompactActionButton(
+                title: 'Upload Media',
+                subtitle: 'Kelola file',
+                icon: Icons.cloud_upload,
+                color: AdminColors.adminPurple,
+                onTap: () => _handleMenuTap('media_library'),
               ),
-              const SizedBox(width: AdminSizes.paddingM),
-              Expanded(
-                child: AdminActionButton(
-                  title: 'Pengaturan',
-                  subtitle: 'Konfigurasi app',
-                  icon: Icons.settings,
-                  color: AdminColors.adminGold,
-                  onTap: () => _handleMenuTap('settings'),
-                ),
+              const SizedBox(height: 6),
+              _buildCompactActionButton(
+                title: 'Pengaturan',
+                subtitle: 'Konfigurasi app',
+                icon: Icons.settings,
+                color: AdminColors.adminGold,
+                onTap: () => _handleMenuTap('settings'),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCompactActionButton({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.roboto(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AdminColors.adminDark,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.roboto(
+                        fontSize: 10,
+                        color: AdminColors.darkGray,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: AdminColors.lightGray,
+                size: 16,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -731,7 +1022,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           ),
         );
         break;
-      // Add other cases as needed
       default:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -746,6 +1036,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
         title: Text(
           'Logout',
           style: GoogleFonts.roboto(
@@ -776,6 +1069,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AdminColors.error,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
             ),
             child: Text(
               'Logout',
