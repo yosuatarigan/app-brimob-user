@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../constants/app_constants.dart';
 import '../models/content_model.dart';
@@ -16,7 +15,7 @@ class ContentPage extends StatefulWidget {
 }
 
 class _ContentPageState extends State<ContentPage> {
-  ContentModel? _content;
+  List<ContentModel> _contentList = [];
   bool _isLoading = true;
   String? _error;
 
@@ -33,10 +32,11 @@ class _ContentPageState extends State<ContentPage> {
         _error = null;
       });
 
-      final content = await FirebaseService.getContentByCategory(widget.category);
+      // Mengambil list content berdasarkan kategori
+      final contentList = await FirebaseService.getContentsByCategory(widget.category);
       
       setState(() {
-        _content = content;
+        _contentList = contentList;
         _isLoading = false;
       });
     } catch (e) {
@@ -86,21 +86,19 @@ class _ContentPageState extends State<ContentPage> {
       return _buildErrorState();
     }
 
-    if (_content == null) {
+    if (_contentList.isEmpty) {
       return _buildEmptyState();
     }
 
     return RefreshIndicator(
       onRefresh: _loadContent,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            _buildContent(),
-          ],
-        ),
+      child: Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: _buildContentList(),
+          ),
+        ],
       ),
     );
   }
@@ -111,18 +109,18 @@ class _ContentPageState extends State<ContentPage> {
     
     return Container(
       width: double.infinity,
-      height: 200,
+      height: 160,
       decoration: BoxDecoration(
         color: menuColor,
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(AppSizes.radiusXL),
-          bottomRight: Radius.circular(AppSizes.radiusXL),
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
         ),
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(AppSizes.radiusXL),
-          bottomRight: Radius.circular(AppSizes.radiusXL),
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
         ),
         child: Stack(
           children: [
@@ -153,40 +151,40 @@ class _ContentPageState extends State<ContentPage> {
             
             // Content
             Padding(
-              padding: const EdgeInsets.all(AppSizes.paddingL),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(AppSizes.paddingM),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: AppColors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           _getMenuIcon(widget.category),
-                          style: const TextStyle(fontSize: 32),
+                          style: const TextStyle(fontSize: 28),
                         ),
                       ),
-                      const SizedBox(width: AppSizes.paddingM),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _content?.title ?? _getMenuTitle(widget.category),
+                              _getMenuTitle(widget.category),
                               style: GoogleFonts.roboto(
-                                fontSize: 24,
+                                fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.white,
                               ),
                             ),
-                            const SizedBox(height: AppSizes.paddingXS),
+                            const SizedBox(height: 4),
                             Text(
-                              menuData['description'] ?? 'Informasi ${_getMenuTitle(widget.category)}',
+                              '${_contentList.length} konten tersedia',
                               style: GoogleFonts.roboto(
                                 fontSize: 14,
                                 color: AppColors.white.withOpacity(0.9),
@@ -197,26 +195,6 @@ class _ContentPageState extends State<ContentPage> {
                       ),
                     ],
                   ),
-                  if (_content?.updatedAt != null) ...[
-                    const SizedBox(height: AppSizes.paddingM),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSizes.paddingM,
-                        vertical: AppSizes.paddingS,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Text(
-                        'Terakhir diupdate: ${_formatDate(_content!.updatedAt)}',
-                        style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          color: AppColors.white.withOpacity(0.9),
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -226,143 +204,166 @@ class _ContentPageState extends State<ContentPage> {
     );
   }
 
-  Widget _buildContent() {
-    return Padding(
-      padding: const EdgeInsets.all(AppSizes.paddingL),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (_content!.images.isNotEmpty) ...[
-            _buildImageGallery(),
-            const SizedBox(height: AppSizes.paddingL),
-          ],
-          _buildTextContent(),
-        ],
-      ),
+  Widget _buildContentList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _contentList.length,
+      itemBuilder: (context, index) {
+        final content = _contentList[index];
+        return _buildContentCard(content);
+      },
     );
   }
 
-  Widget _buildImageGallery() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Galeri',
-          style: GoogleFonts.roboto(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.darkNavy,
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingM),
-        SizedBox(
-          height: 200,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _content!.images.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: EdgeInsets.only(
-                  right: index < _content!.images.length - 1 ? AppSizes.paddingM : 0,
-                ),
-                child: _buildImageCard(_content!.images[index]),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildImageCard(String imageUrl) {
-    return GestureDetector(
-      onTap: () => _showImageDialog(imageUrl),
-      child: Container(
-        width: 280,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppSizes.radiusM),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppSizes.radiusM),
-          child: CachedNetworkImage(
-            imageUrl: imageUrl,
-            fit: BoxFit.cover,
-            placeholder: (context, url) => Container(
-              color: AppColors.lightGray,
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
-            errorWidget: (context, url, error) => Container(
-              color: AppColors.lightGray,
-              child: const Icon(
-                Icons.image_not_supported,
-                size: 50,
-                color: AppColors.darkGray,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextContent() {
+  Widget _buildContentCard(ContentModel content) {
     return Card(
       elevation: 2,
+      margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.paddingL),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Informasi',
-              style: GoogleFonts.roboto(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.darkNavy,
+      child: InkWell(
+        onTap: () => _showContentDetail(content),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header dengan title dan tanggal
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      content.title,
+                      style: GoogleFonts.roboto(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.darkNavy,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getMenuColor(widget.category).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _formatDate(content.updatedAt),
+                      style: GoogleFonts.roboto(
+                        fontSize: 10,
+                        color: _getMenuColor(widget.category),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: AppSizes.paddingM),
-            if (_content!.content.isNotEmpty)
-              Html(
-                data: _content!.content,
-                style: {
-                  "body": Style(
-                    fontFamily: GoogleFonts.roboto().fontFamily,
-                    fontSize: FontSize(16),
-                    lineHeight: const LineHeight(1.6),
-                    color: AppColors.darkNavy,
-                  ),
-                  "h1, h2, h3": Style(
-                    color: AppColors.darkNavy,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  "p": Style(
-                    margin: Margins.only(bottom: 12),
-                  ),
-                },
-              )
-            else
+              
+              const SizedBox(height: 8),
+              
+              // Preview content
               Text(
-                'Informasi untuk ${_getMenuTitle(widget.category)} akan segera tersedia.',
+                content.content.length > 150 
+                    ? '${content.content.substring(0, 150)}...'
+                    : content.content,
                 style: GoogleFonts.roboto(
-                  fontSize: 16,
+                  fontSize: 14,
                   color: AppColors.darkGray,
-                  fontStyle: FontStyle.italic,
+                  height: 1.4,
                 ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
               ),
-          ],
+              
+              // Images preview jika ada
+              if (content.images.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 80,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: content.images.length > 3 ? 3 : content.images.length,
+                    itemBuilder: (context, imgIndex) {
+                      return Container(
+                        width: 80,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.lightGray,
+                            width: 1,
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: CachedNetworkImage(
+                            imageUrl: content.images[imgIndex],
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color: AppColors.lightGray,
+                              child: const Icon(Icons.image, size: 20),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              color: AppColors.lightGray,
+                              child: const Icon(Icons.broken_image, size: 20),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+              
+              const SizedBox(height: 12),
+              
+              // Footer dengan info tambahan
+              Row(
+                children: [
+                  if (content.images.isNotEmpty)
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.image,
+                          size: 16,
+                          color: AppColors.darkGray,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${content.images.length} foto',
+                          style: GoogleFonts.roboto(
+                            fontSize: 12,
+                            color: AppColors.darkGray,
+                          ),
+                        ),
+                      ],
+                    ),
+                  const Spacer(),
+                  Text(
+                    'Tap untuk detail',
+                    style: GoogleFonts.roboto(
+                      fontSize: 12,
+                      color: _getMenuColor(widget.category),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 12,
+                    color: _getMenuColor(widget.category),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -371,7 +372,7 @@ class _ContentPageState extends State<ContentPage> {
   Widget _buildErrorState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSizes.paddingL),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -380,7 +381,7 @@ class _ContentPageState extends State<ContentPage> {
               size: 64,
               color: AppColors.red,
             ),
-            const SizedBox(height: AppSizes.paddingM),
+            const SizedBox(height: 16),
             Text(
               'Terjadi Kesalahan',
               style: GoogleFonts.roboto(
@@ -389,7 +390,7 @@ class _ContentPageState extends State<ContentPage> {
                 color: AppColors.darkNavy,
               ),
             ),
-            const SizedBox(height: AppSizes.paddingS),
+            const SizedBox(height: 8),
             Text(
               _error!,
               textAlign: TextAlign.center,
@@ -398,7 +399,7 @@ class _ContentPageState extends State<ContentPage> {
                 color: AppColors.darkGray,
               ),
             ),
-            const SizedBox(height: AppSizes.paddingL),
+            const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _loadContent,
               child: const Text('Coba Lagi'),
@@ -412,7 +413,7 @@ class _ContentPageState extends State<ContentPage> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSizes.paddingL),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -421,7 +422,7 @@ class _ContentPageState extends State<ContentPage> {
               size: 64,
               color: AppColors.darkGray,
             ),
-            const SizedBox(height: AppSizes.paddingM),
+            const SizedBox(height: 16),
             Text(
               'Konten Belum Tersedia',
               style: GoogleFonts.roboto(
@@ -430,7 +431,7 @@ class _ContentPageState extends State<ContentPage> {
                 color: AppColors.darkNavy,
               ),
             ),
-            const SizedBox(height: AppSizes.paddingS),
+            const SizedBox(height: 8),
             Text(
               'Informasi untuk ${_getMenuTitle(widget.category)} sedang dalam proses pengembangan.',
               textAlign: TextAlign.center,
@@ -445,20 +446,11 @@ class _ContentPageState extends State<ContentPage> {
     );
   }
 
-  void _showImageDialog(String imageUrl) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: InteractiveViewer(
-            child: CachedNetworkImage(
-              imageUrl: imageUrl,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ),
+  void _showContentDetail(ContentModel content) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ContentDetailPage(content: content),
       ),
     );
   }
@@ -498,6 +490,174 @@ class _ContentPageState extends State<ContentPage> {
       orElse: () => {'icon': '📋'},
     );
     return menu['icon'];
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
+}
+
+// Content Detail Page untuk menampilkan detail content
+class ContentDetailPage extends StatelessWidget {
+  final ContentModel content;
+
+  const ContentDetailPage({super.key, required this.content});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.lightGray,
+      appBar: AppBar(
+        backgroundColor: AppColors.primaryBlue,
+        foregroundColor: AppColors.white,
+        title: Text(
+          'Detail Konten',
+          style: GoogleFonts.roboto(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    content.title,
+                    style: GoogleFonts.roboto(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.darkNavy,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Diupdate: ${_formatDate(content.updatedAt)}',
+                    style: GoogleFonts.roboto(
+                      fontSize: 12,
+                      color: AppColors.darkGray,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Images jika ada
+            if (content.images.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'Galeri (${content.images.length} foto)',
+                  style: GoogleFonts.roboto(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.darkNavy,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 200,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: content.images.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      width: 280,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: CachedNetworkImage(
+                          imageUrl: content.images[index],
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: AppColors.lightGray,
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: AppColors.lightGray,
+                            child: const Icon(
+                              Icons.image_not_supported,
+                              size: 50,
+                              color: AppColors.darkGray,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Deskripsi',
+                        style: GoogleFonts.roboto(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.darkNavy,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        content.content,
+                        style: GoogleFonts.roboto(
+                          fontSize: 14,
+                          color: AppColors.darkNavy,
+                          height: 1.6,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   String _formatDate(DateTime date) {

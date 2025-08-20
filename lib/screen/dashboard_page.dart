@@ -89,10 +89,7 @@ class _DashboardPageState extends State<DashboardPage> {
         if (FirebaseService.isLoggedIn) ...[
           IconButton(
             onPressed: _showLogoutDialog,
-            icon: const Icon(
-              Icons.logout,
-              color: AppColors.darkGray,
-            ),
+            icon: const Icon(Icons.logout, color: AppColors.darkGray),
           ),
         ],
       ],
@@ -102,7 +99,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildHeroSection() {
     return const HeroSection(
       title: 'SELAMAT DATANG',
-      subtitle: 'DI WEBSITE SDM RORENMINOPS KORBRIMOB POLRI\nJalan M. Yasin, Kel. Pasir Gn. Sel., Kec. Cimanggis, Kota Depok, Jawa Barat 16451',
+      subtitle: 'DI App SDM RORENMINOPS KORBRIMOB POLRI',
     );
   }
 
@@ -180,7 +177,12 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildQuickAccessCard(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildQuickAccessCard(
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -256,49 +258,51 @@ class _DashboardPageState extends State<DashboardPage> {
   void _navigateToContent(String menuId) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => ContentPage(category: menuId),
-      ),
+      MaterialPageRoute(builder: (context) => ContentPage(category: menuId)),
     );
   }
 
   void _showAccessDeniedDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Akses Ditolak'),
-        content: const Text('Anda tidak memiliki akses ke menu BINKAR. Silakan hubungi administrator.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Akses Ditolak'),
+            content: const Text(
+              'Anda tidak memiliki akses ke menu BINKAR. Silakan hubungi administrator.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   void _showLogoutDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Apakah Anda yakin ingin logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Logout'),
+            content: const Text('Apakah Anda yakin ingin logout?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Batal'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await FirebaseService.signOut();
+                  setState(() {});
+                },
+                child: const Text('Logout'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await FirebaseService.signOut();
-              setState(() {});
-            },
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
     );
   }
 }
