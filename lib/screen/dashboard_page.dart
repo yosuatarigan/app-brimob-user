@@ -155,7 +155,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 AppColors.green,
                 () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const GaleriPage()),
+                  MaterialPageRoute(builder: (context) =>  GalleryPage()),
                 ),
               ),
             ),
