@@ -8,7 +8,7 @@ import 'constants/app_constants.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(MyApp());
+  runApp(AdminApp());
 }
 
 class MyApp extends StatelessWidget {

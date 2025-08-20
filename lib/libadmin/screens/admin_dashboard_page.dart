@@ -1,6 +1,7 @@
 import 'package:app_brimob_user/libadmin/admin_constant.dart';
 import 'package:app_brimob_user/libadmin/models/admin_model.dart';
 import 'package:app_brimob_user/libadmin/screens/content_managament_page.dart';
+import 'package:app_brimob_user/libadmin/screens/galery_management_page.dart';
 import 'package:app_brimob_user/libadmin/widget/admin_witget.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -905,6 +906,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const MediaLibraryPage()),
+        );
+        break;
+      case 'gallery_management':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) =>  GalleryManagementPage()),
         );
         break;
       default:
