@@ -11,6 +11,10 @@ class AppColors {
   static const Color white = Colors.white;
   static const Color red = Color(0xFFDC2626);
   static const Color green = Color(0xFF059669);
+  static const Color orange = Color(0xFFEA580C);
+  static const Color purple = Color(0xFF7C3AED);
+  static const Color indigo = Color(0xFF4F46E5);
+  static const Color teal = Color(0xFF0D9488);
 }
 
 class AppSizes {
@@ -152,21 +156,43 @@ class MenuData {
     },
   ];
 
+  // Updated with 6 items sesuai banner - using local assets
   static const List<Map<String, String>> pedomanItems = [
     {
       'id': 'tri_brata',
       'title': 'TRI BRATA',
-      'description': 'Pedoman hidup anggota Polri',
+      'description': 'Tiga bakti utama anggota Polri',
+      'assetPath': 'assets/tribrata.png',
     },
     {
-      'id': 'falsafah',
-      'title': 'FALSAFAH',
-      'description': 'Filosofi Korps Brimob',
+      'id': 'catur_prasetya',
+      'title': 'CATUR PRASETYA',
+      'description': 'Empat janji setia anggota Polri',
+      'assetPath': 'assets/tribrata.png',
     },
     {
-      'id': 'doktrin',
-      'title': 'DOKTRIN',
-      'description': 'Doktrin Korbrimob Polri',
+      'id': 'panca_prasetya',
+      'title': 'PANCA PRASETYA BRIMOB',
+      'description': 'Lima sumpah setia Brimob',
+      'assetPath': 'assets/brimob.png',
+    },
+    {
+      'id': 'sapta_marga',
+      'title': 'SAPTA MARGA BRIMOB',
+      'description': 'Tujuh janji prajurit Brimob',
+      'assetPath': 'assets/brimob.png',
+    },
+    {
+      'id': 'asta_gatra',
+      'title': 'ASTA GATRA BRIMOB',
+      'description': 'Delapan unsur kekuatan nasional',
+      'assetPath': 'assets/brimob.png',
+    },
+    {
+      'id': 'pancasila_prasetya',
+      'title': 'PANCASILA PRASETYA',
+      'description': 'Sumpah setia kepada Pancasila',
+      'assetPath': 'assets/korpri.svg',
     },
   ];
 }

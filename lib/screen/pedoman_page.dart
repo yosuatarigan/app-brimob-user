@@ -1,57 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_constants.dart';
-import '../services/firebase_service.dart';
 
-class PedomanPage extends StatefulWidget {
+class PedomanPage extends StatelessWidget {
   const PedomanPage({super.key});
-
-  @override
-  State<PedomanPage> createState() => _PedomanPageState();
-}
-
-class _PedomanPageState extends State<PedomanPage> {
-  Map<String, String> _pedomanContent = {};
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPedoman();
-  }
-
-  Future<void> _loadPedoman() async {
-    setState(() => _isLoading = true);
-    
-    try {
-      // Load from Firebase or use default content
-      final triBrata = await FirebaseService.getSettings('tri_brata') ?? 
-          {'content': _getDefaultTriBrata()};
-      final falsafah = await FirebaseService.getSettings('falsafah') ?? 
-          {'content': _getDefaultFalsafah()};
-      final doktrin = await FirebaseService.getSettings('doktrin') ?? 
-          {'content': _getDefaultDoktrin()};
-      
-      setState(() {
-        _pedomanContent = {
-          'tri_brata': triBrata['content'] ?? _getDefaultTriBrata(),
-          'falsafah': falsafah['content'] ?? _getDefaultFalsafah(),
-          'doktrin': doktrin['content'] ?? _getDefaultDoktrin(),
-        };
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _pedomanContent = {
-          'tri_brata': _getDefaultTriBrata(),
-          'falsafah': _getDefaultFalsafah(),
-          'doktrin': _getDefaultDoktrin(),
-        };
-        _isLoading = false;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,28 +17,10 @@ class _PedomanPageState extends State<PedomanPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: _loadPedoman,
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
+        backgroundColor: AppColors.primaryBlue,
+        foregroundColor: AppColors.white,
       ),
-      body: _isLoading ? _buildLoadingState() : _buildContent(),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return const Center(
-      child: CircularProgressIndicator(),
-    );
-  }
-
-  Widget _buildContent() {
-    return RefreshIndicator(
-      onRefresh: _loadPedoman,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSizes.paddingM),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,11 +28,54 @@ class _PedomanPageState extends State<PedomanPage> {
             _buildHeader(),
             const SizedBox(height: AppSizes.paddingL),
             ...MenuData.pedomanItems.map((item) => 
-              _buildPedomanCard(item)).toList(),
+              _buildPedomanCard(context, item)).toList(),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildDetailAssetImage(String assetPath, {
+    required double width,
+    required double height,
+    required IconData fallbackIcon,
+  }) {
+    try {
+      if (assetPath.endsWith('.svg')) {
+        return SvgPicture.asset(
+          assetPath,
+          width: width,
+          height: height,
+          fit: BoxFit.contain,
+          colorFilter: const ColorFilter.mode(AppColors.white, BlendMode.srcIn),
+          placeholderBuilder: (context) => Icon(
+            fallbackIcon,
+            size: width * 0.7,
+            color: AppColors.white,
+          ),
+        );
+      } else {
+        return Image.asset(
+          assetPath,
+          width: width,
+          height: height,
+          fit: BoxFit.contain,
+          color: AppColors.white,
+          colorBlendMode: BlendMode.srcIn,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            fallbackIcon,
+            size: width * 0.7,
+            color: AppColors.white,
+          ),
+        );
+      }
+    } catch (e) {
+      return Icon(
+        fallbackIcon,
+        size: width * 0.7,
+        color: AppColors.white,
+      );
+    }
   }
 
   Widget _buildHeader() {
@@ -118,24 +96,11 @@ class _PedomanPageState extends State<PedomanPage> {
         borderRadius: BorderRadius.circular(AppSizes.radiusL),
         child: Stack(
           children: [
-            // Background image
-            CachedNetworkImage(
-              imageUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&h=300&fit=crop',
-              width: double.infinity,
-              height: double.infinity,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primaryBlue, AppColors.darkNavy],
-                  ),
-                ),
-              ),
-              errorWidget: (context, url, error) => Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primaryBlue, AppColors.darkNavy],
-                  ),
+            // Background gradient instead of problematic image
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.primaryBlue, AppColors.darkNavy],
                 ),
               ),
             ),
@@ -208,7 +173,48 @@ class _PedomanPageState extends State<PedomanPage> {
     );
   }
 
-  Widget _buildPedomanCard(Map<String, String> item) {
+  Widget _buildAssetImage(String assetPath, {
+    required double width,
+    required double height,
+    required IconData fallbackIcon,
+    required Color fallbackColor,
+  }) {
+    try {
+      if (assetPath.endsWith('.svg')) {
+        return SvgPicture.asset(
+          assetPath,
+          width: width,
+          height: height,
+          fit: BoxFit.contain,
+          placeholderBuilder: (context) => Icon(
+            fallbackIcon,
+            color: fallbackColor,
+            size: width * 0.7,
+          ),
+        );
+      } else {
+        return Image.asset(
+          assetPath,
+          width: width,
+          height: height,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            fallbackIcon,
+            color: fallbackColor,
+            size: width * 0.7,
+          ),
+        );
+      }
+    } catch (e) {
+      return Icon(
+        fallbackIcon,
+        color: fallbackColor,
+        size: width * 0.7,
+      );
+    }
+  }
+
+  Widget _buildPedomanCard(BuildContext context, Map<String, String> item) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSizes.paddingM),
       child: Card(
@@ -217,7 +223,7 @@ class _PedomanPageState extends State<PedomanPage> {
           borderRadius: BorderRadius.circular(AppSizes.radiusM),
         ),
         child: InkWell(
-          onTap: () => _showPedomanDetail(item),
+          onTap: () => _showPedomanDetail(context, item),
           borderRadius: BorderRadius.circular(AppSizes.radiusM),
           child: Padding(
             padding: const EdgeInsets.all(AppSizes.paddingL),
@@ -233,10 +239,15 @@ class _PedomanPageState extends State<PedomanPage> {
                       color: _getPedomanColor(item['id']!).withOpacity(0.3),
                     ),
                   ),
-                  child: Icon(
-                    _getPedomanIcon(item['id']!),
-                    color: _getPedomanColor(item['id']!),
-                    size: 28,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppSizes.radiusS),
+                    child: _buildAssetImage(
+                      item['assetPath']!,
+                      width: 40,
+                      height: 40,
+                      fallbackIcon: _getPedomanIcon(item['id']!),
+                      fallbackColor: _getPedomanColor(item['id']!),
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSizes.paddingM),
@@ -276,15 +287,16 @@ class _PedomanPageState extends State<PedomanPage> {
     );
   }
 
-  void _showPedomanDetail(Map<String, String> item) {
+  void _showPedomanDetail(BuildContext context, Map<String, String> item) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => PedomanDetailPage(
           title: item['title']!,
-          content: _pedomanContent[item['id']!] ?? 'Konten sedang dalam pengembangan.',
+          content: _getPedomanContent(item['id']!),
           color: _getPedomanColor(item['id']!),
           icon: _getPedomanIcon(item['id']!),
+          assetPath: item['assetPath']!,
         ),
       ),
     );
@@ -294,10 +306,16 @@ class _PedomanPageState extends State<PedomanPage> {
     switch (id) {
       case 'tri_brata':
         return AppColors.primaryBlue;
-      case 'falsafah':
+      case 'catur_prasetya':
         return AppColors.red;
-      case 'doktrin':
+      case 'panca_prasetya':
         return AppColors.green;
+      case 'sapta_marga':
+        return AppColors.orange;
+      case 'asta_gatra':
+        return AppColors.purple;
+      case 'pancasila_prasetya':
+        return AppColors.indigo;
       default:
         return AppColors.darkGray;
     }
@@ -307,75 +325,178 @@ class _PedomanPageState extends State<PedomanPage> {
     switch (id) {
       case 'tri_brata':
         return Icons.star;
-      case 'falsafah':
-        return Icons.psychology;
-      case 'doktrin':
-        return Icons.library_books;
+      case 'catur_prasetya':
+        return Icons.favorite;
+      case 'panca_prasetya':
+        return Icons.security;
+      case 'sapta_marga':
+        return Icons.military_tech;
+      case 'asta_gatra':
+        return Icons.account_balance;
+      case 'pancasila_prasetya':
+        return Icons.flag;
       default:
         return Icons.book;
     }
   }
 
-  String _getDefaultTriBrata() {
-    return '''
-TRI BRATA
+  String _getPedomanContent(String id) {
+    switch (id) {
+      case 'tri_brata':
+        return '''TRI BRATA
 
-1. RASTRA SEWAKOTTAMA
-   Kami Anggota Polri berjanji akan mengabdikan diri dalam perjuangan menyelenggarakan keamanan dalam negeri, memelihara ketertiban masyarakat, menegakkan hukum dan keadilan, melindungi, mengayomi dan melayani masyarakat serta berbakti kepada nusa dan bangsa.
+Tri Brata adalah pedoman hidup bagi setiap anggota Polri yang terdiri dari tiga bagian:
 
-2. ADHI UPAYA BRIKET DHARMA
-   Kami Anggota Polri berjanji akan mengutamakan kepentingan masyarakat, bangsa dan negara, akan taat dan patuh pada atasan, akan menggunakan kekuatan kami secara bijaksana, berperikemanusiaan dan tidak mengguna-kan kekuatan kami demi kepentingan pribadi.
+KAMI POLISI INDONESIA:
 
-3. TRIBRATA EKA DHARMA
-   Kami Anggota Polri berjanji akan berbakti dengan sepenuh jiwa raga, akan jujur dan dapat dipercaya, akan taat pada janji dan peraturan dinas, serta akan rela berkorban demi keselamatan nusa dan bangsa.
-''';
-  }
+1. BERBAKTI KEPADA NUSA DAN BANGSA
+   "Berbakti kepada nusa dan bangsa dengan penuh ketakwaan terhadap Tuhan Yang Maha Esa."
 
-  String _getDefaultFalsafah() {
-    return '''
-FALSAFAH KORBRIMOB POLRI
+2. MENJUNJUNG TINGGI KEBENARAN, KEADILAN, DAN KEMANUSIAAN  
+   "Menjunjung tinggi kebenaran, keadilan, dan kemanusiaan dalam menegakkan hukum Negara Kesatuan Republik Indonesia yang berdasarkan Pancasila dan Undang-Undang Dasar 1945."
 
-Korbrimob Polri sebagai bagian integral dari Polri memiliki falsafah yang mengakar pada nilai-nilai Pancasila dan UUD 1945.
+3. MELINDUNGI, MENGAYOMI, DAN MELAYANI MASYARAKAT
+   "Senantiasa melindungi, mengayomi, dan melayani masyarakat dengan keikhlasan untuk mewujudkan keamanan dan ketertiban."
 
-NILAI-NILAI DASAR:
-• Ketuhanan Yang Maha Esa
-• Kemanusiaan yang adil dan beradab
-• Persatuan Indonesia
-• Kerakyatan yang dipimpin oleh hikmat kebijaksanaan dalam permusyawaratan/perwakilan
-• Keadilan sosial bagi seluruh rakyat Indonesia
+Tri Brata pertama kali diucapkan dalam prosesi wisuda keserjanaan PTIK angkatan II tanggal 3 Mei 1954, kemudian diresmikan sebagai pedoman hidup Polri pada tanggal 1 Juli 1955.''';
 
-PRINSIP OPERASIONAL:
-• Melindungi, mengayomi, dan melayani masyarakat
-• Menegakkan supremasi hukum
-• Memelihara kamtibmas
-• Profesional dan proporsional dalam setiap tindakan
-''';
-  }
+      case 'catur_prasetya':
+        return '''CATUR PRASETYA
 
-  String _getDefaultDoktrin() {
-    return '''
-DOKTRIN KORBRIMOB POLRI
+Catur Prasetya adalah empat janji kerja anggota Polri dalam melaksanakan tugas:
 
-Doktrin Korbrimob Polri merupakan panduan fundamental dalam pelaksanaan tugas dan fungsi sebagai pasukan elite Polri.
+SEBAGAI INSAN BHAYANGKARA, KEHORMATAN SAYA ADALAH BERKORBAN DEMI MASYARAKAT, BANGSA DAN NEGARA UNTUK:
 
-TUGAS POKOK:
-1. Pengendalian massa/kerusuhan
-2. Pemberantasan terorisme
-3. Pengamanan objek vital
-4. Operasi khusus kepolisian
-5. Bantuan SAR
+1. MENIADAKAN SEGALA BENTUK GANGGUAN KEAMANAN
+   Menjaga keutuhan Negara Kesatuan Republik Indonesia, bersama masyarakat meningkatkan daya cegah dan daya penanggulangan gangguan Kamtibmas.
 
-PRINSIP OPERASI:
-• Kesiapsiagaan tinggi
-• Mobilitas cepat
-• Fleksibilitas taktis
-• Koordinasi terpadu
-• Teknologi modern
+2. MENJAGA KESELAMATAN JIWA RAGA, HARTA BENDA, DAN HAK ASASI MANUSIA
+   Melindungi masyarakat dari setiap gangguan keamanan, menjamin kelancaran aktivitas masyarakat, memberikan pengayoman dan pelayanan optimal.
 
-MOTTO:
-"JIWA DHARMA KARTIKA"
-Jiwa pengabdian yang mengutamakan dharma dan kebenaran dalam setiap tindakan demi kepentingan bangsa dan negara.
-''';
+3. MENJAMIN KEPASTIAN BERDASARKAN HUKUM
+   Menjunjung tinggi kebenaran, keadilan, dan kemanusiaan dalam menegakkan hukum dengan mengutamakan kepentingan negara dan masyarakat.
+
+4. MEMELIHARA PERASAAN TENTRAM DAN DAMAI
+   Berusaha dengan kesungguhan untuk mencegah dan menanggulangi segala bentuk pelanggaran hukum dan ketidakadilan.
+
+Catur Prasetya pertama kali dipaparkan oleh Presiden Sukarno pada hari Bhayangkara, 1 Juli 1960 di Yogyakarta.''';
+
+      case 'panca_prasetya':
+        return '''PANCA PRASETYA KORBRIMOB
+
+Lima prinsip khusus untuk anggota Korps Brimob Polri sebagai pasukan elite:
+
+1. JIWA KORSA YANG TINGGI
+   Memiliki jiwa kesatuan dan kebersamaan yang kuat dalam melaksanakan tugas sebagai pasukan khusus, dengan motto "Setia, Berani, dan Ikhlas".
+
+2. DISIPLIN TINGGI
+   Menjalankan segala perintah dan peraturan dengan penuh tanggung jawab, menjunjung tinggi Tri Brata dan Catur Prasetya dalam pengabdian.
+
+3. PROFESIONALISME
+   Menguasai teknik dan taktik khusus sesuai dengan fungsi sebagai pasukan mobile brigade yang mampu menangani situasi berintensitas tinggi.
+
+4. LOYALITAS TOTAL
+   Setia kepada korps, komando, dan negara dalam segala situasi, dengan semangat Bhayangkara yang mengutamakan kepentingan bangsa.
+
+5. PENGABDIAN DHARMA KARTIKA
+   Siap berkorban jiwa dan raga untuk kepentingan nusa dan bangsa, dengan jiwa pengabdian yang mengutamakan dharma dan kebenaran.
+
+Panca Prasetya Korbrimob merupakan implementasi khusus nilai-nilai Polri untuk pasukan elite yang bertugas menangani gangguan keamanan berintensitas tinggi.''';
+
+      case 'sapta_marga':
+        return '''SAPTA MARGA
+
+Tujuh pedoman hidup prajurit yang juga diadopsi dalam lingkungan Brimob sebagai bagian dari TNI-Polri:
+
+1. KAMI WARGA NEGARA KESATUAN REPUBLIK INDONESIA YANG BERSENDIKAN PANCASILA
+   Menegaskan identitas sebagai warga negara yang berpegang teguh pada dasar negara Pancasila.
+
+2. KAMI PATRIOT INDONESIA PENDUKUNG SERTA PEMBELA IDEOLOGI NEGARA YANG BERTANGGUNG JAWAB DAN TIDAK MENGENAL MENYERAH
+   Komitmen sebagai patriot yang selalu membela ideologi negara dengan penuh tanggung jawab.
+
+3. KAMI KESATRIA INDONESIA YANG BERTAQWA KEPADA TUHAN YANG MAHA ESA SERTA MEMBELA KEJUJURAN, KEBENARAN, DAN KEADILAN
+   Menjunjung tinggi nilai-nilai ketaqwaan dan keadilan dalam setiap tindakan.
+
+4. KAMI PRAJURIT TENTARA NASIONAL INDONESIA ADALAH BHAYANGKARI NEGARA DAN BANGSA INDONESIA
+   Menegaskan peran sebagai penjaga dan pelindung negara dan bangsa.
+
+5. KAMI PRAJURIT TENTARA NASIONAL INDONESIA MEMEGANG TEGUH DISIPLIN, PATUH DAN TAAT KEPADA PIMPINAN SERTA MENJUNJUNG TINGGI SIKAP DAN KEHORMATAN PRAJURIT
+   Komitmen pada disiplin, kepatuhan, dan kehormatan sebagai prajurit.
+
+6. KAMI PRAJURIT TENTARA NASIONAL INDONESIA MENGUTAMAKAN PERSATUAN DAN KESATUAN TNI SERTA KEPENTINGAN NEGARA DI ATAS KEPENTINGAN PRIBADI
+   Mengutamakan kepentingan bersama di atas kepentingan pribadi.
+
+7. KAMI PRAJURIT TENTARA NASIONAL INDONESIA SADAR AKAN TANGGUNG JAWAB DAN TIDAK MENGENAL MENYERAH DALAM MELAKSANAKAN TUGAS
+   Kesadaran penuh akan tanggung jawab dan tekad untuk tidak menyerah.''';
+
+      case 'asta_gatra':
+        return '''ASTA GATRA
+
+Delapan unsur kekuatan nasional yang menjadi dasar ketahanan nasional Indonesia:
+
+TRI GATRA (ASPEK ALAMIAH):
+1. GATRA GEOGRAFI
+   - Letak dan kedudukan geografis Indonesia sebagai negara kepulauan
+   - Kondisi wilayah strategis di antara dua benua dan dua samudra
+
+2. GATRA DEMOGRAFI  
+   - Jumlah, komposisi, persebaran, dan kualitas penduduk
+   - Sumber daya manusia sebagai kekuatan nasional
+
+3. GATRA SUMBER KEKAYAAN ALAM
+   - Potensi sumber daya alam flora, fauna, mineral, energi
+   - Kekayaan laut, udara, dan dirgantara
+
+PANCA GATRA (ASPEK SOSIAL):
+4. GATRA IDEOLOGI
+   - Pancasila sebagai dasar negara dan pemersatu bangsa
+   - Nilai-nilai luhur bangsa dalam kehidupan berbangsa dan bernegara
+
+5. GATRA POLITIK
+   - Sistem politik demokrasi berdasarkan Pancasila dan UUD 1945
+   - Stabilitas politik untuk pembangunan nasional
+
+6. GATRA EKONOMI
+   - Sistem ekonomi nasional untuk kesejahteraan rakyat
+   - Kemandirian ekonomi dan daya saing bangsa
+
+7. GATRA SOSIAL BUDAYA
+   - Keberagaman suku, agama, ras, dan budaya sebagai kekayaan bangsa
+   - Integrasi nasional dalam kebhinekaan
+
+8. GATRA PERTAHANAN KEAMANAN (HANKAM)
+   - Sistem pertahanan rakyat semesta dengan TNI sebagai kekuatan inti
+   - Polri sebagai kekuatan keamanan dalam negeri''';
+
+      case 'pancasila_prasetya':
+        return '''PANCASILA PRASETYA
+
+Sumpah setia kepada dasar negara Pancasila sebagai panduan moral dan etika:
+
+1. KETUHANAN YANG MAHA ESA
+   Beriman dan bertakwa kepada Tuhan Yang Maha Esa sesuai dengan agama dan kepercayaan masing-masing, menjalankan perintah agama dengan toleransi terhadap pemeluk agama lain.
+
+2. KEMANUSIAAN YANG ADIL DAN BERADAB
+   Mengakui dan memperlakukan manusia sesuai dengan harkat dan martabatnya sebagai makhluk Tuhan, menjunjung tinggi nilai-nilai kemanusiaan.
+
+3. PERSATUAN INDONESIA
+   Mampu menempatkan persatuan, kesatuan, serta kepentingan dan keselamatan bangsa dan negara sebagai kepentingan bersama di atas kepentingan pribadi dan golongan.
+
+4. KERAKYATAN YANG DIPIMPIN OLEH HIKMAT KEBIJAKSANAAN DALAM PERMUSYAWARATAN/PERWAKILAN
+   Mengutamakan kepentingan negara dan masyarakat, menghormati keputusan yang diambil secara musyawarah mufakat.
+
+5. KEADILAN SOSIAL BAGI SELURUH RAKYAT INDONESIA
+   Mengembangkan perbuatan yang luhur yang mencerminkan sikap dan suasana kekeluargaan dan gotong royong, menjaga keseimbangan antara hak dan kewajiban.
+
+KOMITMEN PANCASILA PRASETYA:
+- Menjadikan Pancasila sebagai dasar dalam berpikir, bersikap, dan bertindak
+- Mengamalkan nilai-nilai Pancasila dalam kehidupan sehari-hari
+- Menjaga dan melestarikan Pancasila sebagai ideologi bangsa
+- Menolak segala paham yang bertentangan dengan Pancasila''';
+
+      default:
+        return 'Konten sedang dalam pengembangan.';
+    }
   }
 }
 
@@ -384,6 +505,7 @@ class PedomanDetailPage extends StatelessWidget {
   final String content;
   final Color color;
   final IconData icon;
+  final String assetPath;
 
   const PedomanDetailPage({
     super.key,
@@ -391,6 +513,7 @@ class PedomanDetailPage extends StatelessWidget {
     required this.content,
     required this.color,
     required this.icon,
+    required this.assetPath,
   });
 
   @override
@@ -399,6 +522,7 @@ class PedomanDetailPage extends StatelessWidget {
       backgroundColor: AppColors.lightGray,
       appBar: AppBar(
         backgroundColor: color,
+        foregroundColor: AppColors.white,
         title: Text(
           title,
           style: GoogleFonts.roboto(
@@ -416,6 +540,49 @@ class PedomanDetailPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildDetailAssetImage(String assetPath, {
+    required double width,
+    required double height,
+    required IconData fallbackIcon,
+  }) {
+    try {
+      if (assetPath.endsWith('.svg')) {
+        return SvgPicture.asset(
+          assetPath,
+          width: width,
+          height: height,
+          fit: BoxFit.contain,
+          colorFilter: const ColorFilter.mode(AppColors.white, BlendMode.srcIn),
+          placeholderBuilder: (context) => Icon(
+            fallbackIcon,
+            size: width * 0.7,
+            color: AppColors.white,
+          ),
+        );
+      } else {
+        return Image.asset(
+          assetPath,
+          width: width,
+          height: height,
+          fit: BoxFit.contain,
+          color: AppColors.white,
+          colorBlendMode: BlendMode.srcIn,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            fallbackIcon,
+            size: width * 0.7,
+            color: AppColors.white,
+          ),
+        );
+      }
+    } catch (e) {
+      return Icon(
+        fallbackIcon,
+        size: width * 0.7,
+        color: AppColors.white,
+      );
+    }
   }
 
   Widget _buildHeader() {
@@ -436,14 +603,13 @@ class PedomanDetailPage extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            // Background image
-            CachedNetworkImage(
-              imageUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&h=300&fit=crop',
-              width: double.infinity,
-              height: double.infinity,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Container(color: color),
-              errorWidget: (context, url, error) => Container(color: color),
+            // Background gradient instead of problematic image
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [color.withOpacity(0.7), color],
+                ),
+              ),
             ),
             
             // Gradient overlay
@@ -466,15 +632,18 @@ class PedomanDetailPage extends StatelessWidget {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(AppSizes.paddingM),
+                    width: 60,
+                    height: 60,
+                    padding: const EdgeInsets.all(AppSizes.paddingS),
                     decoration: BoxDecoration(
                       color: AppColors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(AppSizes.radiusM),
                     ),
-                    child: Icon(
-                      icon,
-                      size: 32,
-                      color: AppColors.white,
+                    child: _buildDetailAssetImage(
+                      assetPath,
+                      width: 44,
+                      height: 44,
+                      fallbackIcon: icon,
                     ),
                   ),
                   const SizedBox(width: AppSizes.paddingM),
