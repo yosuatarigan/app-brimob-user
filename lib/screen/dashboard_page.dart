@@ -33,8 +33,8 @@ class _DashboardPageState extends State<DashboardPage> {
               children: [
                 _buildHeader(),
                 const SizedBox(height: AppSizes.paddingL),
-                _buildHeroSection(),
-                const SizedBox(height: AppSizes.paddingXL),
+                // _buildHeroSection(),
+                // const SizedBox(height: AppSizes.paddingXL),
                 _buildSectionTitle('Menu Utama'),
                 const SizedBox(height: AppSizes.paddingM),
                 _buildMenuGrid(),
@@ -49,59 +49,36 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildHeader() {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(AppSizes.paddingS),
-          decoration: BoxDecoration(
+    return Container(
+      width: double.infinity,
+      child: Image.asset(
+        'assets/head.png',
+        // fit: BoxFit.cover,
+        height: 250,
+        width: double.infinity,
+        fit: BoxFit.fill,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            height: 400,
             color: AppColors.primaryBlue,
-            borderRadius: BorderRadius.circular(AppSizes.radiusS),
-          ),
-          child: const Icon(
-            Icons.security,
-            color: AppColors.white,
-            size: AppSizes.iconL,
-          ),
-        ),
-        const SizedBox(width: AppSizes.paddingM),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'SDM KORBRIMOB',
-                style: GoogleFonts.roboto(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.darkNavy,
-                ),
+            child: Center(
+              child: Text(
+                'Header Image',
+                style: GoogleFonts.roboto(color: AppColors.white, fontSize: 18),
               ),
-              Text(
-                'Rorenminops Polri',
-                style: GoogleFonts.roboto(
-                  fontSize: 14,
-                  color: AppColors.darkGray,
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (FirebaseService.isLoggedIn) ...[
-          IconButton(
-            onPressed: _showLogoutDialog,
-            icon: const Icon(Icons.logout, color: AppColors.darkGray),
-          ),
-        ],
-      ],
+            ),
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildHeroSection() {
-    return const HeroSection(
-      title: 'SELAMAT DATANG',
-      subtitle: 'DI App SDM RORENMINOPS KORBRIMOB POLRI',
-    );
-  }
+  // Widget _buildHeroSection() {
+  //   return const HeroSection(
+  //     title: 'SELAMAT DATANG',
+  //     subtitle: 'DI App SDM RORENMINOPS KORBRIMOB POLRI',
+  //   );
+  // }
 
   Widget _buildSectionTitle(String title) {
     return Text(
@@ -114,29 +91,145 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  // Ganti method _buildMenuGrid() di DashboardPage dengan ini:
+
   Widget _buildMenuGrid() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.8,
-        crossAxisSpacing: AppSizes.paddingM,
-        mainAxisSpacing: AppSizes.paddingM,
-      ),
-      itemCount: MenuData.mainMenus.length,
-      itemBuilder: (context, index) {
-        final menu = MenuData.mainMenus[index];
-        return MenuCard(
-          title: menu['title'],
-          icon: menu['icon'],
-          imageUrl: menu['imageUrl'],
-          description: menu['description'],
-          color: menu['color'],
-          isProtected: menu['isProtected'],
-          onTap: () => _handleMenuTap(menu),
-        );
+    final List<Map<String, dynamic>> menuItems = [
+      {
+        'title': 'KORBRIMOB',
+        'asset': 'assets/korbrimob.png',
+        'id': 'korbrimob',
+        'isProtected': false, // tambahkan field ini
       },
+      {
+        'title': 'BINKAR',
+        'asset': 'assets/binkar.png',
+        'id': 'binkar',
+        'isProtected': true, // BINKAR biasanya protected
+      },
+      {
+        'title': 'DALPERS',
+        'asset': 'assets/dalpers.png',
+        'id': 'dalpers',
+        'isProtected': false,
+      },
+      {
+        'title': 'WATPERS',
+        'asset': 'assets/watpress.png',
+        'id': 'watpers',
+        'isProtected': false,
+      },
+      {
+        'title': 'PSIKOLOGI',
+        'asset': 'assets/psikologi.png',
+        'id': 'psikologi',
+        'isProtected': false,
+      },
+      {
+        'title': 'PERDANKOR',
+        'asset': 'assets/perdankor.png',
+        'id': 'perdankor',
+        'isProtected': false,
+      },
+      {
+        'title': 'PERKAP',
+        'asset': 'assets/perkap.png',
+        'id': 'perkap',
+        'isProtected': false,
+      },
+      {
+        'title': 'OTHER',
+        'asset': 'assets/other.png',
+        'id': 'other',
+        'isProtected': false,
+      },
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.black87,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          childAspectRatio: 0.7,
+          crossAxisSpacing: 3,
+          mainAxisSpacing: 12,
+        ),
+        itemCount: menuItems.length,
+        itemBuilder: (context, index) {
+          final menu = menuItems[index];
+          return _buildMenuItem(
+            title: menu['title']!,
+            assetPath: menu['asset']!,
+            onTap: () => _handleMenuTap(menu), // pass seluruh menu object
+          );
+        },
+      ),
+    );
+  }
+
+  // Widget untuk setiap item menu
+  Widget _buildMenuItem({
+    required String title,
+    required String assetPath,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        print('Item tapped: $title'); // debug print
+        onTap(); // panggil callback
+      },
+      behavior: HitTestBehavior.translucent, // tambahkan ini
+      child: Container(
+        // tambahkan container dengan padding untuk area tap lebih besar
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Logo
+            Container(
+              width: 55,
+              height: 55,
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+              child: Image.asset(
+                assetPath,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.folder,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Text
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.roboto(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -155,7 +248,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 AppColors.green,
                 () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) =>  GalleryPage()),
+                  MaterialPageRoute(builder: (context) => GalleryPage()),
                 ),
               ),
             ),
@@ -229,7 +322,13 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _handleMenuTap(Map<String, dynamic> menu) async {
-    if (menu['isProtected']) {
+    // Debug print untuk cek apakah method dipanggil
+    print('Menu tapped: ${menu['id']}');
+
+    // Cek apakah menu protected, default false jika null
+    bool isProtected = menu['isProtected'] ?? false;
+
+    if (isProtected) {
       // Check if user is already logged in and has access
       if (FirebaseService.isLoggedIn) {
         final hasAccess = await FirebaseService.hasAccessToBinkar();
@@ -242,6 +341,7 @@ class _DashboardPageState extends State<DashboardPage> {
         _navigateToLogin(menu['id']);
       }
     } else {
+      // Langsung navigate ke content
       _navigateToContent(menu['id']);
     }
   }
