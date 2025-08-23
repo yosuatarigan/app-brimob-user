@@ -70,12 +70,14 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.roboto(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: AppColors.darkNavy,
+    return Center(
+      child: Text(
+        title,
+        style: GoogleFonts.roboto(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
       ),
     );
   }
@@ -407,9 +409,9 @@ class _DashboardPageState extends State<DashboardPage> {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
-              childAspectRatio: 0.75,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
+              childAspectRatio: 0.9,
+              crossAxisSpacing: 32,
+              mainAxisSpacing: 0,
             ),
             itemCount: pedomanItems.length,
             itemBuilder: (context, index) {
@@ -426,18 +428,18 @@ class _DashboardPageState extends State<DashboardPage> {
     return GestureDetector(
       onTap: () => _navigateToPedomanDetail(item),
       child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
+        // padding: const EdgeInsets.all(12),
+        // decoration: BoxDecoration(
+        //   color: Colors.white,
+        //   borderRadius: BorderRadius.circular(12),
+        //   boxShadow: [
+        //     BoxShadow(
+        //       color: Colors.black.withOpacity(0.1),
+        //       blurRadius: 4,
+        //       offset: const Offset(0, 2),
+        //     ),
+        //   ],
+        // ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -453,14 +455,14 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: Center(
                   child: Image.asset(
                     item['assetPath']!,
-                    width: 32,
-                    height: 32,
+                    width: 40,
+                    height: 40,
                     fit: BoxFit.contain,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            // const SizedBox(height: 8),
             Expanded(
               flex: 1,
               child: Text(
@@ -468,7 +470,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 style: GoogleFonts.roboto(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
-                  color: _getPedomanColor(item['id']!),
+                  color: Colors.white,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
