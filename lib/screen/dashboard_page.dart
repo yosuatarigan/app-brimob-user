@@ -21,7 +21,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightGray,
+      backgroundColor: const Color(0xFF6D4C41),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _refreshData,
@@ -32,10 +32,8 @@ class _DashboardPageState extends State<DashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeader(),
-                const SizedBox(height: AppSizes.paddingL),
                 _buildGaleriSatuan(),
-                const SizedBox(height: AppSizes.paddingXL),
-                _buildSectionTitle('Menu Utama'),
+
                 const SizedBox(height: AppSizes.paddingM),
                 _buildMenuGrid(),
                 const SizedBox(height: AppSizes.paddingXL),
@@ -124,7 +122,6 @@ class _DashboardPageState extends State<DashboardPage> {
     ];
 
     return Container(
-      // margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
         color: const Color(0xFF6D4C41), // Brown color like in the image
@@ -141,14 +138,14 @@ class _DashboardPageState extends State<DashboardPage> {
               letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 0),
+
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               childAspectRatio: 0.85,
-              crossAxisSpacing: 36,
+              crossAxisSpacing: 30,
               mainAxisSpacing: 0,
             ),
             itemCount: galeriItems.length,
@@ -268,7 +265,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.teal[800],
+        color: Colors.black,
         borderRadius: BorderRadius.circular(12),
       ),
       child: GridView.builder(
@@ -277,8 +274,8 @@ class _DashboardPageState extends State<DashboardPage> {
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 4,
           childAspectRatio: 0.7,
-          crossAxisSpacing: 3,
-          mainAxisSpacing: 12,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 16,
         ),
         itemCount: menuItems.length,
         itemBuilder: (context, index) {
