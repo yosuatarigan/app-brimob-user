@@ -1,3 +1,4 @@
+import 'package:app_brimob_user/slide_show_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/content_model.dart';
@@ -5,14 +6,23 @@ import '../models/content_model.dart';
 class FirebaseService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static final CollectionReference _slideshowCollection = _firestore.collection(
+    'slideshow',
+  );
 
   // Auth Methods
   static User? get currentUser => _auth.currentUser;
   static bool get isLoggedIn => _auth.currentUser != null;
 
-  static Future<UserCredential?> signInWithEmail(String email, String password) async {
+  static Future<UserCredential?> signInWithEmail(
+    String email,
+    String password,
+  ) async {
     try {
-      return await _auth.signInWithEmailAndPassword(email: email, password: password);
+      return await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
     } catch (e) {
       throw Exception('Login failed: ${e.toString()}');
     }
@@ -22,15 +32,38 @@ class FirebaseService {
     await _auth.signOut();
   }
 
+  static Future<List<SlideshowItem>> getSlideshowImages() async {
+    try {
+      final querySnapshot =
+          await _slideshowCollection
+              .where('isActive', isEqualTo: true)
+              .orderBy('order')
+              .get();
+
+      return querySnapshot.docs
+          .map(
+            (doc) => SlideshowItem.fromJson({
+              ...doc.data() as Map<String, dynamic>,
+              'id': doc.id,
+            }),
+          )
+          .toList();
+    } catch (e) {
+      print('Error getting slideshow images: $e');
+      return [];
+    }
+  }
+
   // Content Methods
   static Future<List<ContentModel>> getPublicContent() async {
     try {
-      final snapshot = await _firestore
-          .collection('content')
-          .where('isPublic', isEqualTo: true)
-          .where('isPublished', isEqualTo: true)
-          .orderBy('createdAt', descending: true)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('content')
+              .where('isPublic', isEqualTo: true)
+              .where('isPublished', isEqualTo: true)
+              .orderBy('createdAt', descending: true)
+              .get();
 
       return snapshot.docs
           .map((doc) => ContentModel.fromMap(doc.data(), doc.id))
@@ -43,17 +76,21 @@ class FirebaseService {
   // Method lama - untuk single content (deprecated)
   static Future<ContentModel?> getContentByCategory(String category) async {
     try {
-      final snapshot = await _firestore
-          .collection('content')
-          .where('category', isEqualTo: category)
-          .where('isPublic', isEqualTo: true)
-          .where('isPublished', isEqualTo: true)
-          .orderBy('createdAt', descending: true)
-          .limit(1)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('content')
+              .where('category', isEqualTo: category)
+              .where('isPublic', isEqualTo: true)
+              .where('isPublished', isEqualTo: true)
+              .orderBy('createdAt', descending: true)
+              .limit(1)
+              .get();
 
       if (snapshot.docs.isNotEmpty) {
-        return ContentModel.fromMap(snapshot.docs.first.data(), snapshot.docs.first.id);
+        return ContentModel.fromMap(
+          snapshot.docs.first.data(),
+          snapshot.docs.first.id,
+        );
       }
       return null;
     } catch (e) {
@@ -62,15 +99,18 @@ class FirebaseService {
   }
 
   // Method baru - untuk multiple content berdasarkan kategori
-  static Future<List<ContentModel>> getContentsByCategory(String category) async {
+  static Future<List<ContentModel>> getContentsByCategory(
+    String category,
+  ) async {
     try {
-      final snapshot = await _firestore
-          .collection('content')
-          .where('category', isEqualTo: category)
-          .where('isPublic', isEqualTo: true)
-          .where('isPublished', isEqualTo: true)
-          .orderBy('createdAt', descending: true)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('content')
+              .where('category', isEqualTo: category)
+              .where('isPublic', isEqualTo: true)
+              .where('isPublished', isEqualTo: true)
+              .orderBy('createdAt', descending: true)
+              .get();
 
       return snapshot.docs
           .map((doc) => ContentModel.fromMap(doc.data(), doc.id))
@@ -81,7 +121,9 @@ class FirebaseService {
   }
 
   // Method untuk BINKAR content (memerlukan autentikasi)
-  static Future<List<ContentModel>> getBinkarContentsByCategory(String category) async {
+  static Future<List<ContentModel>> getBinkarContentsByCategory(
+    String category,
+  ) async {
     try {
       // Cek apakah user memiliki akses BINKAR
       final hasAccess = await hasAccessToBinkar();
@@ -89,12 +131,13 @@ class FirebaseService {
         throw Exception('Access denied: BINKAR access required');
       }
 
-      final snapshot = await _firestore
-          .collection('content')
-          .where('category', isEqualTo: category)
-          .where('isPublished', isEqualTo: true)
-          .orderBy('createdAt', descending: true)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('content')
+              .where('category', isEqualTo: category)
+              .where('isPublished', isEqualTo: true)
+              .orderBy('createdAt', descending: true)
+              .get();
 
       return snapshot.docs
           .map((doc) => ContentModel.fromMap(doc.data(), doc.id))
@@ -107,10 +150,7 @@ class FirebaseService {
   // Method untuk mendapatkan content berdasarkan ID
   static Future<ContentModel?> getContentById(String contentId) async {
     try {
-      final doc = await _firestore
-          .collection('content')
-          .doc(contentId)
-          .get();
+      final doc = await _firestore.collection('content').doc(contentId).get();
 
       if (doc.exists) {
         return ContentModel.fromMap(doc.data()!, doc.id);
@@ -125,27 +165,31 @@ class FirebaseService {
   static Future<List<ContentModel>> searchContent(String query) async {
     try {
       // Search by title
-      final titleSnapshot = await _firestore
-          .collection('content')
-          .where('isPublic', isEqualTo: true)
-          .where('isPublished', isEqualTo: true)
-          .orderBy('title')
-          .startAt([query])
-          .endAt([query + '\uf8ff'])
-          .get();
+      final titleSnapshot =
+          await _firestore
+              .collection('content')
+              .where('isPublic', isEqualTo: true)
+              .where('isPublished', isEqualTo: true)
+              .orderBy('title')
+              .startAt([query])
+              .endAt([query + '\uf8ff'])
+              .get();
 
       // Search by content (simple contains - note: ini tidak efisien untuk database besar)
-      final contentSnapshot = await _firestore
-          .collection('content')
-          .where('isPublic', isEqualTo: true)
-          .where('isPublished', isEqualTo: true)
-          .get();
+      final contentSnapshot =
+          await _firestore
+              .collection('content')
+              .where('isPublic', isEqualTo: true)
+              .where('isPublished', isEqualTo: true)
+              .get();
 
       List<ContentModel> results = [];
-      
+
       // Add title matches
       results.addAll(
-        titleSnapshot.docs.map((doc) => ContentModel.fromMap(doc.data(), doc.id))
+        titleSnapshot.docs.map(
+          (doc) => ContentModel.fromMap(doc.data(), doc.id),
+        ),
       );
 
       // Add content matches (filter manually)
@@ -153,8 +197,8 @@ class FirebaseService {
           .where((doc) {
             final data = doc.data();
             final content = data['content']?.toString().toLowerCase() ?? '';
-            return content.contains(query.toLowerCase()) && 
-                   !results.any((r) => r.id == doc.id); // Avoid duplicates
+            return content.contains(query.toLowerCase()) &&
+                !results.any((r) => r.id == doc.id); // Avoid duplicates
           })
           .map((doc) => ContentModel.fromMap(doc.data(), doc.id));
 
@@ -169,13 +213,14 @@ class FirebaseService {
   // Method untuk mendapatkan content terbaru
   static Future<List<ContentModel>> getLatestContent({int limit = 10}) async {
     try {
-      final snapshot = await _firestore
-          .collection('content')
-          .where('isPublic', isEqualTo: true)
-          .where('isPublished', isEqualTo: true)
-          .orderBy('createdAt', descending: true)
-          .limit(limit)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('content')
+              .where('isPublic', isEqualTo: true)
+              .where('isPublished', isEqualTo: true)
+              .orderBy('createdAt', descending: true)
+              .limit(limit)
+              .get();
 
       return snapshot.docs
           .map((doc) => ContentModel.fromMap(doc.data(), doc.id))
@@ -188,10 +233,7 @@ class FirebaseService {
   // Method untuk increment view count
   static Future<void> incrementContentView(String contentId) async {
     try {
-      await _firestore
-          .collection('content')
-          .doc(contentId)
-          .update({
+      await _firestore.collection('content').doc(contentId).update({
         'viewCount': FieldValue.increment(1),
         'lastViewed': FieldValue.serverTimestamp(),
       });
@@ -204,10 +246,8 @@ class FirebaseService {
   // Galeri Methods
   static Future<List<GaleriModel>> getGaleriSatuan() async {
     try {
-      final snapshot = await _firestore
-          .collection('galeri')
-          .orderBy('order')
-          .get();
+      final snapshot =
+          await _firestore.collection('galeri').orderBy('order').get();
 
       return snapshot.docs
           .map((doc) => GaleriModel.fromMap(doc.data(), doc.id))
@@ -230,13 +270,11 @@ class FirebaseService {
   // User Methods
   static Future<bool> hasAccessToBinkar() async {
     if (!isLoggedIn) return false;
-    
+
     try {
-      final userDoc = await _firestore
-          .collection('users')
-          .doc(currentUser!.uid)
-          .get();
-      
+      final userDoc =
+          await _firestore.collection('users').doc(currentUser!.uid).get();
+
       if (userDoc.exists) {
         final userData = userDoc.data()!;
         return userData['role'] == 'binkar' || userData['role'] == 'admin';
@@ -249,13 +287,11 @@ class FirebaseService {
 
   static Future<Map<String, dynamic>?> getUserProfile() async {
     if (!isLoggedIn) return null;
-    
+
     try {
-      final userDoc = await _firestore
-          .collection('users')
-          .doc(currentUser!.uid)
-          .get();
-      
+      final userDoc =
+          await _firestore.collection('users').doc(currentUser!.uid).get();
+
       return userDoc.exists ? userDoc.data() : null;
     } catch (e) {
       return null;
@@ -263,13 +299,14 @@ class FirebaseService {
   }
 
   // Analytics Methods
-  static Future<void> logUserActivity(String activity, Map<String, dynamic>? data) async {
+  static Future<void> logUserActivity(
+    String activity,
+    Map<String, dynamic>? data,
+  ) async {
     if (!isLoggedIn) return;
-    
+
     try {
-      await _firestore
-          .collection('user_activity')
-          .add({
+      await _firestore.collection('user_activity').add({
         'userId': currentUser!.uid,
         'activity': activity,
         'data': data ?? {},

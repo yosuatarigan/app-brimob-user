@@ -99,7 +99,7 @@ class AdminMenus {
     },
   ];
 
-  static const List<Map<String, dynamic>> adminMenus = [
+  static List<Map<String, dynamic>> adminMenus = [
     {
       'id': 'content_management',
       'title': 'Content Management',
@@ -130,6 +130,14 @@ class AdminMenus {
       'imageUrl':
           'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=200&fit=crop',
       'route': '/gallery-management',
+    },
+    {
+      'id': 'slideshow_management',
+      'title': 'SLIDESHOW',
+      'subtitle': 'Kelola slideshow dashboard',
+      'icon': Icons.slideshow,
+      'color': AdminColors.adminPurple,
+      'imageUrl': AdminImages.slideshowManagement, // Add appropriate image URL
     },
   ];
 
@@ -197,6 +205,8 @@ class AdminImages {
       'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop';
   static const String mediaLibrary =
       'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=400&fit=crop';
+  static const String slideshowManagement =
+      'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=400&fit=crop';
   static const String analytics =
       'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop';
 

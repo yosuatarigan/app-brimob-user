@@ -2,6 +2,7 @@ import 'package:app_brimob_user/libadmin/admin_constant.dart';
 import 'package:app_brimob_user/libadmin/models/admin_model.dart';
 import 'package:app_brimob_user/libadmin/screens/content_managament_page.dart';
 import 'package:app_brimob_user/libadmin/screens/galery_management_page.dart';
+import 'package:app_brimob_user/libadmin/screens/slide_show_management.dart';
 import 'package:app_brimob_user/libadmin/widget/admin_witget.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -911,7 +912,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
       case 'gallery_management':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) =>  GalleryManagementPage()),
+          MaterialPageRoute(builder: (context) => GalleryManagementPage()),
+        );
+        break;
+      case 'slideshow_management': // Add this case
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SlideshowManagementPage(),
+          ),
         );
         break;
       default:
