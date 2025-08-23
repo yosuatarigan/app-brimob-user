@@ -27,14 +27,13 @@ class _DashboardPageState extends State<DashboardPage> {
           onRefresh: _refreshData,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(AppSizes.paddingM),
+            // padding: const EdgeInsets.all(AppSizes.paddingM),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeader(),
                 _buildGaleriSatuan(),
 
-                const SizedBox(height: AppSizes.paddingM),
                 _buildMenuGrid(),
                 const SizedBox(height: AppSizes.paddingXL),
                 _buildPedomanSection(),
@@ -353,42 +352,42 @@ class _DashboardPageState extends State<DashboardPage> {
         'description':
             'Pedoman hidup bagi setiap anggota Polri yang terdiri dari tiga bagian utama.',
         'id': 'tri_brata',
-        'assetPath': 'assets/tri_brata.png',
+        'assetPath': 'assets/tribrata.png',
       },
       {
         'title': 'Catur Prasetya',
         'description':
             'Empat janji kerja anggota Polri dalam melaksanakan tugas kepolisian.',
         'id': 'catur_prasetya',
-        'assetPath': 'assets/catur_prasetya.png',
+        'assetPath': 'assets/tribrata.png',
       },
       {
         'title': 'Panca Prasetya',
         'description':
             'Lima prinsip khusus untuk anggota Korps Brimob Polri sebagai pasukan elite.',
         'id': 'panca_prasetya',
-        'assetPath': 'assets/panca_prasetya.png',
+        'assetPath': 'assets/brimob.png',
       },
       {
         'title': 'Sapta Marga',
         'description':
             'Tujuh pedoman hidup prajurit yang diadopsi dalam lingkungan Brimob.',
         'id': 'sapta_marga',
-        'assetPath': 'assets/sapta_marga.png',
+        'assetPath': 'assets/brimob.png',
       },
       {
         'title': 'Asta Gatra',
         'description':
             'Delapan unsur kekuatan nasional sebagai dasar ketahanan nasional Indonesia.',
         'id': 'asta_gatra',
-        'assetPath': 'assets/asta_gatra.png',
+        'assetPath': 'assets/brimob.png',
       },
       {
         'title': 'Pancasila Prasetya',
         'description':
             'Sumpah setia kepada dasar negara Pancasila sebagai panduan moral dan etika.',
         'id': 'pancasila_prasetya',
-        'assetPath': 'assets/pancasila_prasetya.png',
+        'assetPath': 'assets/korpri.png',
       },
     ];
 
@@ -457,13 +456,6 @@ class _DashboardPageState extends State<DashboardPage> {
                     width: 32,
                     height: 32,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Icon(
-                        _getPedomanIcon(item['id']!),
-                        color: _getPedomanColor(item['id']!),
-                        size: 24,
-                      );
-                    },
                   ),
                 ),
               ),
