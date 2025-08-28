@@ -180,7 +180,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
     return Container(
       width: double.infinity,
-      height: 230,
+      height: 260,
       child: Stack(
         children: [
           // PageView for slideshow
@@ -446,9 +446,9 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildSectionTitle(String title) {
     return Center(
       child: Text(
-        title,
+        title.toUpperCase(),
         style: GoogleFonts.roboto(
-          fontSize: 18,
+          fontSize: 14,
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
@@ -518,7 +518,7 @@ class _DashboardPageState extends State<DashboardPage> {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
-              childAspectRatio: 0.85,
+              childAspectRatio: 1,
               crossAxisSpacing: 30,
               mainAxisSpacing: 0,
             ),
@@ -543,8 +543,8 @@ class _DashboardPageState extends State<DashboardPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 60,
-              height: 60,
+              width: 50,
+              height: 50,
               child: Image.asset(
                 item['logo'],
                 fit: BoxFit.contain,
@@ -769,7 +769,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Pedoman, Falsafah & Doktrin'),
+        _buildSectionTitle('Pedoman, Falsafah & Doktrin Korbrimob Polri'),
         const SizedBox(height: AppSizes.paddingM),
         Container(
           padding: const EdgeInsets.all(20),
