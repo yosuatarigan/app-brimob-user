@@ -19,7 +19,7 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   bool _isLoading = false;
-  
+
   // Slideshow variables
   final PageController _pageController = PageController();
   List<SlideshowItem> _slideshowImages = [];
@@ -46,7 +46,7 @@ class _DashboardPageState extends State<DashboardPage> {
         _slideshowImages = images;
         _isLoadingSlideshow = false;
       });
-      
+
       // Start auto-slide if images are available
       if (_slideshowImages.isNotEmpty) {
         _startAutoSlide();
@@ -96,10 +96,10 @@ class _DashboardPageState extends State<DashboardPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Image.asset('assets/welcome.png'),
                 _buildSlideshowHeader(),
                 _buildGaleriSatuan(),
                 _buildMenuGrid(),
-                const SizedBox(height: AppSizes.paddingXL),
                 _buildPedomanSection(),
               ],
             ),
@@ -118,10 +118,7 @@ class _DashboardPageState extends State<DashboardPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              const Color(0xFF6D4C41),
-              AppColors.primaryBlue,
-            ],
+            colors: [const Color(0xFF6D4C41), AppColors.primaryBlue],
           ),
         ),
         child: const Center(
@@ -134,10 +131,7 @@ class _DashboardPageState extends State<DashboardPage> {
               SizedBox(height: 16),
               Text(
                 'Loading Slideshow...',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 14),
               ),
             ],
           ),
@@ -197,7 +191,7 @@ class _DashboardPageState extends State<DashboardPage> {
               return _buildSlideItem(slide);
             },
           ),
-          
+
           // Dots indicator (only show if more than 1 image)
           if (_slideshowImages.length > 1)
             Positioned(
@@ -215,24 +209,26 @@ class _DashboardPageState extends State<DashboardPage> {
                     margin: const EdgeInsets.symmetric(horizontal: 3),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(4),
-                      color: _currentSlide == index
-                          ? Colors.white
-                          : Colors.white.withOpacity(0.4),
-                      boxShadow: _currentSlide == index
-                          ? [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
+                      color:
+                          _currentSlide == index
+                              ? Colors.white
+                              : Colors.white.withOpacity(0.4),
+                      boxShadow:
+                          _currentSlide == index
+                              ? [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                              : null,
                     ),
                   ),
                 ),
               ),
             ),
-          
+
           // Navigation arrows (only show if more than 1 image)
           if (_slideshowImages.length > 1) ...[
             // Previous button
@@ -243,9 +239,10 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Center(
                 child: GestureDetector(
                   onTap: () {
-                    final prevSlide = _currentSlide == 0 
-                        ? _slideshowImages.length - 1 
-                        : _currentSlide - 1;
+                    final prevSlide =
+                        _currentSlide == 0
+                            ? _slideshowImages.length - 1
+                            : _currentSlide - 1;
                     _pageController.animateToPage(
                       prevSlide,
                       duration: const Duration(milliseconds: 300),
@@ -274,7 +271,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ),
             ),
-            
+
             // Next button
             Positioned(
               right: 16,
@@ -283,7 +280,8 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Center(
                 child: GestureDetector(
                   onTap: () {
-                    final nextSlide = (_currentSlide + 1) % _slideshowImages.length;
+                    final nextSlide =
+                        (_currentSlide + 1) % _slideshowImages.length;
                     _pageController.animateToPage(
                       nextSlide,
                       duration: const Duration(milliseconds: 300),
@@ -323,7 +321,6 @@ class _DashboardPageState extends State<DashboardPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '${_currentSlide + 1} / ${_slideshowImages.length}',
@@ -344,101 +341,106 @@ class _DashboardPageState extends State<DashboardPage> {
     return Container(
       width: double.infinity,
       height: 250,
-      child: slide.imageUrl.startsWith('http')
-          ? CachedNetworkImage(
-              imageUrl: slide.imageUrl,
-              fit: BoxFit.fill,
-              placeholder: (context, url) => Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primaryBlue,
-                      const Color(0xFF6D4C41),
-                    ],
-                  ),
-                ),
-                child: const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        'Loading image...',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
+      child:
+          slide.imageUrl.startsWith('http')
+              ? CachedNetworkImage(
+                imageUrl: slide.imageUrl,
+                fit: BoxFit.fill,
+                placeholder:
+                    (context, url) => Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.primaryBlue,
+                            const Color(0xFF6D4C41),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              errorWidget: (context, url, error) => Container(
-                color: AppColors.primaryBlue,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: Colors.white.withOpacity(0.7),
-                        size: 48,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Failed to load image',
-                        style: GoogleFonts.roboto(
-                          color: Colors.white,
-                          fontSize: 16,
+                      child: const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 12),
+                            Text(
+                              'Loading image...',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            )
-          : Image.asset(
-              slide.imageUrl,
-              fit: BoxFit.fill,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: AppColors.primaryBlue,
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.image_not_supported,
-                          color: Colors.white.withOpacity(0.7),
-                          size: 48,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'SDM Korbrimob Polri',
-                          style: GoogleFonts.roboto(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'Sistem Data Manajemen',
-                          style: GoogleFonts.roboto(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
-                );
-              },
-            ),
+                errorWidget:
+                    (context, url, error) => Container(
+                      color: AppColors.primaryBlue,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.white.withOpacity(0.7),
+                              size: 48,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Failed to load image',
+                              style: GoogleFonts.roboto(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+              )
+              : Image.asset(
+                slide.imageUrl,
+                fit: BoxFit.fill,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: AppColors.primaryBlue,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.image_not_supported,
+                            color: Colors.white.withOpacity(0.7),
+                            size: 48,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'SDM Korbrimob Polri',
+                            style: GoogleFonts.roboto(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Sistem Data Manajemen',
+                            style: GoogleFonts.roboto(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
     );
   }
 
@@ -452,6 +454,7 @@ class _DashboardPageState extends State<DashboardPage> {
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
+        textAlign: TextAlign.center,
       ),
     );
   }
@@ -500,7 +503,6 @@ class _DashboardPageState extends State<DashboardPage> {
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
         color: const Color(0xFF6D4C41),
-        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
@@ -519,7 +521,7 @@ class _DashboardPageState extends State<DashboardPage> {
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               childAspectRatio: 1,
-              crossAxisSpacing: 30,
+              crossAxisSpacing: 60,
               mainAxisSpacing: 0,
             ),
             itemCount: galeriItems.length,
@@ -640,7 +642,6 @@ class _DashboardPageState extends State<DashboardPage> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.black,
-        borderRadius: BorderRadius.circular(12),
       ),
       child: GridView.builder(
         shrinkWrap: true,
@@ -769,28 +770,31 @@ class _DashboardPageState extends State<DashboardPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Pedoman, Falsafah & Doktrin Korbrimob Polri'),
-        const SizedBox(height: AppSizes.paddingM),
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: AppColors.primaryBlue,
-            borderRadius: BorderRadius.circular(12),
           ),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              childAspectRatio: 0.9,
-              crossAxisSpacing: 32,
-              mainAxisSpacing: 0,
-            ),
-            itemCount: pedomanItems.length,
-            itemBuilder: (context, index) {
-              final item = pedomanItems[index];
-              return _buildPedomanItem(item);
-            },
+          child: Column(
+            children: [
+              _buildSectionTitle('Pedoman, Falsafah & Doktrin Korbrimob Polri'),
+              const SizedBox(height: AppSizes.paddingM),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  childAspectRatio: 0.9,
+                  crossAxisSpacing: 32,
+                  mainAxisSpacing: 0,
+                ),
+                itemCount: pedomanItems.length,
+                itemBuilder: (context, index) {
+                  final item = pedomanItems[index];
+                  return _buildPedomanItem(item);
+                },
+              ),
+            ],
           ),
         ),
       ],
@@ -856,13 +860,14 @@ class _DashboardPageState extends State<DashboardPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PedomanDetailPage(
-          title: item['title']!,
-          content: _getPedomanContent(item['id']!),
-          color: _getPedomanColor(item['id']!),
-          icon: _getPedomanIcon(item['id']!),
-          assetPath: item['assetPath']!,
-        ),
+        builder:
+            (context) => PedomanDetailPage(
+              title: item['title']!,
+              content: _getPedomanContent(item['id']!),
+              color: _getPedomanColor(item['id']!),
+              icon: _getPedomanIcon(item['id']!),
+              assetPath: item['assetPath']!,
+            ),
       ),
     );
   }
@@ -1041,18 +1046,19 @@ Sumpah setia kepada dasar negara Pancasila sebagai panduan moral dan etika:
   void _showAccessDeniedDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Akses Ditolak'),
-        content: const Text(
-          'Anda tidak memiliki akses ke menu BINKAR. Silakan hubungi administrator.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Akses Ditolak'),
+            content: const Text(
+              'Anda tidak memiliki akses ke menu BINKAR. Silakan hubungi administrator.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }
