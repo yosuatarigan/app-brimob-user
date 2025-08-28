@@ -8,7 +8,7 @@ import '../services/firebase_service.dart';
 import 'login_page.dart';
 import 'content_page.dart';
 import 'galeri_page.dart';
-import 'pedoman_page.dart';
+import 'pedoman_detail_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -319,9 +319,7 @@ class _DashboardPageState extends State<DashboardPage> {
               right: 16,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                ),
+                decoration: BoxDecoration(color: Colors.black.withOpacity(0.5)),
                 child: Text(
                   '${_currentSlide + 1} / ${_slideshowImages.length}',
                   style: GoogleFonts.roboto(
@@ -501,9 +499,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF6D4C41),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFF6D4C41)),
       child: Column(
         children: [
           Text(
@@ -640,9 +636,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.black,
-      ),
+      decoration: BoxDecoration(color: Colors.black),
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -725,45 +719,45 @@ class _DashboardPageState extends State<DashboardPage> {
     final List<Map<String, String>> pedomanItems = [
       {
         'title': 'Tri Brata',
-        'description':
-            'Pedoman hidup bagi setiap anggota Polri yang terdiri dari tiga bagian utama.',
+        'description': 'Pedoman hidup anggota Polri',
         'id': 'tri_brata',
         'assetPath': 'assets/tribrata.png',
+        'imageContent': 'assets/dc/tribrata.png',
       },
       {
         'title': 'Catur Prasetya',
-        'description':
-            'Empat janji kerja anggota Polri dalam melaksanakan tugas kepolisian.',
+        'description': 'Empat janji kerja anggota Polri',
         'id': 'catur_prasetya',
         'assetPath': 'assets/tribrata.png',
+        'imageContent': 'assets/dc/catutprasetya.png',
       },
       {
         'title': 'Panca Prasetya',
-        'description':
-            'Lima prinsip khusus untuk anggota Korps Brimob Polri sebagai pasukan elite.',
+        'description': 'Lima prinsip khusus Korbrimob',
         'id': 'panca_prasetya',
         'assetPath': 'assets/brimob.png',
+        'imageContent': 'assets/dc/panca.png',
       },
       {
-        'title': 'Sapta Marga',
-        'description':
-            'Tujuh pedoman hidup prajurit yang diadopti dalam lingkungan Brimob.',
-        'id': 'sapta_marga',
+        'title': 'Etika Profesi',
+        'description': 'Etika profesi Brimob',
+        'id': 'etika_profesi',
         'assetPath': 'assets/brimob.png',
+        'imageContent': 'assets/dc/etika.png',
       },
       {
-        'title': 'Asta Gatra',
-        'description':
-            'Delapan unsur kekuatan nasional sebagai dasar ketahanan nasional Indonesia.',
-        'id': 'asta_gatra',
+        'title': 'Ikrar Brimob',
+        'description': 'Ikrar anggota Brimob',
+        'id': 'ikrar_brimob',
         'assetPath': 'assets/brimob.png',
+        'imageContent': 'assets/dc/ikrar.png',
       },
       {
-        'title': 'Pancasila Prasetya',
-        'description':
-            'Sumpah setia kepada dasar negara Pancasila sebagai panduan moral dan etika.',
-        'id': 'pancasila_prasetya',
+        'title': 'Jati Diri Brimob',
+        'description': 'Jati diri Korbrimob Polri',
+        'id': 'jati_diri',
         'assetPath': 'assets/korpri.png',
+        'imageContent': 'assets/dc/jatidiri.png',
       },
     ];
 
@@ -772,9 +766,7 @@ class _DashboardPageState extends State<DashboardPage> {
       children: [
         Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.primaryBlue,
-          ),
+          decoration: BoxDecoration(color: AppColors.primaryBlue),
           child: Column(
             children: [
               _buildSectionTitle('Pedoman, Falsafah & Doktrin Korbrimob Polri'),
@@ -786,7 +778,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   crossAxisCount: 3,
                   childAspectRatio: 0.9,
                   crossAxisSpacing: 32,
-                  mainAxisSpacing: 0,
+                  mainAxisSpacing: 12,
                 ),
                 itemCount: pedomanItems.length,
                 itemBuilder: (context, index) {
@@ -863,10 +855,11 @@ class _DashboardPageState extends State<DashboardPage> {
         builder:
             (context) => PedomanDetailPage(
               title: item['title']!,
-              content: _getPedomanContent(item['id']!),
+              content: item['imageContent']!, // Pass image path instead of text
               color: _getPedomanColor(item['id']!),
               icon: _getPedomanIcon(item['id']!),
               assetPath: item['assetPath']!,
+              isImageContent: true, // Flag untuk indicate ini image content
             ),
       ),
     );
@@ -880,11 +873,11 @@ class _DashboardPageState extends State<DashboardPage> {
         return AppColors.red;
       case 'panca_prasetya':
         return AppColors.green;
-      case 'sapta_marga':
+      case 'etika_profesi':
         return AppColors.orange;
-      case 'asta_gatra':
+      case 'ikrar_brimob':
         return AppColors.purple;
-      case 'pancasila_prasetya':
+      case 'jati_diri':
         return AppColors.indigo;
       default:
         return AppColors.darkGray;
@@ -899,12 +892,12 @@ class _DashboardPageState extends State<DashboardPage> {
         return Icons.favorite;
       case 'panca_prasetya':
         return Icons.security;
-      case 'sapta_marga':
+      case 'etika_profesi':
+        return Icons.school;
+      case 'ikrar_brimob':
         return Icons.military_tech;
-      case 'asta_gatra':
-        return Icons.account_balance;
-      case 'pancasila_prasetya':
-        return Icons.flag;
+      case 'jati_diri':
+        return Icons.badge;
       default:
         return Icons.book;
     }
