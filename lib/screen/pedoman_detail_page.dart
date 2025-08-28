@@ -6,7 +6,6 @@ import '../constants/app_constants.dart';
 class PedomanDetailPage extends StatelessWidget {
   final String title;
   final String content; // Sekarang ini akan berisi path ke gambar
-  final Color color;
   final IconData icon;
   final String assetPath;
   final bool isImageContent; // Flag untuk indicate content adalah gambar
@@ -15,7 +14,6 @@ class PedomanDetailPage extends StatelessWidget {
     super.key,
     required this.title,
     required this.content,
-    required this.color,
     required this.icon,
     required this.assetPath,
     this.isImageContent = true, // Default true untuk gambar
@@ -26,8 +24,8 @@ class PedomanDetailPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.lightGray,
       appBar: AppBar(
-        backgroundColor: color,
-        foregroundColor: AppColors.white,
+        // backgroundColor: Colors.white,
+        // foregroundColor: AppColors.white,
         elevation: 0,
         title: Text(
           title,
@@ -45,7 +43,7 @@ class PedomanDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(),
+            // _buildHeader(),
             _buildContent(context),
           ],
         ),
@@ -66,7 +64,6 @@ class PedomanDetailPage extends StatelessWidget {
           width: width,
           height: height,
           fit: BoxFit.contain,
-          colorFilter: const ColorFilter.mode(AppColors.white, BlendMode.srcIn),
           placeholderBuilder: (context) =>
               Icon(fallbackIcon, size: width * 0.7, color: AppColors.white),
         );
@@ -76,7 +73,6 @@ class PedomanDetailPage extends StatelessWidget {
           width: width,
           height: height,
           fit: BoxFit.contain,
-          color: AppColors.white,
           errorBuilder: (context, error, stackTrace) =>
               Icon(fallbackIcon, size: width * 0.7, color: AppColors.white),
         );
@@ -91,11 +87,11 @@ class PedomanDetailPage extends StatelessWidget {
       width: double.infinity,
       height: 120,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [color, color.withOpacity(0.8)],
-        ),
+        // gradient: LinearGradient(
+        //   begin: Alignment.topLeft,
+        //   end: Alignment.bottomRight,
+        //   colors: [color, color.withOpacity(0.8)],
+        // ),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),
@@ -135,7 +131,6 @@ class PedomanDetailPage extends StatelessWidget {
                     style: GoogleFonts.roboto(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.white,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -144,7 +139,6 @@ class PedomanDetailPage extends StatelessWidget {
                     'Korbrimob Polri',
                     style: GoogleFonts.roboto(
                       fontSize: 14,
-                      color: AppColors.white.withOpacity(0.9),
                       fontWeight: FontWeight.w400,
                     ),
                   ),
@@ -158,177 +152,72 @@ class PedomanDetailPage extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              // Header card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      icon,
-                      color: color,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Pedoman dan Doktrin',
-                      style: GoogleFonts.roboto(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: color,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              // Content area
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: _buildImageContent(context),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        _buildImageContent(context),
+        const SizedBox(height: 20),
+      ],
     );
   }
 
   Widget _buildImageContent(BuildContext context) {
     if (!isImageContent) {
       // Fallback untuk text content jika diperlukan
-      return Text(
-        content,
-        style: GoogleFonts.roboto(
-          fontSize: 15,
-          color: AppColors.darkNavy,
-          height: 1.6,
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: Text(
+          content,
+          style: GoogleFonts.roboto(
+            fontSize: 15,
+            color: AppColors.darkNavy,
+            height: 1.6,
+          ),
         ),
       );
     }
 
-    return Column(
-      children: [
-        // Image container with better styling
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              content,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  height: 300,
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: color.withOpacity(0.3),
-                      width: 2,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.image_not_supported,
-                        size: 48,
-                        color: color.withOpacity(0.6),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Gambar tidak dapat dimuat',
-                        style: GoogleFonts.roboto(
-                          fontSize: 16,
-                          color: color,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Mohon periksa file gambar',
-                        style: GoogleFonts.roboto(
-                          fontSize: 14,
-                          color: AppColors.darkGray,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        
-        const SizedBox(height: 20),
-        
-        // Info footer
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.lightGray.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: color.withOpacity(0.2),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.info_outline,
-                size: 20,
-                color: color,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Ketuk gambar untuk memperbesar tampilan',
+    return Container(
+      width: double.infinity,
+      child: Image.asset(
+        content,
+        fit: BoxFit.contain,
+        width: double.infinity,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            height: 400,
+            width: double.infinity,
+            // color: color.withOpacity(0.1),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.image_not_supported,
+                  size: 64,
+                  // color: color.withOpacity(0.6),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Gambar tidak dapat dimuat',
                   style: GoogleFonts.roboto(
-                    fontSize: 12,
-                    color: AppColors.darkGray,
-                    fontStyle: FontStyle.italic,
+                    fontSize: 18,
+                    // color: color,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-      ],
+                const SizedBox(height: 8),
+                Text(
+                  'Mohon periksa file gambar',
+                  style: GoogleFonts.roboto(
+                    fontSize: 14,
+                    color: AppColors.darkGray,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

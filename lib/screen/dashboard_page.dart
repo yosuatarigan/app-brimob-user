@@ -856,7 +856,7 @@ class _DashboardPageState extends State<DashboardPage> {
             (context) => PedomanDetailPage(
               title: item['title']!,
               content: item['imageContent']!, // Pass image path instead of text
-              color: _getPedomanColor(item['id']!),
+              // color: _getPedomanColor(item['id']!),
               icon: _getPedomanIcon(item['id']!),
               assetPath: item['assetPath']!,
               isImageContent: true, // Flag untuk indicate ini image content
