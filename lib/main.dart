@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'constants/app_constants.dart';
+import 'widgets/auth_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -74,7 +75,11 @@ class MyApp extends StatelessWidget {
           fillColor: AppColors.white,
         ),
       ),
-      home: const SplashPage(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const SplashPage(),
+        '/auth': (context) => AuthWrapper(),
+      },
     );
   }
 }

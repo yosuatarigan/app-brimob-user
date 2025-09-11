@@ -78,28 +78,3 @@ class GaleriModel {
   }
 }
 
-class UserModel {
-  final String uid;
-  final String email;
-  final String role;
-  final bool isActive;
-  final DateTime createdAt;
-
-  UserModel({
-    required this.uid,
-    required this.email,
-    required this.role,
-    required this.isActive,
-    required this.createdAt,
-  });
-
-  factory UserModel.fromMap(Map<String, dynamic> map, String uid) {
-    return UserModel(
-      uid: uid,
-      email: map['email'] ?? '',
-      role: map['role'] ?? 'public',
-      isActive: map['isActive'] ?? true,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
-    );
-  }
-}

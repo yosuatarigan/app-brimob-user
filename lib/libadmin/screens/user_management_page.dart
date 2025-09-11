@@ -1,10 +1,11 @@
-import 'package:app_brimob_user/libadmin/admin_constant.dart';
-import 'package:app_brimob_user/libadmin/models/admin_model.dart';
 import 'package:app_brimob_user/libadmin/widget/admin_witget.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../admin_constant.dart';
 import '../services/admin_firebase_service.dart';
+import '../../models/user_model.dart';
+import '../../constants/app_constants.dart';
 
 class UserManagementPage extends StatefulWidget {
   const UserManagementPage({super.key});
@@ -17,17 +18,18 @@ class _UserManagementPageState extends State<UserManagementPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  List<AdminUser> _allUsers = [];
-  List<AdminUser> _filteredUsers = [];
+  List<UserModel> _allUsers = [];
+  List<UserModel> _filteredUsers = [];
   bool _isLoading = true;
   String? _error;
   String _selectedRole = 'all';
+  String _selectedStatus = 'all';
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _loadUsers();
   }
 
@@ -38,7 +40,7 @@ class _UserManagementPageState extends State<UserManagementPage>
         _error = null;
       });
 
-      final users = await AdminFirebaseService.getAllUsers();
+      final users = await AdminFirebaseService.getAllUsersWithApproval();
 
       setState(() {
         _allUsers = users;
@@ -55,16 +57,16 @@ class _UserManagementPageState extends State<UserManagementPage>
 
   void _filterUsers() {
     setState(() {
-      _filteredUsers =
-          _allUsers.where((user) {
-            final matchesRole =
-                _selectedRole == 'all' || user.role == _selectedRole;
-            final matchesSearch =
-                user.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                user.email.toLowerCase().contains(_searchQuery.toLowerCase());
+      _filteredUsers = _allUsers.where((user) {
+        final matchesRole = _selectedRole == 'all' || user.role.name == _selectedRole;
+        final matchesStatus = _selectedStatus == 'all' || user.status.name == _selectedStatus;
+        final matchesSearch =
+            user.fullName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            user.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            user.nrp.toLowerCase().contains(_searchQuery.toLowerCase());
 
-            return matchesRole && matchesSearch;
-          }).toList();
+        return matchesRole && matchesStatus && matchesSearch;
+      }).toList();
     });
   }
 
@@ -99,6 +101,10 @@ class _UserManagementPageState extends State<UserManagementPage>
   }
 
   Widget _buildHeader() {
+    final pendingCount = _allUsers.where((u) => u.status == UserStatus.pending).length;
+    final approvedCount = _allUsers.where((u) => u.status == UserStatus.approved).length;
+    final rejectedCount = _allUsers.where((u) => u.status == UserStatus.rejected).length;
+
     return Container(
       width: double.infinity,
       height: 140,
@@ -113,18 +119,16 @@ class _UserManagementPageState extends State<UserManagementPage>
             width: double.infinity,
             height: double.infinity,
             fit: BoxFit.cover,
-            placeholder:
-                (context, url) => Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(colors: AdminColors.adminGradient),
-                  ),
-                ),
-            errorWidget:
-                (context, url, error) => Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(colors: AdminColors.adminGradient),
-                  ),
-                ),
+            placeholder: (context, url) => Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: AdminColors.adminGradient),
+              ),
+            ),
+            errorWidget: (context, url, error) => Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: AdminColors.adminGradient),
+              ),
+            ),
           ),
 
           // Gradient overlay
@@ -164,6 +168,26 @@ class _UserManagementPageState extends State<UserManagementPage>
                         ),
                       ),
                     ),
+                    if (pendingCount > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.goldYellow,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '$pendingCount pending',
+                          style: GoogleFonts.roboto(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.darkNavy,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: AdminSizes.paddingS),
                     IconButton(
                       onPressed: _loadUsers,
                       icon: const Icon(Icons.refresh, color: Colors.white),
@@ -172,7 +196,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                 ),
                 const Spacer(),
                 Text(
-                  'Kelola pengguna dan akses aplikasi',
+                  'Kelola pengguna dan persetujuan pendaftaran',
                   style: GoogleFonts.roboto(
                     fontSize: 14,
                     color: Colors.white.withOpacity(0.9),
@@ -183,15 +207,11 @@ class _UserManagementPageState extends State<UserManagementPage>
                   children: [
                     _buildQuickStat('Total Users', '${_allUsers.length}'),
                     const SizedBox(width: AdminSizes.paddingL),
-                    _buildQuickStat(
-                      'Active',
-                      '${_allUsers.where((u) => u.isActive).length}',
-                    ),
+                    _buildQuickStat('Pending', '$pendingCount', color: AppColors.goldYellow),
                     const SizedBox(width: AdminSizes.paddingL),
-                    _buildQuickStat(
-                      'BINKAR',
-                      '${_allUsers.where((u) => u.role == 'binkar').length}',
-                    ),
+                    _buildQuickStat('Approved', '$approvedCount', color: AppColors.green),
+                    const SizedBox(width: AdminSizes.paddingL),
+                    _buildQuickStat('Rejected', '$rejectedCount', color: AppColors.red),
                   ],
                 ),
               ],
@@ -202,7 +222,7 @@ class _UserManagementPageState extends State<UserManagementPage>
     );
   }
 
-  Widget _buildQuickStat(String label, String value) {
+  Widget _buildQuickStat(String label, String value, {Color? color}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -211,7 +231,7 @@ class _UserManagementPageState extends State<UserManagementPage>
           style: GoogleFonts.roboto(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: AdminColors.adminGold,
+            color: color ?? AdminColors.adminGold,
           ),
         ),
         Text(
@@ -238,7 +258,7 @@ class _UserManagementPageState extends State<UserManagementPage>
               _filterUsers();
             },
             decoration: InputDecoration(
-              hintText: 'Cari pengguna...',
+              hintText: 'Cari pengguna (nama, email, NRP)...',
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AdminSizes.radiusM),
@@ -255,17 +275,57 @@ class _UserManagementPageState extends State<UserManagementPage>
 
           const SizedBox(height: AdminSizes.paddingM),
 
-          // Role filter
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildRoleChip('all', 'Semua'),
-                _buildRoleChip('admin', 'Admin'),
-                _buildRoleChip('binkar', 'BINKAR'),
-                // _buildRoleChip('public', 'Public'),
-              ],
-            ),
+          // Filters
+          Row(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      Text(
+                        'Role: ',
+                        style: GoogleFonts.roboto(
+                          fontWeight: FontWeight.w600,
+                          color: AdminColors.darkGray,
+                        ),
+                      ),
+                      _buildRoleChip('all', 'Semua'),
+                      ...UserRole.values.map((role) => 
+                        _buildRoleChip(role.name, role.displayName)
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: AdminSizes.paddingS),
+
+          Row(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      Text(
+                        'Status: ',
+                        style: GoogleFonts.roboto(
+                          fontWeight: FontWeight.w600,
+                          color: AdminColors.darkGray,
+                        ),
+                      ),
+                      _buildStatusChip('all', 'Semua'),
+                      ...UserStatus.values.map((status) => 
+                        _buildStatusChip(status.name, status.displayName)
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -291,6 +351,7 @@ class _UserManagementPageState extends State<UserManagementPage>
         labelStyle: GoogleFonts.roboto(
           color: isSelected ? AdminColors.primaryBlue : AdminColors.darkGray,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontSize: 12,
         ),
         side: BorderSide(
           color: isSelected ? AdminColors.primaryBlue : AdminColors.borderColor,
@@ -299,7 +360,39 @@ class _UserManagementPageState extends State<UserManagementPage>
     );
   }
 
+  Widget _buildStatusChip(String statusId, String title) {
+    final isSelected = _selectedStatus == statusId;
+    return Padding(
+      padding: const EdgeInsets.only(right: AdminSizes.paddingS),
+      child: FilterChip(
+        label: Text(title),
+        selected: isSelected,
+        onSelected: (selected) {
+          setState(() {
+            _selectedStatus = statusId;
+          });
+          _filterUsers();
+        },
+        backgroundColor: Colors.white,
+        selectedColor: AdminColors.success.withOpacity(0.1),
+        checkmarkColor: AdminColors.success,
+        labelStyle: GoogleFonts.roboto(
+          color: isSelected ? AdminColors.success : AdminColors.darkGray,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontSize: 12,
+        ),
+        side: BorderSide(
+          color: isSelected ? AdminColors.success : AdminColors.borderColor,
+        ),
+      ),
+    );
+  }
+
   Widget _buildTabBar() {
+    final pendingCount = _allUsers.where((u) => u.status == UserStatus.pending).length;
+    final approvedCount = _allUsers.where((u) => u.status == UserStatus.approved).length;
+    final rejectedCount = _allUsers.where((u) => u.status == UserStatus.rejected).length;
+
     return Container(
       color: Colors.white,
       child: TabBar(
@@ -307,11 +400,38 @@ class _UserManagementPageState extends State<UserManagementPage>
         labelColor: AdminColors.primaryBlue,
         unselectedLabelColor: AdminColors.darkGray,
         indicatorColor: AdminColors.primaryBlue,
-        labelStyle: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-        tabs: const [
-          Tab(text: 'All Users'),
-          Tab(text: 'Active'),
-          Tab(text: 'Inactive'),
+        labelStyle: GoogleFonts.roboto(fontWeight: FontWeight.bold, fontSize: 12),
+        isScrollable: true,
+        tabs: [
+          Tab(text: 'Semua (${_allUsers.length})'),
+          Tab(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Pending'),
+                if (pendingCount > 0) ...[
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.goldYellow,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$pendingCount',
+                      style: GoogleFonts.roboto(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.darkNavy,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Tab(text: 'Approved ($approvedCount)'),
+          Tab(text: 'Rejected ($rejectedCount)'),
           Tab(text: 'Recent'),
         ],
         onTap: (index) {
@@ -321,15 +441,17 @@ class _UserManagementPageState extends State<UserManagementPage>
                 _filteredUsers = _allUsers;
                 break;
               case 1:
-                _filteredUsers = _allUsers.where((u) => u.isActive).toList();
+                _filteredUsers = _allUsers.where((u) => u.status == UserStatus.pending).toList();
                 break;
               case 2:
-                _filteredUsers = _allUsers.where((u) => !u.isActive).toList();
+                _filteredUsers = _allUsers.where((u) => u.status == UserStatus.approved).toList();
                 break;
               case 3:
-                _filteredUsers =
-                    _allUsers
-                      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+                _filteredUsers = _allUsers.where((u) => u.status == UserStatus.rejected).toList();
+                break;
+              case 4:
+                _filteredUsers = List.from(_allUsers)
+                  ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
                 break;
             }
           });
@@ -365,16 +487,17 @@ class _UserManagementPageState extends State<UserManagementPage>
       controller: _tabController,
       children: [
         _buildUserList(_filteredUsers),
-        _buildUserList(_allUsers.where((u) => u.isActive).toList()),
-        _buildUserList(_allUsers.where((u) => !u.isActive).toList()),
+        _buildUserList(_allUsers.where((u) => u.status == UserStatus.pending).toList()),
+        _buildUserList(_allUsers.where((u) => u.status == UserStatus.approved).toList()),
+        _buildUserList(_allUsers.where((u) => u.status == UserStatus.rejected).toList()),
         _buildUserList(
-          _allUsers..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
+          List.from(_allUsers)..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
         ),
       ],
     );
   }
 
-  Widget _buildUserList(List<AdminUser> users) {
+  Widget _buildUserList(List<UserModel> users) {
     return RefreshIndicator(
       onRefresh: _loadUsers,
       child: ListView.builder(
@@ -388,7 +511,7 @@ class _UserManagementPageState extends State<UserManagementPage>
     );
   }
 
-  Widget _buildUserCard(AdminUser user) {
+  Widget _buildUserCard(UserModel user) {
     return Card(
       margin: const EdgeInsets.only(bottom: AdminSizes.paddingM),
       elevation: 4,
@@ -405,18 +528,16 @@ class _UserManagementPageState extends State<UserManagementPage>
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: _getRoleColor(user.role).withOpacity(0.1),
-                  backgroundImage:
-                      user.profileImageUrl != null
-                          ? CachedNetworkImageProvider(user.profileImageUrl!)
-                          : null,
-                  child:
-                      user.profileImageUrl == null
-                          ? Icon(
-                            Icons.person,
-                            size: 30,
-                            color: _getRoleColor(user.role),
-                          )
-                          : null,
+                  backgroundImage: user.photoUrl != null
+                      ? CachedNetworkImageProvider(user.photoUrl!)
+                      : null,
+                  child: user.photoUrl == null
+                      ? Icon(
+                          Icons.person,
+                          size: 30,
+                          color: _getRoleColor(user.role),
+                        )
+                      : null,
                 ),
 
                 const SizedBox(width: AdminSizes.paddingM),
@@ -427,7 +548,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user.name.isNotEmpty ? user.name : 'No Name',
+                        user.displayName,
                         style: GoogleFonts.roboto(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -443,23 +564,28 @@ class _UserManagementPageState extends State<UserManagementPage>
                         ),
                       ),
                       const SizedBox(height: AdminSizes.paddingXS),
+                      Text(
+                        'NRP: ${user.nrp}',
+                        style: GoogleFonts.roboto(
+                          fontSize: 12,
+                          color: AdminColors.darkGray,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: AdminSizes.paddingXS),
                       Row(
                         children: [
                           AdminStatusChip(
-                            text: user.role.toUpperCase(),
+                            text: user.role.displayName,
                             color: _getRoleColor(user.role),
+                            // fontSize: 10,
                           ),
                           const SizedBox(width: AdminSizes.paddingS),
                           AdminStatusChip(
-                            text: user.isActive ? 'Active' : 'Inactive',
-                            color:
-                                user.isActive
-                                    ? AdminColors.success
-                                    : AdminColors.error,
-                            icon:
-                                user.isActive
-                                    ? Icons.check_circle
-                                    : Icons.cancel,
+                            text: user.status.displayName,
+                            color: _getStatusColor(user.status),
+                            icon: _getStatusIcon(user.status),
+                            // fontSize: 10,
                           ),
                         ],
                       ),
@@ -470,57 +596,82 @@ class _UserManagementPageState extends State<UserManagementPage>
                 // Actions menu
                 PopupMenuButton<String>(
                   onSelected: (value) => _handleUserAction(value, user),
-                  itemBuilder:
-                      (context) => [
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit, size: 18),
-                              SizedBox(width: 8),
-                              Text('Edit'),
-                            ],
-                          ),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'view',
+                      child: Row(
+                        children: [
+                          Icon(Icons.visibility, size: 18),
+                          SizedBox(width: 8),
+                          Text('View Details'),
+                        ],
+                      ),
+                    ),
+                    if (user.status == UserStatus.pending) ...[
+                      const PopupMenuItem(
+                        value: 'approve',
+                        child: Row(
+                          children: [
+                            Icon(Icons.check_circle, size: 18, color: Colors.green),
+                            SizedBox(width: 8),
+                            Text('Approve'),
+                          ],
                         ),
-                        PopupMenuItem(
-                          value: user.isActive ? 'deactivate' : 'activate',
-                          child: Row(
-                            children: [
-                              Icon(
-                                user.isActive
-                                    ? Icons.block
-                                    : Icons.check_circle,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(user.isActive ? 'Deactivate' : 'Activate'),
-                            ],
-                          ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'reject',
+                        child: Row(
+                          children: [
+                            Icon(Icons.cancel, size: 18, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Reject'),
+                          ],
                         ),
-                        const PopupMenuItem(
-                          value: 'reset_password',
-                          child: Row(
-                            children: [
-                              Icon(Icons.lock_reset, size: 18),
-                              SizedBox(width: 8),
-                              Text('Reset Password'),
-                            ],
-                          ),
+                      ),
+                    ],
+                    if (user.status == UserStatus.rejected) ...[
+                      const PopupMenuItem(
+                        value: 'approve',
+                        child: Row(
+                          children: [
+                            Icon(Icons.check_circle, size: 18, color: Colors.green),
+                            SizedBox(width: 8),
+                            Text('Approve'),
+                          ],
                         ),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete, size: 18, color: Colors.red),
-                              SizedBox(width: 8),
-                              Text(
-                                'Delete',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
+                    ],
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, size: 18),
+                          SizedBox(width: 8),
+                          Text('Edit'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'reset_password',
+                      child: Row(
+                        children: [
+                          Icon(Icons.lock_reset, size: 18),
+                          SizedBox(width: 8),
+                          Text('Reset Password'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, size: 18, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Delete', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -528,6 +679,59 @@ class _UserManagementPageState extends State<UserManagementPage>
             const SizedBox(height: AdminSizes.paddingM),
 
             // User stats
+            Container(
+              padding: const EdgeInsets.all(AdminSizes.paddingM),
+              decoration: BoxDecoration(
+                color: AdminColors.background,
+                borderRadius: BorderRadius.circular(AdminSizes.radiusS),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildUserStat('Umur', '${user.age} tahun', Icons.cake),
+                  _buildUserStat('Masa Dinas', '${user.yearsOfService} tahun', Icons.military_tech),
+                  _buildUserStat('Tanggal Daftar', _formatDate(user.createdAt), Icons.calendar_today),
+                ],
+              ),
+            ),
+
+            // Approval actions for pending users
+            if (user.status == UserStatus.pending) ...[
+              const SizedBox(height: AdminSizes.paddingM),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _approveUser(user),
+                      icon: const Icon(Icons.check_circle, size: 18),
+                      label: const Text('Approve'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.green,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AdminSizes.radiusS),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AdminSizes.paddingS),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _rejectUser(user),
+                      icon: const Icon(Icons.cancel, size: 18),
+                      label: const Text('Reject'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.red,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AdminSizes.radiusS),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -541,12 +745,12 @@ class _UserManagementPageState extends State<UserManagementPage>
         const SizedBox(height: AdminSizes.paddingXS),
         Text(
           label,
-          style: GoogleFonts.roboto(fontSize: 12, color: AdminColors.lightGray),
+          style: GoogleFonts.roboto(fontSize: 10, color: AdminColors.lightGray),
         ),
         Text(
           value,
           style: GoogleFonts.roboto(
-            fontSize: 12,
+            fontSize: 10,
             fontWeight: FontWeight.w600,
             color: AdminColors.darkGray,
           ),
@@ -558,23 +762,27 @@ class _UserManagementPageState extends State<UserManagementPage>
   void _showCreateUserDialog() {
     showDialog(
       context: context,
-      builder:
-          (context) => CreateUserDialog(
-            onUserCreated: () {
-              _loadUsers();
-            },
-          ),
+      builder: (context) => CreateUserDialog(
+        onUserCreated: () {
+          _loadUsers();
+        },
+      ),
     );
   }
 
-  void _handleUserAction(String action, AdminUser user) {
+  void _handleUserAction(String action, UserModel user) {
     switch (action) {
+      case 'view':
+        _showUserDetails(user);
+        break;
+      case 'approve':
+        _approveUser(user);
+        break;
+      case 'reject':
+        _rejectUser(user);
+        break;
       case 'edit':
         _showEditUserDialog(user);
-        break;
-      case 'activate':
-      case 'deactivate':
-        _toggleUserStatus(user);
         break;
       case 'reset_password':
         _showResetPasswordDialog(user);
@@ -585,142 +793,233 @@ class _UserManagementPageState extends State<UserManagementPage>
     }
   }
 
-  void _showEditUserDialog(AdminUser user) {
+  void _showUserDetails(UserModel user) {
     showDialog(
       context: context,
-      builder:
-          (context) => EditUserDialog(
-            user: user,
-            onUserUpdated: () {
-              _loadUsers();
-            },
-          ),
+      builder: (context) => UserDetailDialog(user: user),
     );
   }
 
-  void _toggleUserStatus(AdminUser user) async {
+  Future<void> _approveUser(UserModel user) async {
     try {
-      await AdminFirebaseService.toggleUserStatus(user.uid, !user.isActive);
+      await AdminFirebaseService.approveUser(user.id);
       _loadUsers();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'User ${!user.isActive ? "activated" : "deactivated"} successfully',
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('User ${user.fullName} telah disetujui'),
+            backgroundColor: AppColors.green,
           ),
-          backgroundColor: AdminColors.success,
-        ),
-      );
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: AdminColors.error,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: AppColors.red,
+          ),
+        );
+      }
     }
   }
 
-  void _showResetPasswordDialog(AdminUser user) {
+  Future<void> _rejectUser(UserModel user) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => RejectUserDialog(),
+    );
+
+    if (result != null) {
+      try {
+        await AdminFirebaseService.rejectUser(user.id, result);
+        _loadUsers();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('User ${user.fullName} telah ditolak'),
+              backgroundColor: AppColors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              backgroundColor: AppColors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _showEditUserDialog(UserModel user) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text(
-              'Reset Password',
-              style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
+      builder: (context) => EditUserDialog(
+        user: user,
+        onUserUpdated: () {
+          _loadUsers();
+        },
+      ),
+    );
+  }
+
+  void _showResetPasswordDialog(UserModel user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Reset Password',
+          style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Send password reset email to ${user.email}?',
+          style: GoogleFonts.roboto(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.roboto(color: AdminColors.darkGray),
             ),
-            content: Text(
-              'Send password reset email to ${user.email}?',
-              style: GoogleFonts.roboto(),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.roboto(color: AdminColors.darkGray),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  // TODO: Implement password reset
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await AdminFirebaseService.resetUserPassword(user.email);
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Password reset email sent!'),
                       backgroundColor: AdminColors.success,
                     ),
                   );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AdminColors.primaryBlue,
-                ),
-                child: Text(
-                  'Send Email',
-                  style: GoogleFonts.roboto(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-    );
-  }
-
-  void _showDeleteConfirmation(AdminUser user) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text(
-              'Delete User',
-              style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-            ),
-            content: Text(
-              'Are you sure you want to delete ${user.name}? This action cannot be undone.',
-              style: GoogleFonts.roboto(),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.roboto(color: AdminColors.darkGray),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  // TODO: Implement user deletion
+                }
+              } catch (e) {
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('User deletion feature coming soon'),
-                      backgroundColor: AdminColors.warning,
+                    SnackBar(
+                      content: Text('Error: ${e.toString()}'),
+                      backgroundColor: AdminColors.error,
                     ),
                   );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AdminColors.error,
-                ),
-                child: Text(
-                  'Delete',
-                  style: GoogleFonts.roboto(color: Colors.white),
-                ),
-              ),
-            ],
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AdminColors.primaryBlue,
+            ),
+            child: Text(
+              'Send Email',
+              style: GoogleFonts.roboto(color: Colors.white),
+            ),
           ),
+        ],
+      ),
     );
   }
 
-  Color _getRoleColor(String role) {
+  void _showDeleteConfirmation(UserModel user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Delete User',
+          style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Are you sure you want to delete ${user.fullName}? This action cannot be undone.',
+          style: GoogleFonts.roboto(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.roboto(color: AdminColors.darkGray),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await AdminFirebaseService.deleteUser(user.id);
+                _loadUsers();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('User deleted successfully'),
+                      backgroundColor: AdminColors.success,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: ${e.toString()}'),
+                      backgroundColor: AdminColors.error,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AdminColors.error,
+            ),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.roboto(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getRoleColor(UserRole role) {
     switch (role) {
-      case 'admin':
+      case UserRole.makoKor:
         return AdminColors.error;
-      case 'binkar':
+      case UserRole.pasPelopor:
         return AdminColors.adminPurple;
-      // case 'public':
-      //   return AdminColors.success;
-      default:
-        return AdminColors.lightGray;
+      case UserRole.pasGegana:
+        return AdminColors.success;
+      case UserRole.pasbrimobI:
+        return AdminColors.warning;
+      case UserRole.pasbrimobII:
+        return AdminColors.info;
+      case UserRole.pasbrimobIII:
+        return Colors.teal;
+    }
+  }
+
+  Color _getStatusColor(UserStatus status) {
+    switch (status) {
+      case UserStatus.pending:
+        return AppColors.goldYellow;
+      case UserStatus.approved:
+        return AppColors.green;
+      case UserStatus.rejected:
+        return AppColors.red;
+    }
+  }
+
+  IconData _getStatusIcon(UserStatus status) {
+    switch (status) {
+      case UserStatus.pending:
+        return Icons.schedule;
+      case UserStatus.approved:
+        return Icons.check_circle;
+      case UserStatus.rejected:
+        return Icons.cancel;
     }
   }
 
@@ -742,7 +1041,204 @@ class _UserManagementPageState extends State<UserManagementPage>
   }
 }
 
-// Create User Dialog
+// Dialog for rejecting user with reason
+class RejectUserDialog extends StatefulWidget {
+  @override
+  State<RejectUserDialog> createState() => _RejectUserDialogState();
+}
+
+class _RejectUserDialogState extends State<RejectUserDialog> {
+  final _reasonController = TextEditingController();
+  final _predefinedReasons = [
+    'Data tidak lengkap',
+    'Dokumen tidak valid',
+    'Informasi tidak sesuai',
+    'Tidak memenuhi syarat',
+    'Duplikasi akun',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        'Reject User',
+        style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Pilih alasan penolakan:',
+            style: GoogleFonts.roboto(fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: AdminSizes.paddingS),
+          ..._predefinedReasons.map((reason) => RadioListTile<String>(
+            title: Text(reason, style: GoogleFonts.roboto(fontSize: 14)),
+            value: reason,
+            groupValue: _reasonController.text,
+            onChanged: (value) {
+              setState(() {
+                _reasonController.text = value!;
+              });
+            },
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          )),
+          RadioListTile<String>(
+            title: Text('Lainnya', style: GoogleFonts.roboto(fontSize: 14)),
+            value: 'custom',
+            groupValue: _reasonController.text.isEmpty ? null : 
+                      _predefinedReasons.contains(_reasonController.text) ? null : 'custom',
+            onChanged: (value) {
+              setState(() {
+                _reasonController.text = '';
+              });
+            },
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+          if (!_predefinedReasons.contains(_reasonController.text)) ...[
+            const SizedBox(height: AdminSizes.paddingS),
+            TextField(
+              controller: _reasonController,
+              decoration: const InputDecoration(
+                hintText: 'Masukkan alasan penolakan...',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            'Cancel',
+            style: GoogleFonts.roboto(color: AdminColors.darkGray),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: _reasonController.text.isNotEmpty
+              ? () => Navigator.pop(context, _reasonController.text)
+              : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.red,
+          ),
+          child: Text(
+            'Reject',
+            style: GoogleFonts.roboto(color: Colors.white),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// User Detail Dialog
+class UserDetailDialog extends StatelessWidget {
+  final UserModel user;
+
+  const UserDetailDialog({super.key, required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Container(
+        width: 500,
+        padding: const EdgeInsets.all(AdminSizes.paddingL),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundImage: user.photoUrl != null
+                      ? CachedNetworkImageProvider(user.photoUrl!)
+                      : null,
+                  child: user.photoUrl == null
+                      ? const Icon(Icons.person, size: 30)
+                      : null,
+                ),
+                const SizedBox(width: AdminSizes.paddingM),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.displayName,
+                        style: GoogleFonts.roboto(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        user.role.displayName,
+                        style: GoogleFonts.roboto(
+                          fontSize: 14,
+                          color: AdminColors.darkGray,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: AdminSizes.paddingL),
+            _buildDetailRow('Email', user.email),
+            _buildDetailRow('NRP', user.nrp),
+            _buildDetailRow('Pangkat', user.rank),
+            _buildDetailRow('Umur', '${user.age} tahun'),
+            _buildDetailRow('Tanggal Lahir', user.formattedDateOfBirth),
+            _buildDetailRow('Tanggal Masuk Militer', user.formattedMilitaryJoinDate),
+            _buildDetailRow('Masa Dinas', '${user.yearsOfService} tahun'),
+            _buildDetailRow('Status', user.status.displayName),
+            _buildDetailRow('Tanggal Daftar', user.formattedDateOfBirth),
+            if (user.rejectionReason != null)
+              _buildDetailRow('Alasan Penolakan', user.rejectionReason!),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AdminSizes.paddingXS),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: GoogleFonts.roboto(
+                fontWeight: FontWeight.w500,
+                color: AdminColors.darkGray,
+              ),
+            ),
+          ),
+          Text(' : '),
+          Expanded(
+            child: Text(
+              value,
+              style: GoogleFonts.roboto(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Simplified Create and Edit dialogs can be added here
 class CreateUserDialog extends StatefulWidget {
   final VoidCallback onUserCreated;
 
@@ -754,11 +1250,11 @@ class CreateUserDialog extends StatefulWidget {
 
 class _CreateUserDialogState extends State<CreateUserDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-
-  String _selectedRole = 'binkar';
+  final _nameController = TextEditingController();
+  
+  UserRole _selectedRole = UserRole.makoKor;
   bool _isLoading = false;
 
   @override
@@ -776,7 +1272,7 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: 'Name',
+                labelText: 'Full Name',
                 prefixIcon: Icon(Icons.person),
               ),
               validator: (value) {
@@ -797,9 +1293,7 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
                 if (value == null || value.isEmpty) {
                   return 'Email is required';
                 }
-                if (!RegExp(
-                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                ).hasMatch(value)) {
+                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
                   return 'Invalid email format';
                 }
                 return null;
@@ -824,17 +1318,16 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
               },
             ),
             const SizedBox(height: AdminSizes.paddingM),
-            DropdownButtonFormField<String>(
+            DropdownButtonFormField<UserRole>(
               value: _selectedRole,
               decoration: const InputDecoration(
-                labelText: 'Role',
+                labelText: 'Role/Satuan',
                 prefixIcon: Icon(Icons.security),
               ),
-              items: const [
-                // DropdownMenuItem(value: 'public', child: Text('Public')),
-                DropdownMenuItem(value: 'binkar', child: Text('BINKAR')),
-                DropdownMenuItem(value: 'admin', child: Text('Admin')),
-              ],
+              items: UserRole.values.map((role) => DropdownMenuItem(
+                value: role,
+                child: Text(role.displayName),
+              )).toList(),
               onChanged: (value) {
                 setState(() {
                   _selectedRole = value!;
@@ -857,20 +1350,19 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
           style: ElevatedButton.styleFrom(
             backgroundColor: AdminColors.primaryBlue,
           ),
-          child:
-              _isLoading
-                  ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                  : Text(
-                    'Create',
-                    style: GoogleFonts.roboto(color: Colors.white),
+          child: _isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
+                )
+              : Text(
+                  'Create',
+                  style: GoogleFonts.roboto(color: Colors.white),
+                ),
         ),
       ],
     );
@@ -882,23 +1374,29 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
     setState(() => _isLoading = true);
 
     try {
-      await AdminFirebaseService.createUser(
-        _emailController.text.trim(),
-        _passwordController.text,
-        _nameController.text.trim(),
-        _selectedRole,
+      // Create user with UserModel system (approved by default when created by admin)
+      final userModel = UserModel(
+        id: '', // Will be set by Firestore
+        email: _emailController.text.trim(),
+        fullName: _nameController.text.trim(),
+        nrp: 'AUTO-${DateTime.now().millisecondsSinceEpoch}', // Auto generate for admin-created users
+        rank: 'BHARADA', // Default rank
+        role: _selectedRole,
+        status: UserStatus.approved, // Admin-created users are approved by default
+        dateOfBirth: DateTime.now().subtract(const Duration(days: 365 * 25)), // Default age 25
+        militaryJoinDate: DateTime.now().subtract(const Duration(days: 365 * 2)), // Default 2 years service
+        createdAt: DateTime.now(),
       );
 
-      if (mounted) {
-        Navigator.pop(context);
-        widget.onUserCreated();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User created successfully!'),
-            backgroundColor: AdminColors.success,
-          ),
-        );
-      }
+      // This would need a new method in AdminFirebaseService for creating UserModel directly
+      // For now, show message that this feature needs implementation
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Direct user creation feature coming soon. Users should register through app.'),
+          backgroundColor: AdminColors.warning,
+        ),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -916,9 +1414,8 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
   }
 }
 
-// Edit User Dialog
 class EditUserDialog extends StatefulWidget {
-  final AdminUser user;
+  final UserModel user;
   final VoidCallback onUserUpdated;
 
   const EditUserDialog({
@@ -934,17 +1431,21 @@ class EditUserDialog extends StatefulWidget {
 class _EditUserDialogState extends State<EditUserDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _nrpController = TextEditingController();
+  final _rankController = TextEditingController();
 
-  late String _selectedRole;
-  late bool _isActive;
+  late UserRole _selectedRole;
+  late UserStatus _selectedStatus;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _nameController.text = widget.user.name;
+    _nameController.text = widget.user.fullName;
+    _nrpController.text = widget.user.nrp;
+    _rankController.text = widget.user.rank;
     _selectedRole = widget.user.role;
-    _isActive = widget.user.isActive;
+    _selectedStatus = widget.user.status;
   }
 
   @override
@@ -962,7 +1463,7 @@ class _EditUserDialogState extends State<EditUserDialog> {
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: 'Name',
+                labelText: 'Full Name',
                 prefixIcon: Icon(Icons.person),
               ),
               validator: (value) {
@@ -973,17 +1474,47 @@ class _EditUserDialogState extends State<EditUserDialog> {
               },
             ),
             const SizedBox(height: AdminSizes.paddingM),
+            TextFormField(
+              controller: _nrpController,
+              decoration: const InputDecoration(
+                labelText: 'NRP',
+                prefixIcon: Icon(Icons.badge),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'NRP is required';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: AdminSizes.paddingM),
             DropdownButtonFormField<String>(
+              value: _rankController.text.isEmpty ? MenuData.militaryRanks.first : _rankController.text,
+              decoration: const InputDecoration(
+                labelText: 'Rank',
+                prefixIcon: Icon(Icons.military_tech),
+              ),
+              items: MenuData.militaryRanks.map((rank) => DropdownMenuItem(
+                value: rank,
+                child: Text(rank),
+              )).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _rankController.text = value!;
+                });
+              },
+            ),
+            const SizedBox(height: AdminSizes.paddingM),
+            DropdownButtonFormField<UserRole>(
               value: _selectedRole,
               decoration: const InputDecoration(
-                labelText: 'Role',
-                prefixIcon: Icon(Icons.security),
+                labelText: 'Role/Satuan',
+                prefixIcon: Icon(Icons.group),
               ),
-              items: const [
-                // DropdownMenuItem(value: 'public', child: Text('Public')),
-                DropdownMenuItem(value: 'binkar', child: Text('BINKAR')),
-                DropdownMenuItem(value: 'admin', child: Text('Admin')),
-              ],
+              items: UserRole.values.map((role) => DropdownMenuItem(
+                value: role,
+                child: Text(role.displayName),
+              )).toList(),
               onChanged: (value) {
                 setState(() {
                   _selectedRole = value!;
@@ -991,16 +1522,21 @@ class _EditUserDialogState extends State<EditUserDialog> {
               },
             ),
             const SizedBox(height: AdminSizes.paddingM),
-            SwitchListTile(
-              title: const Text('Active'),
-              subtitle: Text(_isActive ? 'User is active' : 'User is inactive'),
-              value: _isActive,
+            DropdownButtonFormField<UserStatus>(
+              value: _selectedStatus,
+              decoration: const InputDecoration(
+                labelText: 'Status',
+                prefixIcon: Icon(Icons.check_circle),
+              ),
+              items: UserStatus.values.map((status) => DropdownMenuItem(
+                value: status,
+                child: Text(status.displayName),
+              )).toList(),
               onChanged: (value) {
                 setState(() {
-                  _isActive = value;
+                  _selectedStatus = value!;
                 });
               },
-              activeColor: AdminColors.success,
             ),
           ],
         ),
@@ -1018,20 +1554,19 @@ class _EditUserDialogState extends State<EditUserDialog> {
           style: ElevatedButton.styleFrom(
             backgroundColor: AdminColors.primaryBlue,
           ),
-          child:
-              _isLoading
-                  ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                  : Text(
-                    'Update',
-                    style: GoogleFonts.roboto(color: Colors.white),
+          child: _isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
+                )
+              : Text(
+                  'Update',
+                  style: GoogleFonts.roboto(color: Colors.white),
+                ),
         ),
       ],
     );
@@ -1043,18 +1578,16 @@ class _EditUserDialogState extends State<EditUserDialog> {
     setState(() => _isLoading = true);
 
     try {
-      final updatedUser = AdminUser(
-        uid: widget.user.uid,
-        email: widget.user.email,
-        name: _nameController.text.trim(),
+      final updatedUser = widget.user.copyWith(
+        fullName: _nameController.text.trim(),
+        nrp: _nrpController.text.trim(),
+        rank: _rankController.text.trim(),
         role: _selectedRole,
-        isActive: _isActive,
-        createdAt: widget.user.createdAt,
-        lastLogin: widget.user.lastLogin,
-        profileImageUrl: widget.user.profileImageUrl,
+        status: _selectedStatus,
+        updatedAt: DateTime.now(),
       );
 
-      await AdminFirebaseService.updateUser(widget.user.uid, updatedUser);
+      await AdminFirebaseService.updateUserModel(widget.user.id, updatedUser);
 
       if (mounted) {
         Navigator.pop(context);

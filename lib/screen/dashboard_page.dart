@@ -1024,7 +1024,7 @@ Sumpah setia kepada dasar negara Pancasila sebagai panduan moral dan etika:
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => LoginPage(targetMenu: targetMenu),
+        builder: (context) => LoginPage(),
       ),
     );
   }

@@ -1,25 +1,22 @@
-import 'package:app_brimob_user/libadmin/models/admin_model.dart';
-import 'package:app_brimob_user/slide_show_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import '../../models/user_model.dart';
+import '../models/admin_model.dart';
+import '../../slide_show_model.dart';
 
 class AdminFirebaseService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final FirebaseStorage _storage = FirebaseStorage.instance;
-  static final CollectionReference _slideshowCollection = _firestore.collection(
-    'slideshow',
-  );
+  static final CollectionReference _slideshowCollection = _firestore.collection('slideshow');
+
   // Auth Methods
   static User? get currentUser => _auth.currentUser;
   static bool get isLoggedIn => _auth.currentUser != null;
 
-  static Future<UserCredential?> signInAsAdmin(
-    String email,
-    String password,
-  ) async {
+  static Future<UserCredential?> signInAsAdmin(String email, String password) async {
     try {
       final credential = await _auth.signInWithEmailAndPassword(
         email: email,
@@ -27,12 +24,27 @@ class AdminFirebaseService {
       );
 
       // Verify admin role
-      final userDoc =
-          await _firestore.collection('users').doc(credential.user!.uid).get();
+      final userDoc = await _firestore.collection('users').doc(credential.user!.uid).get();
 
       if (userDoc.exists) {
         final userData = userDoc.data()!;
-        if (userData['role'] != 'admin') {
+        
+        // Check for admin role - support both old system and new UserModel
+        bool isAdmin = false;
+        
+        // Check old admin system
+        if (userData['role'] == 'admin') {
+          isAdmin = true;
+        }
+        
+        // Check new UserModel system - admin emails
+        final userModel = UserModel.fromFirestore(userDoc);
+        if (userModel.email == 'admin@korbrimob.polri.go.id' || 
+            userModel.email.endsWith('@admin.korbrimob.polri.go.id')) {
+          isAdmin = true;
+        }
+
+        if (!isAdmin) {
           await _auth.signOut();
           throw Exception('Unauthorized: Admin access required');
         }
@@ -40,6 +52,7 @@ class AdminFirebaseService {
         // Update last login
         await userDoc.reference.update({
           'lastLogin': DateTime.now().millisecondsSinceEpoch,
+          'updatedAt': Timestamp.fromDate(DateTime.now()),
         });
 
         return credential;
@@ -64,16 +77,19 @@ class AdminFirebaseService {
       final contentSnapshot = await _firestore.collection('content').get();
       final mediaSnapshot = await _firestore.collection('media').get();
 
-      // Count active users (logged in within last 30 days)
-      final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
-      final activeUsersSnapshot =
-          await _firestore
-              .collection('users')
-              .where(
-                'lastLogin',
-                isGreaterThan: thirtyDaysAgo.millisecondsSinceEpoch,
-              )
-              .get();
+      // Count active users (approved status for UserModel, or active for old AdminUser)
+      int activeUsers = 0;
+      for (var doc in usersSnapshot.docs) {
+        final data = doc.data();
+        // Check new UserModel system
+        if (data.containsKey('status')) {
+          if (data['status'] == 'approved') activeUsers++;
+        }
+        // Check old AdminUser system
+        else if (data.containsKey('isActive')) {
+          if (data['isActive'] == true) activeUsers++;
+        }
+      }
 
       // Count content by category
       Map<String, int> contentByCategory = {};
@@ -85,7 +101,19 @@ class AdminFirebaseService {
       // Count users by role
       Map<String, int> usersByRole = {};
       for (var doc in usersSnapshot.docs) {
-        final role = doc.data()['role'] ?? 'public';
+        final data = doc.data();
+        String role = 'public';
+        
+        // Check new UserModel system
+        if (data.containsKey('status')) {
+          final userModel = UserModel.fromFirestore(doc);
+          role = userModel.role.displayName;
+        }
+        // Check old AdminUser system
+        else if (data.containsKey('role')) {
+          role = data['role'] ?? 'public';
+        }
+        
         usersByRole[role] = (usersByRole[role] ?? 0) + 1;
       }
 
@@ -100,7 +128,7 @@ class AdminFirebaseService {
         totalUsers: usersSnapshot.docs.length,
         totalContent: contentSnapshot.docs.length,
         totalMedia: mediaSnapshot.docs.length,
-        activeUsers: activeUsersSnapshot.docs.length,
+        activeUsers: activeUsers,
         storageUsed: storageUsed,
         contentByCategory: contentByCategory,
         usersByRole: usersByRole,
@@ -114,11 +142,10 @@ class AdminFirebaseService {
   // Content Management
   static Future<List<ContentItem>> getAllContent() async {
     try {
-      final snapshot =
-          await _firestore
-              .collection('content')
-              .orderBy('updatedAt', descending: true)
-              .get();
+      final snapshot = await _firestore
+          .collection('content')
+          .orderBy('updatedAt', descending: true)
+          .get();
 
       return snapshot.docs
           .map((doc) => ContentItem.fromMap(doc.data(), doc.id))
@@ -142,10 +169,7 @@ class AdminFirebaseService {
     }
   }
 
-  static Future<void> updateContent(
-    String contentId,
-    ContentItem content,
-  ) async {
+  static Future<void> updateContent(String contentId, ContentItem content) async {
     try {
       await _firestore
           .collection('content')
@@ -181,14 +205,29 @@ class AdminFirebaseService {
     }
   }
 
-  // User Management
+  // User Management - Supporting both new UserModel and old AdminUser
+  static Future<List<UserModel>> getAllUsersWithApproval() async {
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => UserModel.fromFirestore(doc))
+          .toList();
+    } catch (e) {
+      throw Exception('Error fetching users: ${e.toString()}');
+    }
+  }
+
+  // Legacy method for old AdminUser system
   static Future<List<AdminUser>> getAllUsers() async {
     try {
-      final snapshot =
-          await _firestore
-              .collection('users')
-              .orderBy('createdAt', descending: true)
-              .get();
+      final snapshot = await _firestore
+          .collection('users')
+          .orderBy('createdAt', descending: true)
+          .get();
 
       return snapshot.docs
           .map((doc) => AdminUser.fromMap(doc.data(), doc.id))
@@ -198,6 +237,147 @@ class AdminFirebaseService {
     }
   }
 
+  // Get pending users only (UserModel system)
+  static Future<List<UserModel>> getPendingUsers() async {
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .where('status', isEqualTo: 'pending')
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => UserModel.fromFirestore(doc))
+          .toList();
+    } catch (e) {
+      throw Exception('Error fetching pending users: ${e.toString()}');
+    }
+  }
+
+  // Approve user
+  static Future<void> approveUser(String userId) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'status': UserStatus.approved.name,
+        'approvedBy': currentUser?.uid,
+        'approvedAt': Timestamp.fromDate(DateTime.now()),
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+        'rejectionReason': null, // Clear any previous rejection reason
+      });
+
+      await _logAdminAction(
+        'APPROVE_USER',
+        'Approved user registration',
+        'user',
+        userId,
+      );
+
+      // Send approval notification email (optional)
+      await _sendApprovalNotification(userId, true);
+    } catch (e) {
+      throw Exception('Error approving user: ${e.toString()}');
+    }
+  }
+
+  // Reject user
+  static Future<void> rejectUser(String userId, String reason) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'status': UserStatus.rejected.name,
+        'rejectionReason': reason,
+        'approvedBy': currentUser?.uid,
+        'approvedAt': Timestamp.fromDate(DateTime.now()),
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+      });
+
+      await _logAdminAction(
+        'REJECT_USER',
+        'Rejected user registration: $reason',
+        'user',
+        userId,
+      );
+
+      // Send rejection notification email (optional)
+      await _sendApprovalNotification(userId, false, reason);
+    } catch (e) {
+      throw Exception('Error rejecting user: ${e.toString()}');
+    }
+  }
+
+  // Bulk approve users
+  static Future<void> bulkApproveUsers(List<String> userIds) async {
+    try {
+      final batch = _firestore.batch();
+      final now = Timestamp.fromDate(DateTime.now());
+      final adminId = currentUser?.uid;
+
+      for (final userId in userIds) {
+        batch.update(_firestore.collection('users').doc(userId), {
+          'status': UserStatus.approved.name,
+          'approvedBy': adminId,
+          'approvedAt': now,
+          'updatedAt': now,
+          'rejectionReason': null,
+        });
+      }
+
+      await batch.commit();
+
+      await _logAdminAction(
+        'BULK_APPROVE_USERS',
+        'Bulk approved ${userIds.length} users',
+        'user',
+        null,
+      );
+    } catch (e) {
+      throw Exception('Error bulk approving users: ${e.toString()}');
+    }
+  }
+
+  // Bulk reject users
+  static Future<void> bulkRejectUsers(List<String> userIds, String reason) async {
+    try {
+      final batch = _firestore.batch();
+      final now = Timestamp.fromDate(DateTime.now());
+      final adminId = currentUser?.uid;
+
+      for (final userId in userIds) {
+        batch.update(_firestore.collection('users').doc(userId), {
+          'status': UserStatus.rejected.name,
+          'rejectionReason': reason,
+          'approvedBy': adminId,
+          'approvedAt': now,
+          'updatedAt': now,
+        });
+      }
+
+      await batch.commit();
+
+      await _logAdminAction(
+        'BULK_REJECT_USERS',
+        'Bulk rejected ${userIds.length} users: $reason',
+        'user',
+        null,
+      );
+    } catch (e) {
+      throw Exception('Error bulk rejecting users: ${e.toString()}');
+    }
+  }
+
+  // Get user by ID (UserModel)
+  static Future<UserModel?> getUserById(String userId) async {
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      if (doc.exists) {
+        return UserModel.fromFirestore(doc);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Error fetching user: ${e.toString()}');
+    }
+  }
+
+  // Legacy create user method for AdminUser system
   static Future<void> createUser(
     String email,
     String password,
@@ -238,6 +418,7 @@ class AdminFirebaseService {
     }
   }
 
+  // Update user (AdminUser system)
   static Future<void> updateUser(String userId, AdminUser user) async {
     try {
       await _firestore.collection('users').doc(userId).update(user.toMap());
@@ -253,6 +434,27 @@ class AdminFirebaseService {
     }
   }
 
+  // Update user (UserModel system)
+  static Future<void> updateUserModel(String userId, UserModel user) async {
+    try {
+      final updatedUser = user.copyWith(updatedAt: DateTime.now());
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .update(updatedUser.toFirestore());
+
+      await _logAdminAction(
+        'UPDATE_USER',
+        'Updated user: ${user.fullName}',
+        'user',
+        userId,
+      );
+    } catch (e) {
+      throw Exception('Error updating user: ${e.toString()}');
+    }
+  }
+
+  // Toggle user status (legacy AdminUser system)
   static Future<void> toggleUserStatus(String userId, bool isActive) async {
     try {
       await _firestore.collection('users').doc(userId).update({
@@ -271,14 +473,117 @@ class AdminFirebaseService {
     }
   }
 
+  // Delete user
+  static Future<void> deleteUser(String userId) async {
+    try {
+      // Get user data first for logging
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+      String userName = 'Unknown';
+      
+      if (userDoc.exists) {
+        final data = userDoc.data()!;
+        // Check if it's UserModel or AdminUser
+        if (data.containsKey('fullName')) {
+          userName = data['fullName'] ?? 'Unknown';
+        } else if (data.containsKey('name')) {
+          userName = data['name'] ?? 'Unknown';
+        }
+      }
+
+      // Delete user document
+      await _firestore.collection('users').doc(userId).delete();
+
+      await _logAdminAction(
+        'DELETE_USER',
+        'Deleted user: $userName',
+        'user',
+        userId,
+      );
+    } catch (e) {
+      throw Exception('Error deleting user: ${e.toString()}');
+    }
+  }
+
+  // Reset user password
+  static Future<void> resetUserPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+
+      await _logAdminAction(
+        'RESET_PASSWORD',
+        'Sent password reset email to: $email',
+        'user',
+        null,
+      );
+    } catch (e) {
+      throw Exception('Error sending password reset email: ${e.toString()}');
+    }
+  }
+
+  // Send approval/rejection notification
+  static Future<void> _sendApprovalNotification(String userId, bool approved, [String? reason]) async {
+    try {
+      final user = await getUserById(userId);
+      if (user == null) return;
+
+      // Here you can implement email notification
+      // For now, we'll just log it
+      final status = approved ? 'approved' : 'rejected';
+      print('Notification sent to ${user.email}: Account $status');
+      
+      if (!approved && reason != null) {
+        print('Rejection reason: $reason');
+      }
+
+      // You can integrate with email service like SendGrid, Firebase Functions, etc.
+    } catch (e) {
+      print('Error sending notification: $e');
+    }
+  }
+
+  // Get approval statistics
+  static Future<Map<String, dynamic>> getApprovalStatistics() async {
+    try {
+      final allUsers = await getAllUsersWithApproval();
+      
+      final totalUsers = allUsers.length;
+      final pendingUsers = allUsers.where((u) => u.status == UserStatus.pending).length;
+      final approvedUsers = allUsers.where((u) => u.status == UserStatus.approved).length;
+      final rejectedUsers = allUsers.where((u) => u.status == UserStatus.rejected).length;
+
+      // Statistics by role
+      final usersByRole = <String, int>{};
+      for (final role in UserRole.values) {
+        usersByRole[role.displayName] = allUsers.where((u) => u.role == role).length;
+      }
+
+      // Recent registrations (last 7 days)
+      final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+      final recentRegistrations = allUsers
+          .where((u) => u.createdAt.isAfter(sevenDaysAgo))
+          .length;
+
+      return {
+        'totalUsers': totalUsers,
+        'pendingUsers': pendingUsers,
+        'approvedUsers': approvedUsers,
+        'rejectedUsers': rejectedUsers,
+        'usersByRole': usersByRole,
+        'recentRegistrations': recentRegistrations,
+        'approvalRate': totalUsers > 0 ? (approvedUsers / totalUsers * 100).round() : 0,
+      };
+    } catch (e) {
+      throw Exception('Error getting approval statistics: ${e.toString()}');
+    }
+  }
+
   // Media Management
   static Future<List<MediaFile>> getAllMedia() async {
     try {
-      final snapshot =
-          await _firestore
-              .collection('media')
-              .orderBy('uploadedAt', descending: true)
-              .get();
+      final snapshot = await _firestore
+          .collection('media')
+          .orderBy('uploadedAt', descending: true)
+          .get();
 
       return snapshot.docs
           .map((doc) => MediaFile.fromMap(doc.data(), doc.id))
@@ -352,8 +657,7 @@ class AdminFirebaseService {
   // Gallery Management
   static Future<List<GalleryItem>> getAllGallery() async {
     try {
-      final snapshot =
-          await _firestore.collection('galeri').orderBy('order').get();
+      final snapshot = await _firestore.collection('galeri').orderBy('order').get();
 
       return snapshot.docs
           .map((doc) => GalleryItem.fromMap(doc.data(), doc.id))
@@ -394,10 +698,7 @@ class AdminFirebaseService {
   }
 
   // Settings Management
-  static Future<void> updateAppSetting(
-    String key,
-    Map<String, dynamic> value,
-  ) async {
+  static Future<void> updateAppSetting(String key, Map<String, dynamic> value) async {
     try {
       await _firestore.collection('settings').doc(key).set(value);
 
@@ -451,12 +752,11 @@ class AdminFirebaseService {
 
   static Future<List<AdminLog>> getAdminLogs({int limit = 50}) async {
     try {
-      final snapshot =
-          await _firestore
-              .collection('admin_logs')
-              .orderBy('timestamp', descending: true)
-              .limit(limit)
-              .get();
+      final snapshot = await _firestore
+          .collection('admin_logs')
+          .orderBy('timestamp', descending: true)
+          .limit(limit)
+          .get();
 
       return snapshot.docs
           .map((doc) => AdminLog.fromMap(doc.data(), doc.id))
@@ -466,30 +766,7 @@ class AdminFirebaseService {
     }
   }
 
-  // Helper methods
-  static String _getFileType(String fileName) {
-    final extension = fileName.split('.').last.toLowerCase();
-    switch (extension) {
-      case 'jpg':
-      case 'jpeg':
-      case 'png':
-      case 'gif':
-      case 'webp':
-        return 'image';
-      case 'mp4':
-      case 'avi':
-      case 'mov':
-        return 'video';
-      case 'pdf':
-        return 'pdf';
-      case 'doc':
-      case 'docx':
-        return 'document';
-      default:
-        return 'file';
-    }
-  }
-
+  // Slideshow Management
   static Future<List<SlideshowItem>> getSlideshowItems() async {
     try {
       final querySnapshot = await _slideshowCollection.orderBy('order').get();
@@ -513,12 +790,9 @@ class AdminFirebaseService {
     try {
       // Get the next order number
       final existingItems = await getSlideshowItems();
-      final maxOrder =
-          existingItems.isEmpty
-              ? 0
-              : existingItems
-                  .map((e) => e.order)
-                  .reduce((a, b) => a > b ? a : b);
+      final maxOrder = existingItems.isEmpty
+          ? 0
+          : existingItems.map((e) => e.order).reduce((a, b) => a > b ? a : b);
 
       final newItem = item.copyWith(
         order: maxOrder + 1,
@@ -577,9 +851,7 @@ class AdminFirebaseService {
   }
 
   // Update slideshow order
-  static Future<void> updateSlideshowOrder(
-    List<SlideshowItem> orderedItems,
-  ) async {
+  static Future<void> updateSlideshowOrder(List<SlideshowItem> orderedItems) async {
     try {
       final batch = _firestore.batch();
 
@@ -663,13 +935,12 @@ class AdminFirebaseService {
         'totalItems': items.length,
         'activeItems': activeCount,
         'inactiveItems': inactiveCount,
-        'lastUpdated':
-            items.isNotEmpty
-                ? items
-                    .where((item) => item.updatedAt != null)
-                    .map((item) => item.updatedAt!)
-                    .reduce((a, b) => a.isAfter(b) ? a : b)
-                : null,
+        'lastUpdated': items.isNotEmpty
+            ? items
+                .where((item) => item.updatedAt != null)
+                .map((item) => item.updatedAt!)
+                .reduce((a, b) => a.isAfter(b) ? a : b)
+            : null,
       };
     } catch (e) {
       print('Error getting slideshow analytics: $e');
@@ -701,6 +972,30 @@ class AdminFirebaseService {
     } catch (e) {
       print('Error bulk updating slideshow status: $e');
       throw Exception('Failed to bulk update slideshow status: $e');
+    }
+  }
+
+  // Helper methods
+  static String _getFileType(String fileName) {
+    final extension = fileName.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'webp':
+        return 'image';
+      case 'mp4':
+      case 'avi':
+      case 'mov':
+        return 'video';
+      case 'pdf':
+        return 'pdf';
+      case 'doc':
+      case 'docx':
+        return 'document';
+      default:
+        return 'file';
     }
   }
 }

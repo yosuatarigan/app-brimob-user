@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../constants/app_constants.dart';
-import 'dashboard_page.dart';
+import '../widgets/auth_wrapper.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -22,7 +22,7 @@ class _SplashPageState extends State<SplashPage>
   void initState() {
     super.initState();
     _initAnimations();
-    _navigateToHome();
+    _navigateToAuth();
   }
 
   void _initAnimations() {
@@ -58,17 +58,17 @@ class _SplashPageState extends State<SplashPage>
     _animationController.forward();
   }
 
-  void _navigateToHome() {
-    Future.delayed(const Duration(seconds: 4), () {
+  void _navigateToAuth() {
+    Future.delayed(AppDurations.splashDuration, () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) => 
-                const DashboardPage(),
+                AuthWrapper(),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(opacity: animation, child: child);
             },
-            transitionDuration: const Duration(milliseconds: 800),
+            transitionDuration: AppDurations.animationLong,
           ),
         );
       }
@@ -85,8 +85,8 @@ class _SplashPageState extends State<SplashPage>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
@@ -97,7 +97,7 @@ class _SplashPageState extends State<SplashPage>
         ),
         child: Stack(
           children: [
-            // Background pattern
+            // Background pattern circles
             Positioned(
               top: -100,
               right: -100,
@@ -123,6 +123,32 @@ class _SplashPageState extends State<SplashPage>
               ),
             ),
             
+            // Additional decorative elements
+            Positioned(
+              top: 100,
+              left: -50,
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  color: AppColors.lightBlue.withOpacity(0.08),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 100,
+              right: -30,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  color: AppColors.goldYellow.withOpacity(0.06),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            
             // Main content
             SafeArea(
               child: Center(
@@ -132,7 +158,7 @@ class _SplashPageState extends State<SplashPage>
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Logo section
+                        // Logo section with enhanced styling
                         FadeTransition(
                           opacity: _fadeAnimation,
                           child: ScaleTransition(
@@ -148,6 +174,11 @@ class _SplashPageState extends State<SplashPage>
                                     color: Colors.black.withOpacity(0.3),
                                     blurRadius: 30,
                                     offset: const Offset(0, 15),
+                                  ),
+                                  BoxShadow(
+                                    color: AppColors.goldYellow.withOpacity(0.2),
+                                    blurRadius: 50,
+                                    offset: const Offset(0, 0),
                                   ),
                                 ],
                               ),
@@ -172,27 +203,36 @@ class _SplashPageState extends State<SplashPage>
                           ),
                         ),
                         
-                        const SizedBox(height: AppSizes.paddingXL * 2),
+                        const SizedBox(height: AppSizes.paddingXXL * 2),
                         
-                        // Title section
+                        // Title section with enhanced typography
                         SlideTransition(
                           position: _slideAnimation,
                           child: FadeTransition(
                             opacity: _fadeAnimation,
                             child: Column(
                               children: [
+                                // Main title
                                 Text(
-                                  'SDM KORBRIMOB',
+                                  AppStrings.appName,
                                   style: GoogleFonts.roboto(
                                     fontSize: 32,
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.white,
                                     letterSpacing: 2.0,
+                                    shadows: [
+                                      Shadow(
+                                        offset: const Offset(0, 2),
+                                        blurRadius: 4,
+                                        color: Colors.black.withOpacity(0.3),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 
                                 const SizedBox(height: AppSizes.paddingM),
                                 
+                                // Subtitle badge
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: AppSizes.paddingL,
@@ -203,14 +243,14 @@ class _SplashPageState extends State<SplashPage>
                                     borderRadius: BorderRadius.circular(25),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: AppColors.goldYellow.withOpacity(0.3),
-                                        blurRadius: 15,
-                                        offset: const Offset(0, 5),
+                                        color: AppColors.goldYellow.withOpacity(0.4),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 8),
                                       ),
                                     ],
                                   ),
                                   child: Text(
-                                    'RORENMINOPS POLRI',
+                                    AppStrings.appSubtitle,
                                     style: GoogleFonts.roboto(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -222,47 +262,96 @@ class _SplashPageState extends State<SplashPage>
                                 
                                 const SizedBox(height: AppSizes.paddingXL),
                                 
-                                // Address
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSizes.paddingXL,
+                                // Address with better formatting
+                                Container(
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: AppSizes.paddingL,
+                                  ),
+                                  padding: const EdgeInsets.all(AppSizes.paddingM),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.white.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                                    border: Border.all(
+                                      color: AppColors.white.withOpacity(0.2),
+                                      width: 1,
+                                    ),
                                   ),
                                   child: Text(
-                                    'Jalan M. Yasin, Kel. Pasir Gn. Sel., Kec. Cimanggis\nKota Depok, Jawa Barat 16451',
+                                    AppStrings.appAddress,
                                     textAlign: TextAlign.center,
                                     style: GoogleFonts.roboto(
-                                      fontSize: 14,
+                                      fontSize: 13,
                                       color: AppColors.white.withOpacity(0.9),
                                       height: 1.6,
+                                      fontWeight: FontWeight.w400,
                                     ),
                                   ),
                                 ),
                                 
-                                const SizedBox(height: AppSizes.paddingXL * 2),
+                                const SizedBox(height: AppSizes.paddingXXL * 2),
                                 
-                                // Loading indicator with text
+                                // Loading section with enhanced animation
                                 Column(
                                   children: [
-                                    SizedBox(
-                                      width: 28,
-                                      height: 28,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 3,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          AppColors.goldYellow,
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        // Outer glow circle
+                                        Container(
+                                          width: 50,
+                                          height: 50,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: AppColors.goldYellow.withOpacity(0.2),
+                                          ),
                                         ),
-                                      ),
+                                        // Loading indicator
+                                        SizedBox(
+                                          width: 32,
+                                          height: 32,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 3,
+                                            valueColor: AlwaysStoppedAnimation<Color>(
+                                              AppColors.goldYellow,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                     const SizedBox(height: AppSizes.paddingM),
                                     Text(
-                                      'Memuat Aplikasi...',
+                                      AppStrings.loadingApp,
                                       style: GoogleFonts.roboto(
                                         fontSize: 14,
                                         color: AppColors.white.withOpacity(0.8),
                                         fontWeight: FontWeight.w500,
+                                        letterSpacing: 0.5,
                                       ),
                                     ),
                                   ],
+                                ),
+                                
+                                const SizedBox(height: AppSizes.paddingXL),
+                                
+                                // Version or additional info (optional)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSizes.paddingM,
+                                    vertical: AppSizes.paddingS,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.darkNavy.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(AppSizes.radiusS),
+                                  ),
+                                  child: Text(
+                                    'Sistem Manajemen SDM v1.0',
+                                    style: GoogleFonts.roboto(
+                                      fontSize: 11,
+                                      color: AppColors.white.withOpacity(0.7),
+                                      fontWeight: FontWeight.w400,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
