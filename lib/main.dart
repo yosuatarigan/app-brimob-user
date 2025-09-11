@@ -9,7 +9,7 @@ import 'widgets/auth_wrapper.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
+  runApp(const AdminApp());
 }
 
 class MyApp extends StatelessWidget {

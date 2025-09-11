@@ -6,7 +6,6 @@ import '../models/user_model.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_dropdown.dart';
-import '../widgets/custom_date_picker.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -33,11 +32,6 @@ class _RegisterPageState extends State<RegisterPage> {
   UserRole? _selectedRole;
   DateTime? _dateOfBirth;
   DateTime? _militaryJoinDate;
-
-  final List<String> _ranks = [
-    'AIPDA', 'AIPTU', 'IPDA', 'IPTU', 'AKP', 'KOMPOL', 
-    'AKBP', 'KOMBES', 'BRIGJEN', 'IRJEN', 'KOMJEN'
-  ];
 
   @override
   void dispose() {
@@ -109,19 +103,200 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
+  String _formatDate(DateTime date) {
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  Future<void> _selectDateOfBirth() async {
+    final DateTime firstDate = DateTime(1960);
+    final DateTime lastDate = DateTime.now().subtract(const Duration(days: 365 * 17));
+    DateTime initialDate;
+    
+    // Pastikan initialDate berada dalam range yang valid
+    if (_dateOfBirth != null) {
+      initialDate = _dateOfBirth!;
+    } else {
+      // Set ke tanggal yang aman di tengah-tengah range
+      initialDate = DateTime(1990, 1, 1);
+      // Pastikan tidak melebihi lastDate
+      if (initialDate.isAfter(lastDate)) {
+        initialDate = lastDate;
+      }
+    }
+
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      helpText: 'Pilih Tanggal Lahir',
+      confirmText: 'PILIH',
+      cancelText: 'BATAL',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primaryBlue,
+              onPrimary: AppColors.white,
+              onSurface: AppColors.darkNavy,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primaryBlue,
+                textStyle: GoogleFonts.roboto(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != _dateOfBirth) {
+      setState(() {
+        _dateOfBirth = picked;
+      });
+    }
+  }
+
+  Future<void> _selectMilitaryJoinDate() async {
+    final DateTime firstDate = DateTime(1980);
+    final DateTime lastDate = DateTime.now();
+    DateTime initialDate;
+    
+    // Pastikan initialDate berada dalam range yang valid
+    if (_militaryJoinDate != null) {
+      initialDate = _militaryJoinDate!;
+    } else {
+      // Set ke tanggal yang aman, misalnya 5 tahun lalu
+      initialDate = DateTime.now().subtract(const Duration(days: 365 * 5));
+    }
+
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      helpText: 'Pilih Tanggal Masuk Militer',
+      confirmText: 'PILIH',
+      cancelText: 'BATAL',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primaryBlue,
+              onPrimary: AppColors.white,
+              onSurface: AppColors.darkNavy,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primaryBlue,
+                textStyle: GoogleFonts.roboto(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != _militaryJoinDate) {
+      setState(() {
+        _militaryJoinDate = picked;
+      });
+    }
+  }
+
+  Widget _buildDatePicker({
+    required String labelText,
+    required DateTime? selectedDate,
+    required VoidCallback onTap,
+    required String? Function(DateTime?) validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.paddingM,
+              vertical: AppSizes.paddingM + 2,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              border: Border.all(
+                color: AppColors.darkGray.withOpacity(0.3),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  color: AppColors.primaryBlue,
+                  size: 20,
+                ),
+                const SizedBox(width: AppSizes.paddingM),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        labelText,
+                        style: GoogleFonts.roboto(
+                          fontSize: 12,
+                          color: AppColors.darkGray,
+                          height: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        selectedDate != null
+                            ? _formatDate(selectedDate)
+                            : 'Pilih tanggal',
+                        style: GoogleFonts.roboto(
+                          fontSize: 14,
+                          color: selectedDate != null
+                              ? AppColors.darkNavy
+                              : AppColors.darkGray.withOpacity(0.6),
+                          fontWeight: selectedDate != null
+                              ? FontWeight.w500
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: AppColors.primaryBlue,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.primaryBlue,
-              AppColors.darkNavy,
-            ],
-          ),
+          gradient: AppColors.primaryGradient,
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -212,12 +387,15 @@ class _RegisterPageState extends State<RegisterPage> {
                         
                         const SizedBox(height: AppSizes.paddingM),
                         
-                        CustomDatePicker(
+                        // Custom Date Picker for Date of Birth
+                        _buildDatePicker(
                           labelText: 'Tanggal Lahir',
                           selectedDate: _dateOfBirth,
-                          onDateSelected: (date) => setState(() => _dateOfBirth = date),
-                          firstDate: DateTime(1960),
-                          lastDate: DateTime.now().subtract(const Duration(days: 365 * 17)),
+                          onTap: _selectDateOfBirth,
+                          validator: (value) {
+                            if (value == null) return 'Pilih tanggal lahir';
+                            return null;
+                          },
                         ),
                         
                         const SizedBox(height: AppSizes.paddingL),
@@ -251,7 +429,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           value: _rankController.text.isEmpty ? null : _rankController.text,
                           labelText: 'Pangkat',
                           prefixIcon: Icons.military_tech_outlined,
-                          items: _ranks.map((rank) => DropdownMenuItem(
+                          items: MenuData.militaryRanks.map((rank) => DropdownMenuItem(
                             value: rank,
                             child: Text(rank),
                           )).toList(),
@@ -281,12 +459,15 @@ class _RegisterPageState extends State<RegisterPage> {
                         
                         const SizedBox(height: AppSizes.paddingM),
                         
-                        CustomDatePicker(
+                        // Custom Date Picker for Military Join Date
+                        _buildDatePicker(
                           labelText: 'Tanggal Masuk Militer',
                           selectedDate: _militaryJoinDate,
-                          onDateSelected: (date) => setState(() => _militaryJoinDate = date),
-                          firstDate: DateTime(1980),
-                          lastDate: DateTime.now(),
+                          onTap: _selectMilitaryJoinDate,
+                          validator: (value) {
+                            if (value == null) return 'Pilih tanggal masuk militer';
+                            return null;
+                          },
                         ),
                         
                         const SizedBox(height: AppSizes.paddingL),
@@ -359,7 +540,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         Container(
                           padding: const EdgeInsets.all(AppSizes.paddingM),
                           decoration: BoxDecoration(
-                            color: Colors.lightBlue.withOpacity(0.1),
+                            color: AppColors.lightBlue.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(AppSizes.radiusM),
                           ),
                           child: Row(
