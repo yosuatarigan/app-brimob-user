@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../constants/app_constants.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
@@ -24,6 +26,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _rankController = TextEditingController();
   
   final AuthService _authService = AuthService();
+  final ImagePicker _imagePicker = ImagePicker();
   
   bool _isLoading = false;
   bool _isPasswordVisible = false;
@@ -32,6 +35,7 @@ class _RegisterPageState extends State<RegisterPage> {
   UserRole? _selectedRole;
   DateTime? _dateOfBirth;
   DateTime? _militaryJoinDate;
+  File? _selectedImage;
 
   @override
   void dispose() {
@@ -76,31 +80,204 @@ class _RegisterPageState extends State<RegisterPage> {
 
     setState(() => _isLoading = true);
 
-    final result = await _authService.registerWithEmailAndPassword(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-      fullName: _fullNameController.text.trim(),
-      nrp: _nrpController.text.trim(),
-      rank: _rankController.text.trim(),
-      role: _selectedRole!,
-      dateOfBirth: _dateOfBirth!,
-      militaryJoinDate: _militaryJoinDate!,
-    );
+    String? photoUrl;
 
-    setState(() => _isLoading = false);
+    try {
+      // Upload photo to Firebase Storage if selected
+      if (_selectedImage != null) {
+        photoUrl = await _uploadProfilePhoto(_selectedImage!);
+      }
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message']),
-          backgroundColor: result['success'] ? Colors.green : Colors.red,
-        ),
+      final result = await _authService.registerWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        fullName: _fullNameController.text.trim(),
+        nrp: _nrpController.text.trim(),
+        rank: _rankController.text.trim(),
+        role: _selectedRole!,
+        dateOfBirth: _dateOfBirth!,
+        militaryJoinDate: _militaryJoinDate!,
+        photoUrl: photoUrl,
       );
 
-      if (result['success']) {
-        Navigator.pop(context);
+      setState(() => _isLoading = false);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: result['success'] ? Colors.green : Colors.red,
+          ),
+        );
+
+        if (result['success']) {
+          Navigator.pop(context);
+        }
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Terjadi kesalahan: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
+  }
+
+  Future<String?> _uploadProfilePhoto(File imageFile) async {
+    try {
+      // Use AuthService to upload photo
+      final photoUrl = await _authService.uploadProfilePhoto(
+        imageFile, 
+        'temp_${DateTime.now().millisecondsSinceEpoch}' // Temporary ID for upload
+      );
+      return photoUrl;
+    } catch (e) {
+      print('Error uploading photo: $e');
+      throw Exception('Gagal mengupload foto profil');
+    }
+  }
+
+  Future<void> _selectProfilePhoto() async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(AppSizes.paddingL),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.darkGray.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: AppSizes.paddingM),
+            Text(
+              'Pilih Foto Profil',
+              style: GoogleFonts.roboto(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.darkNavy,
+              ),
+            ),
+            const SizedBox(height: AppSizes.paddingL),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildPhotoOption(
+                    icon: Icons.camera_alt,
+                    label: 'Kamera',
+                    onTap: () => _pickImage(ImageSource.camera),
+                  ),
+                ),
+                const SizedBox(width: AppSizes.paddingM),
+                Expanded(
+                  child: _buildPhotoOption(
+                    icon: Icons.photo_library,
+                    label: 'Galeri',
+                    onTap: () => _pickImage(ImageSource.gallery),
+                  ),
+                ),
+              ],
+            ),
+            if (_selectedImage != null) ...[
+              const SizedBox(height: AppSizes.paddingM),
+              SizedBox(
+                width: double.infinity,
+                child: _buildPhotoOption(
+                  icon: Icons.delete,
+                  label: 'Hapus Foto',
+                  onTap: _removePhoto,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSizes.paddingL),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(AppSizes.radiusM),
+      child: Container(
+        padding: const EdgeInsets.all(AppSizes.paddingL),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.darkGray.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 32,
+              color: color ?? AppColors.primaryBlue,
+            ),
+            const SizedBox(height: AppSizes.paddingS),
+            Text(
+              label,
+              style: GoogleFonts.roboto(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: color ?? AppColors.darkNavy,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 80,
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _selectedImage = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memilih foto: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _removePhoto() {
+    setState(() {
+      _selectedImage = null;
+    });
   }
 
   String _formatDate(DateTime date) {
@@ -116,13 +293,10 @@ class _RegisterPageState extends State<RegisterPage> {
     final DateTime lastDate = DateTime.now().subtract(const Duration(days: 365 * 17));
     DateTime initialDate;
     
-    // Pastikan initialDate berada dalam range yang valid
     if (_dateOfBirth != null) {
       initialDate = _dateOfBirth!;
     } else {
-      // Set ke tanggal yang aman di tengah-tengah range
       initialDate = DateTime(1990, 1, 1);
-      // Pastikan tidak melebihi lastDate
       if (initialDate.isAfter(lastDate)) {
         initialDate = lastDate;
       }
@@ -170,11 +344,9 @@ class _RegisterPageState extends State<RegisterPage> {
     final DateTime lastDate = DateTime.now();
     DateTime initialDate;
     
-    // Pastikan initialDate berada dalam range yang valid
     if (_militaryJoinDate != null) {
       initialDate = _militaryJoinDate!;
     } else {
-      // Set ke tanggal yang aman, misalnya 5 tahun lalu
       initialDate = DateTime.now().subtract(const Duration(days: 365 * 5));
     }
 
@@ -356,7 +528,98 @@ class _RegisterPageState extends State<RegisterPage> {
                             color: AppColors.darkNavy,
                           ),
                         ),
-                        const SizedBox(height: AppSizes.paddingM),
+                        const SizedBox(height: AppSizes.paddingL),
+                        
+                        // Profile Photo Section
+                        Center(
+                          child: Column(
+                            children: [
+                              GestureDetector(
+                                onTap: _selectProfilePhoto,
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      width: 120,
+                                      height: 120,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: AppColors.primaryBlue,
+                                          width: 3,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.primaryBlue.withOpacity(0.2),
+                                            blurRadius: 15,
+                                            offset: const Offset(0, 5),
+                                          ),
+                                        ],
+                                      ),
+                                      child: ClipOval(
+                                        child: _selectedImage != null
+                                            ? Image.file(
+                                                _selectedImage!,
+                                                width: 120,
+                                                height: 120,
+                                                fit: BoxFit.cover,
+                                              )
+                                            : Container(
+                                                width: 120,
+                                                height: 120,
+                                                color: AppColors.lightGray,
+                                                child: Icon(
+                                                  Icons.person,
+                                                  size: 60,
+                                                  color: AppColors.darkGray,
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      bottom: 0,
+                                      right: 0,
+                                      child: Container(
+                                        width: 36,
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primaryBlue,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: AppColors.white,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.camera_alt,
+                                          color: AppColors.white,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: AppSizes.paddingS),
+                              Text(
+                                'Foto Profil',
+                                style: GoogleFonts.roboto(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.darkNavy,
+                                ),
+                              ),
+                              Text(
+                                'Tap untuk ${_selectedImage != null ? 'mengubah' : 'menambah'} foto',
+                                style: GoogleFonts.roboto(
+                                  fontSize: 12,
+                                  color: AppColors.darkGray,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        const SizedBox(height: AppSizes.paddingL),
                         
                         CustomTextField(
                           controller: _fullNameController,
