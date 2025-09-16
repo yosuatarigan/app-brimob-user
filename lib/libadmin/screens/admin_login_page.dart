@@ -16,7 +16,7 @@ class _AdminLoginPageState extends State<AdminLoginPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController(text: 'admin@polri.go.id');
-  final _passwordController = TextEditingController();
+  final _passwordController = TextEditingController(text: 'admin123');
 
   bool _isLoading = false;
   bool _obscurePassword = true;

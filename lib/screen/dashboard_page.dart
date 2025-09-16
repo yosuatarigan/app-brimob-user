@@ -1,3 +1,4 @@
+import 'package:app_brimob_user/notification_widget.dart';
 import 'package:app_brimob_user/slide_show_model.dart';
 import 'package:app_brimob_user/widget/menu_card.dart';
 import 'package:flutter/material.dart';
@@ -101,6 +102,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 _buildGaleriSatuan(),
                 _buildMenuGrid(),
                 _buildPedomanSection(),
+                _buildNotificationSection(),
               ],
             ),
           ),
@@ -330,6 +332,20 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  // Tambahkan di build method
+  Widget _buildNotificationSection() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const NotificationWidget(), // Widget notifikasi ringkas
+          const SizedBox(height: 16),
+          const RecentNotificationsWidget(limit: 3), // 3 notifikasi terbaru
         ],
       ),
     );
@@ -1023,9 +1039,7 @@ Sumpah setia kepada dasar negara Pancasila sebagai panduan moral dan etika:
   void _navigateToLogin(String targetMenu) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => LoginPage(),
-      ),
+      MaterialPageRoute(builder: (context) => LoginPage()),
     );
   }
 

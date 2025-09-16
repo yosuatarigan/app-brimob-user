@@ -1,9 +1,12 @@
+import 'package:app_brimob_user/admin_send_notification_page.dart';
 import 'package:app_brimob_user/libadmin/admin_constant.dart';
 import 'package:app_brimob_user/libadmin/models/admin_model.dart';
 import 'package:app_brimob_user/libadmin/screens/content_managament_page.dart';
 import 'package:app_brimob_user/libadmin/screens/galery_management_page.dart';
 import 'package:app_brimob_user/libadmin/screens/slide_show_management.dart';
 import 'package:app_brimob_user/libadmin/widget/admin_witget.dart';
+import 'package:app_brimob_user/services/cloud_function_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -78,6 +81,97 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          print('=== TESTING CLOUD FUNCTIONS WITH AUTH FIX ===');
+
+          // Check authentication
+          final user = FirebaseAuth.instance.currentUser;
+          print('Current user: ${user?.uid}');
+          print('User email: ${user?.email}');
+
+          if (user == null) {
+            print('❌ USER NOT AUTHENTICATED');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Please login first'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
+
+          print('✅ User authenticated: ${user.uid}');
+
+          // Test getting ID token
+          try {
+            print('Getting ID token...');
+            final String? token = await user.getIdToken(true);
+            print('✅ ID Token obtained: ${token?.substring(0, 20)}...');
+          } catch (e) {
+            print('❌ Failed to get ID token: $e');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to get ID token: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
+
+          // Test Cloud Function with fixed auth
+          try {
+            print('Testing Cloud Function with fixed auth...');
+            final result = await CloudFunctionService.testFirestore();
+
+            print('Raw result: $result');
+
+            if (result != null && result['success'] == true) {
+              print('✅ SUCCESS!');
+              print('User exists: ${result['userExists']}');
+              print('User data: ${result['userData']}');
+
+              final userData = result['userData'];
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'SUCCESS! Role: ${userData['role']}, Name: ${userData['name']}',
+                  ),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            } else if (result != null && result['success'] == false) {
+              print('❌ Function returned error: ${result['error']}');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error: ${result['error']}'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            } else {
+              print('❌ Unexpected result: $result');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Unexpected result'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          } catch (e, stackTrace) {
+            print('❌ EXCEPTION: $e');
+            print('Stack trace: $stackTrace');
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Exception: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+
+          print('=== END TEST ===');
+        },
+      ),
       backgroundColor: AdminColors.background,
       body: SafeArea(
         child: _isLoading ? _buildLoadingState() : _buildContent(),
@@ -887,6 +981,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     );
   }
 
+  // Update method _handleMenuTap di AdminDashboardPage
+
   void _handleMenuTap(String menuId) {
     switch (menuId) {
       case 'content_management':
@@ -903,6 +999,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           MaterialPageRoute(builder: (context) => const UserManagementPage()),
         );
         break;
+      case 'send_notification':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AdminSendNotificationPage(),
+          ),
+        );
+        break;
       case 'media_library':
         Navigator.push(
           context,
@@ -915,7 +1019,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           MaterialPageRoute(builder: (context) => GalleryManagementPage()),
         );
         break;
-      case 'slideshow_management': // Add this case
+      case 'slideshow_management':
         Navigator.push(
           context,
           MaterialPageRoute(

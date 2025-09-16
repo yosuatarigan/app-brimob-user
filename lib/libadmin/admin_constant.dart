@@ -120,7 +120,16 @@ class AdminMenus {
           'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=200&fit=crop',
       'route': '/user-management',
     },
-
+    {
+      'id': 'send_notification',
+      'title': 'Send Notification',
+      'subtitle': 'Kirim notifikasi ke satuan',
+      'icon': Icons.send,
+      'color': AdminColors.adminRed,
+      'imageUrl':
+          'https://images.unsplash.com/photo-1553484771-371a605b060b?w=400&h=200&fit=crop',
+      'route': '/send-notification',
+    },
     {
       'id': 'gallery_management',
       'title': 'Gallery Management',
@@ -137,7 +146,7 @@ class AdminMenus {
       'subtitle': 'Kelola slideshow dashboard',
       'icon': Icons.slideshow,
       'color': AdminColors.adminPurple,
-      'imageUrl': AdminImages.slideshowManagement, // Add appropriate image URL
+      'imageUrl': AdminImages.slideshowManagement,
     },
   ];
 
@@ -205,6 +214,8 @@ class AdminImages {
       'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop';
   static const String mediaLibrary =
       'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=400&fit=crop';
+  static const String sendNotification =
+      'https://images.unsplash.com/photo-1553484771-371a605b060b?w=800&h=400&fit=crop';
   static const String slideshowManagement =
       'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=400&fit=crop';
   static const String analytics =

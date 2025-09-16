@@ -1,0 +1,9 @@
+{
+  "functions": [
+    {
+      "source": "brimob-functions",
+      "codebase": "brimob-functions",
+      "runtime": "nodejs18"
+    }
+  ]
+}
