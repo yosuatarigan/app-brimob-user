@@ -1,5 +1,6 @@
 import 'package:app_brimob_user/libadmin/screens/main_admin.dart';
 import 'package:app_brimob_user/screen/splash_page.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +10,13 @@ import 'widgets/auth_wrapper.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  // ✨ AKTIFKAN APP CHECK DI SINI ✨
+  await FirebaseAppCheck.instance.activate(
+    // Gunakan provider debug untuk pengembangan dan pengujian
+    androidProvider: AndroidProvider.debug,
+    appleProvider: AppleProvider.debug,
+  );
+
   runApp(const AdminApp());
 }
 
@@ -40,9 +48,7 @@ class MyApp extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primaryBlue,
             foregroundColor: AppColors.white,
-            textStyle: GoogleFonts.roboto(
-              fontWeight: FontWeight.bold,
-            ),
+            textStyle: GoogleFonts.roboto(fontWeight: FontWeight.bold),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSizes.radiusM),
             ),
@@ -60,9 +66,7 @@ class MyApp extends StatelessWidget {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppSizes.radiusM),
-            borderSide: BorderSide(
-              color: AppColors.darkGray.withOpacity(0.3),
-            ),
+            borderSide: BorderSide(color: AppColors.darkGray.withOpacity(0.3)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppSizes.radiusM),

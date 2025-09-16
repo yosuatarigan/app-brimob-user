@@ -14,7 +14,7 @@ class CloudFunctionService {
         print('No current user for token');
         return null;
       }
-      
+
       final String? token = await currentUser.getIdToken(true); // Force refresh
       print('Got ID token: ${token?.substring(0, 20)}...');
       return token;
@@ -28,27 +28,27 @@ class CloudFunctionService {
   static Future<Map<String, dynamic>?> testConnection() async {
     try {
       print('Testing Cloud Functions connection...');
-      
+
       // Ensure user is authenticated and get token
       final User? currentUser = _auth.currentUser;
       if (currentUser == null) {
         print('User not authenticated');
         return null;
       }
-      
+
       // Get fresh ID token
       final String? token = await _getIdToken();
       if (token == null) {
         print('Failed to get ID token');
         return null;
       }
-      
+
       print('Making authenticated call...');
-      
+
       // Make authenticated call
       final HttpsCallable callable = _functions.httpsCallable('testFirestore');
       final HttpsCallableResult result = await callable.call();
-      
+
       print('Test connection result: ${result.data}');
       return result.data;
     } catch (e) {
@@ -77,14 +77,17 @@ class CloudFunctionService {
       final String? token = await _getIdToken();
       if (token == null) {
         print('Failed to get ID token');
-        return {'success': false, 'error': 'Failed to get authentication token'};
+        return {
+          'success': false,
+          'error': 'Failed to get authentication token',
+        };
       }
 
       print('Making authenticated testFirestore call...');
 
       final HttpsCallable callable = _functions.httpsCallable('testFirestore');
       final HttpsCallableResult result = await callable.call();
-      
+
       print('Test Firestore result: ${result.data}');
       return result.data;
     } catch (e) {
@@ -93,7 +96,7 @@ class CloudFunctionService {
         print('Functions Exception Code: ${e.code}');
         print('Functions Exception Message: ${e.message}');
         print('Functions Exception Details: ${e.details}');
-        
+
         // Return error info for debugging
         return {
           'success': false,
@@ -123,7 +126,9 @@ class CloudFunctionService {
       }
 
       print('Calling sendNotification Cloud Function...');
-      print('Data: title="$title", targetRole="${targetRole.name}", type="${type.name}"');
+      print(
+        'Data: title="$title", targetRole="${targetRole.name}", type="${type.name}"',
+      );
 
       // Get fresh ID token
       final String? token = await _getIdToken();
@@ -132,8 +137,10 @@ class CloudFunctionService {
         return false;
       }
 
-      final HttpsCallable callable = _functions.httpsCallable('sendNotification');
-      
+      final HttpsCallable callable = _functions.httpsCallable(
+        'sendNotification',
+      );
+
       final HttpsCallableResult result = await callable.call({
         'title': title,
         'message': message,
@@ -144,7 +151,7 @@ class CloudFunctionService {
       });
 
       print('Cloud Function sendNotification response: ${result.data}');
-      
+
       final bool success = result.data['success'] == true;
       if (success) {
         print('✅ Notification sent successfully!');
@@ -152,17 +159,16 @@ class CloudFunctionService {
         print('FCM Message ID: ${result.data['messageId']}');
         print('Topic: ${result.data['topic']}');
       }
-      
+
       return success;
-      
     } catch (e) {
       print('❌ Error calling sendNotification Cloud Function: $e');
-      
+
       if (e is FirebaseFunctionsException) {
         print('Functions Exception Code: ${e.code}');
         print('Functions Exception Message: ${e.message}');
         print('Functions Exception Details: ${e.details}');
-        
+
         // Handle specific error codes
         switch (e.code) {
           case 'unauthenticated':
@@ -175,13 +181,15 @@ class CloudFunctionService {
             print('❌ Error: User document not found in Firestore');
             break;
           case 'invalid-argument':
-            print('❌ Error: Missing required fields (title, message, targetRole)');
+            print(
+              '❌ Error: Missing required fields (title, message, targetRole)',
+            );
             break;
           default:
             print('❌ Error: ${e.message}');
         }
       }
-      
+
       return false;
     }
   }
@@ -201,9 +209,11 @@ class CloudFunctionService {
         return null;
       }
 
-      final HttpsCallable callable = _functions.httpsCallable('getNotificationStats');
+      final HttpsCallable callable = _functions.httpsCallable(
+        'getNotificationStats',
+      );
       final HttpsCallableResult result = await callable.call();
-      
+
       print('Notification stats result: ${result.data}');
       return result.data;
     } catch (e) {
@@ -220,9 +230,9 @@ class CloudFunctionService {
     try {
       final User? currentUser = _auth.currentUser;
       if (currentUser == null) return false;
-      
+
       await currentUser.reload();
-      final String? token = await currentUser.getIdToken(true);
+      await currentUser.getIdToken(true);
       print('Auth refreshed successfully');
       return true;
     } catch (e) {
