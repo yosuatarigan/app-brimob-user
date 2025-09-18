@@ -10,21 +10,23 @@ class NotificationHelper {
   static Future<void> initialize() async {
     // Android initialization - ganti icon
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher'); // ganti dari @drawable ke @mipmap
+        AndroidInitializationSettings(
+          '@mipmap/ic_launcher',
+        ); // ganti dari @drawable ke @mipmap
 
     // iOS initialization
     const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings(
-      requestSoundPermission: true,
-      requestBadgePermission: true,
-      requestAlertPermission: true,
-    );
+          requestSoundPermission: true,
+          requestBadgePermission: true,
+          requestAlertPermission: true,
+        );
 
     const InitializationSettings initializationSettings =
         InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-    );
+          android: initializationSettingsAndroid,
+          iOS: initializationSettingsIOS,
+        );
 
     await _notificationsPlugin.initialize(initializationSettings);
 
@@ -35,16 +37,19 @@ class NotificationHelper {
   // Create notification channel (Android 8.0+)
   static Future<void> _createNotificationChannel() async {
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'high_importance_channel', // Channel ID
-      'High Importance Notifications', // Channel name
-      description: 'This channel is used for important notifications.',
-      importance: Importance.high,
+      'bypass_silent_channel', // SAMA dengan di functions
+      'Bypass Silent Notifications',
+      description: 'Notifikasi yang bypass silent mode',
+      importance: Importance.max, // MAKSIMAL
+      enableVibration: true,
       playSound: true,
+      showBadge: true,
     );
 
     await _notificationsPlugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
   }
 
@@ -52,22 +57,23 @@ class NotificationHelper {
   static Future<void> showNotification(RemoteMessage message) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      'high_importance_channel',
-      'High Importance Notifications',
-      channelDescription: 'This channel is used for important notifications.',
-      importance: Importance.high,
-      priority: Priority.high,
-      showWhen: true,
-      playSound: true,
-      enableVibration: true,
-    );
+          'high_importance_channel',
+          'High Importance Notifications',
+          channelDescription:
+              'This channel is used for important notifications.',
+          importance: Importance.high,
+          priority: Priority.high,
+          showWhen: true,
+          playSound: true,
+          enableVibration: true,
+        );
 
     const DarwinNotificationDetails iOSPlatformChannelSpecifics =
         DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        );
 
     const NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,

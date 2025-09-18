@@ -1,73 +1,108 @@
-// functions/index.js
+// functions/index.js - SEMUA NOTIFIKASI BYPASS SILENT MODE
 const {onDocumentCreated} = require("firebase-functions/v2/firestore");
 const {initializeApp} = require("firebase-admin/app");
 const {getMessaging} = require("firebase-admin/messaging");
 
 initializeApp();
 
-// Function untuk notifikasi broadcast (semua user)
-exports.sendNotificationToAll = onDocumentCreated("notifications/{docId}", async (event) => {
-  const data = event.data.data();
-  
-  const message = {
+// Helper function - SEMUA NOTIFIKASI BYPASS SILENT MODE (CORRECTED)
+function createMessage(data, topic) {
+  return {
     notification: {
       title: data.title,
       body: data.message,
     },
-    topic: "all_users"
+    android: {
+      priority: "high",
+      notification: {
+        channelId: "bypass_silent_channel",
+        priority: "high",
+        defaultSound: true,
+        defaultVibrateTimings: false,
+        // Field yang VALID untuk FCM Android
+        sound: "default",
+        tag: "bypass_silent",
+        color: "#FF0000",
+        sticky: false,
+        localOnly: false,
+        visibility: "public"
+      }
+    },
+    apns: {
+      headers: {
+        "apns-priority": "10",
+        "apns-push-type": "alert"
+      },
+      payload: {
+        aps: {
+          alert: {
+            title: data.title,
+            body: data.message
+          },
+          sound: "default",
+          badge: 1,
+          // BYPASS SILENT MODE iOS - CRITICAL LEVEL
+          "interruption-level": "critical"
+        }
+      }
+    },
+    data: {
+      bypassSilent: "true",
+      forceSound: "true",
+      priority: "high",
+      timestamp: new Date().toISOString()
+    },
+    topic: topic
   };
+}
+
+// Function untuk notifikasi broadcast (semua user)
+exports.sendNotificationToAll = onDocumentCreated("notifications/{docId}", async (event) => {
+  const data = event.data.data();
+  
+  const message = createMessage(data, "all_users");
 
   try {
     await getMessaging().send(message);
-    console.log("Broadcast notification sent successfully to all_users");
+    console.log("🔊 Broadcast notification sent - BYPASS SILENT MODE ACTIVE");
   } catch (error) {
     console.error("Error sending broadcast notification:", error);
   }
 });
 
-// Function untuk notifikasi berdasarkan role/satuan BRIMOB
+// Function untuk notifikasi berdasarkan role/satuan
 exports.sendNotificationToRole = onDocumentCreated("role_notifications/{docId}", async (event) => {
   const data = event.data.data();
   
-  const message = {
-    notification: {
-      title: data.title,
-      body: data.message,
-    },
-    topic: data.targetTopic // akan berisi topic seperti "mako_kor_users", "pas_pelopor_users", dll
-  };
+  const message = createMessage(data, data.targetTopic);
 
   try {
     await getMessaging().send(message);
-    console.log(`Role notification sent successfully to topic: ${data.targetTopic}`);
+    console.log(`🔊 Role notification sent to: ${data.targetTopic} - BYPASS SILENT MODE`);
     
-    // Log additional info
+    // Log info
     console.log(`Notification details:`, {
       title: data.title,
       targetRole: data.targetRole,
       topic: data.targetTopic,
-      senderName: data.senderName || 'Admin',
-      type: data.type || 'general'
+      bypassSilent: true,
+      forceSound: true
     });
   } catch (error) {
     console.error("Error sending role notification:", error);
-    console.error("Failed notification data:", {
-      title: data.title,
-      topic: data.targetTopic,
-      targetRole: data.targetRole
-    });
   }
 });
 
-// Optional: Function untuk debugging - melihat semua topics BRIMOB yang ada
-exports.debugBrimobTopics = onDocumentCreated("debug/{docId}", async (event) => {
-  console.log("Available FCM topics for BRIMOB app:");
-  console.log("- all_users (broadcast)");
-  console.log("- admin_users");
-  console.log("- mako_kor_users (MAKO KOR)");
-  console.log("- pas_pelopor_users (PAS PELOPOR)");
-  console.log("- pas_gegana_users (PAS GEGANA)");
-  console.log("- pasbrimob_i_users (PASBRIMOB I)");
-  console.log("- pasbrimob_ii_users (PASBRIMOB II)");
-  console.log("- pasbrimob_iii_users (PASBRIMOB III)");
+// Debug topics - SEMUA BYPASS SILENT MODE
+exports.debugTopics = onDocumentCreated("debug/{docId}", async (event) => {
+  console.log("🔊 ALL FCM topics BYPASS SILENT MODE - NO EXCEPTIONS:");
+  console.log("- all_users (FORCE SOUND)");
+  console.log("- admin_users (FORCE SOUND)");
+  console.log("- mako_kor_users (FORCE SOUND)");
+  console.log("- pas_pelopor_users (FORCE SOUND)");
+  console.log("- pas_gegana_users (FORCE SOUND)");
+  console.log("- pasbrimob_i_users (FORCE SOUND)");
+  console.log("- pasbrimob_ii_users (FORCE SOUND)");
+  console.log("- pasbrimob_iii_users (FORCE SOUND)");
+  console.log("✅ Priority: MAXIMUM | BypassDND: TRUE | InterruptionLevel: CRITICAL");
 });
