@@ -1,21 +1,63 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Import UserRole from existing user model
 enum UserRole {
-  makoKor('MAKO KOR'),
-  pasPelopor('PAS PELOPOR'),
-  pasGegana('PAS GEGANA'),
-  pasbrimobI('PASBRIMOB I'),
-  pasbrimobII('PASBRIMOB II'),
-  pasbrimobIII('PASBRIMOB III');
+  admin,
+  makoKor,
+  pasPelopor,
+  pasGegana,
+  pasbrimobI,
+  pasbrimobII,
+  pasbrimobIII,
+  other;
 
-  const UserRole(this.displayName);
-  final String displayName;
+  String get displayName {
+    switch (this) {
+      case UserRole.admin:
+        return 'ADMINISTRATOR';
+      case UserRole.makoKor:
+        return 'MAKO KOR';
+      case UserRole.pasPelopor:
+        return 'PAS PELOPOR';
+      case UserRole.pasGegana:
+        return 'PAS GEGANA';
+      case UserRole.pasbrimobI:
+        return 'PASBRIMOB I';
+      case UserRole.pasbrimobII:
+        return 'PASBRIMOB II';
+      case UserRole.pasbrimobIII:
+        return 'PASBRIMOB III';
+      case UserRole.other:
+        return 'OTHER';
+    }
+  }
+
+  String get topicName {
+    switch (this) {
+      case UserRole.admin:
+        return 'admin_users';
+      case UserRole.makoKor:
+        return 'mako_kor_users';
+      case UserRole.pasPelopor:
+        return 'pas_pelopor_users';
+      case UserRole.pasGegana:
+        return 'pas_gegana_users';
+      case UserRole.pasbrimobI:
+        return 'pasbrimob_i_users';
+      case UserRole.pasbrimobII:
+        return 'pasbrimob_ii_users';
+      case UserRole.pasbrimobIII:
+        return 'pasbrimob_iii_users';
+      case UserRole.other:
+        return 'other_users';
+    }
+  }
 
   // Get role from string
   static UserRole fromString(String value) {
     return UserRole.values.firstWhere(
       (e) => e.name == value,
-      orElse: () => UserRole.makoKor,
+      orElse: () => UserRole.other,
     );
   }
 }
@@ -90,7 +132,7 @@ class UserModel {
   int get age {
     final now = DateTime.now();
     int age = now.year - dateOfBirth.year;
-    if (now.month < dateOfBirth.month || 
+    if (now.month < dateOfBirth.month ||
         (now.month == dateOfBirth.month && now.day < dateOfBirth.day)) {
       age--;
     }
@@ -101,8 +143,9 @@ class UserModel {
   int get yearsOfService {
     final now = DateTime.now();
     int years = now.year - militaryJoinDate.year;
-    if (now.month < militaryJoinDate.month || 
-        (now.month == militaryJoinDate.month && now.day < militaryJoinDate.day)) {
+    if (now.month < militaryJoinDate.month ||
+        (now.month == militaryJoinDate.month &&
+            now.day < militaryJoinDate.day)) {
       years--;
     }
     return years < 0 ? 0 : years;
@@ -111,8 +154,9 @@ class UserModel {
   // Calculate months of military service
   int get monthsOfService {
     final now = DateTime.now();
-    int totalMonths = (now.year - militaryJoinDate.year) * 12 + 
-                     (now.month - militaryJoinDate.month);
+    int totalMonths =
+        (now.year - militaryJoinDate.year) * 12 +
+        (now.month - militaryJoinDate.month);
     if (now.day < militaryJoinDate.day) {
       totalMonths--;
     }
@@ -131,11 +175,24 @@ class UserModel {
   // Check if user is rejected
   bool get isRejected => status == UserStatus.rejected;
 
+  // Check if user is admin
+  bool get isAdmin => role == UserRole.admin;
+
   // Get formatted date of birth
   String get formattedDateOfBirth {
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return '${dateOfBirth.day} ${months[dateOfBirth.month - 1]} ${dateOfBirth.year}';
   }
@@ -143,8 +200,18 @@ class UserModel {
   // Get formatted military join date
   String get formattedMilitaryJoinDate {
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return '${militaryJoinDate.day} ${months[militaryJoinDate.month - 1]} ${militaryJoinDate.year}';
   }
@@ -152,28 +219,32 @@ class UserModel {
   // Convert from Firestore DocumentSnapshot
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    
+
     return UserModel(
       id: doc.id,
       email: data['email'] ?? '',
       fullName: data['fullName'] ?? '',
       nrp: data['nrp'] ?? '',
       rank: data['rank'] ?? '',
-      role: UserRole.fromString(data['role'] ?? 'makoKor'),
+      role: UserRole.fromString(data['role'] ?? 'other'),
       status: UserStatus.fromString(data['status'] ?? 'pending'),
       photoUrl: data['photoUrl'],
-      dateOfBirth: data['dateOfBirth'] != null 
-          ? (data['dateOfBirth'] as Timestamp).toDate()
-          : DateTime.now(),
-      militaryJoinDate: data['militaryJoinDate'] != null 
-          ? (data['militaryJoinDate'] as Timestamp).toDate()
-          : DateTime.now(),
-      createdAt: data['createdAt'] != null 
-          ? (data['createdAt'] as Timestamp).toDate()
-          : DateTime.now(),
-      updatedAt: data['updatedAt'] != null 
-          ? (data['updatedAt'] as Timestamp).toDate()
-          : null,
+      dateOfBirth:
+          data['dateOfBirth'] != null
+              ? (data['dateOfBirth'] as Timestamp).toDate()
+              : DateTime.now(),
+      militaryJoinDate:
+          data['militaryJoinDate'] != null
+              ? (data['militaryJoinDate'] as Timestamp).toDate()
+              : DateTime.now(),
+      createdAt:
+          data['createdAt'] != null
+              ? (data['createdAt'] as Timestamp).toDate()
+              : DateTime.now(),
+      updatedAt:
+          data['updatedAt'] != null
+              ? (data['updatedAt'] as Timestamp).toDate()
+              : null,
       phoneNumber: data['phoneNumber'],
       address: data['address'],
       emergencyContact: data['emergencyContact'],
@@ -182,9 +253,10 @@ class UserModel {
       maritalStatus: data['maritalStatus'],
       education: data['education'],
       approvedBy: data['approvedBy'],
-      approvedAt: data['approvedAt'] != null 
-          ? (data['approvedAt'] as Timestamp).toDate()
-          : null,
+      approvedAt:
+          data['approvedAt'] != null
+              ? (data['approvedAt'] as Timestamp).toDate()
+              : null,
       rejectionReason: data['rejectionReason'],
     );
   }
@@ -197,21 +269,23 @@ class UserModel {
       fullName: map['fullName'] ?? '',
       nrp: map['nrp'] ?? '',
       rank: map['rank'] ?? '',
-      role: UserRole.fromString(map['role'] ?? 'makoKor'),
+      role: UserRole.fromString(map['role'] ?? 'other'),
       status: UserStatus.fromString(map['status'] ?? 'pending'),
       photoUrl: map['photoUrl'],
-      dateOfBirth: map['dateOfBirth'] != null 
-          ? DateTime.parse(map['dateOfBirth'])
-          : DateTime.now(),
-      militaryJoinDate: map['militaryJoinDate'] != null 
-          ? DateTime.parse(map['militaryJoinDate'])
-          : DateTime.now(),
-      createdAt: map['createdAt'] != null 
-          ? DateTime.parse(map['createdAt'])
-          : DateTime.now(),
-      updatedAt: map['updatedAt'] != null 
-          ? DateTime.parse(map['updatedAt'])
-          : null,
+      dateOfBirth:
+          map['dateOfBirth'] != null
+              ? DateTime.parse(map['dateOfBirth'])
+              : DateTime.now(),
+      militaryJoinDate:
+          map['militaryJoinDate'] != null
+              ? DateTime.parse(map['militaryJoinDate'])
+              : DateTime.now(),
+      createdAt:
+          map['createdAt'] != null
+              ? DateTime.parse(map['createdAt'])
+              : DateTime.now(),
+      updatedAt:
+          map['updatedAt'] != null ? DateTime.parse(map['updatedAt']) : null,
       phoneNumber: map['phoneNumber'],
       address: map['address'],
       emergencyContact: map['emergencyContact'],
@@ -220,9 +294,8 @@ class UserModel {
       maritalStatus: map['maritalStatus'],
       education: map['education'],
       approvedBy: map['approvedBy'],
-      approvedAt: map['approvedAt'] != null 
-          ? DateTime.parse(map['approvedAt'])
-          : null,
+      approvedAt:
+          map['approvedAt'] != null ? DateTime.parse(map['approvedAt']) : null,
       rejectionReason: map['rejectionReason'],
     );
   }
@@ -371,12 +444,7 @@ class MilitaryRank {
     'KOMJEN',
   ];
 
-  static const List<String> bloodTypes = [
-    'A',
-    'B',
-    'AB',
-    'O',
-  ];
+  static const List<String> bloodTypes = ['A', 'B', 'AB', 'O'];
 
   static const List<String> religions = [
     'Islam',

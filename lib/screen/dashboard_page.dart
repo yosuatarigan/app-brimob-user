@@ -1,12 +1,15 @@
+// lib/pages/dashboard_page.dart
 import 'package:app_brimob_user/notification_widget.dart';
-import 'package:app_brimob_user/slide_show_model.dart';
-import 'package:app_brimob_user/widget/menu_card.dart';
+import 'package:app_brimob_user/percobaannotif/fcm_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+
+// Import existing
+import '../slide_show_model.dart';
+import '../widget/menu_card.dart';
 import '../constants/app_constants.dart';
 import '../services/firebase_service.dart';
-import 'login_page.dart';
 import 'content_page.dart';
 import 'galeri_page.dart';
 import 'pedoman_detail_page.dart';
@@ -20,6 +23,7 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   bool _isLoading = false;
+  bool _isFCMInitialized = false;
 
   // Slideshow variables
   final PageController _pageController = PageController();
@@ -31,12 +35,23 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _loadSlideshowImages();
+    _initializeNotificationSystem();
   }
 
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  // Initialize FCM for notifications
+  Future<void> _initializeNotificationSystem() async {
+    try {
+      await FCMService.initialize();
+      setState(() => _isFCMInitialized = true);
+    } catch (e) {
+      print('Error initializing FCM: $e');
+    }
   }
 
   Future<void> _loadSlideshowImages() async {
@@ -48,14 +63,12 @@ class _DashboardPageState extends State<DashboardPage> {
         _isLoadingSlideshow = false;
       });
 
-      // Start auto-slide if images are available
       if (_slideshowImages.isNotEmpty) {
         _startAutoSlide();
       }
     } catch (e) {
       print('Error loading slideshow images: $e');
       setState(() => _isLoadingSlideshow = false);
-      // Use default image if loading fails
       _slideshowImages = [
         SlideshowItem(
           id: 'default',
@@ -64,7 +77,7 @@ class _DashboardPageState extends State<DashboardPage> {
           order: 0,
         ),
       ];
-      _startAutoSlide(); // Start auto-slide even with default image
+      _startAutoSlide();
     }
   }
 
@@ -77,9 +90,8 @@ class _DashboardPageState extends State<DashboardPage> {
           duration: const Duration(milliseconds: 500),
           curve: Curves.easeInOut,
         );
-        _startAutoSlide(); // Continue auto-slide
+        _startAutoSlide();
       } else if (mounted && _slideshowImages.length == 1) {
-        // Even with single image, restart the timer for consistency
         _startAutoSlide();
       }
     });
@@ -99,16 +111,36 @@ class _DashboardPageState extends State<DashboardPage> {
               children: [
                 Image.asset('assets/welcome.png'),
                 _buildSlideshowHeader(),
+                _buildNotificationSection(),
+                _buildNotificationQuickAccess(),
                 _buildGaleriSatuan(),
                 _buildMenuGrid(),
                 _buildPedomanSection(),
-                _buildNotificationSection(),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  // Simplified Notification Section (no role dependency)
+  Widget _buildNotificationSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          NotificationWidget(),
+          const SizedBox(height: 16),
+          RecentNotificationsWidget(limit: 3),
+        ],
+      ),
+    );
+  }
+
+  // Quick Access to Notification Features
+  Widget _buildNotificationQuickAccess() {
+    return const NotificationQuickAccessWidget();
   }
 
   Widget _buildSlideshowHeader() {
@@ -179,7 +211,6 @@ class _DashboardPageState extends State<DashboardPage> {
       height: 260,
       child: Stack(
         children: [
-          // PageView for slideshow
           PageView.builder(
             controller: _pageController,
             onPageChanged: (index) {
@@ -194,7 +225,6 @@ class _DashboardPageState extends State<DashboardPage> {
             },
           ),
 
-          // Dots indicator (only show if more than 1 image)
           if (_slideshowImages.length > 1)
             Positioned(
               bottom: 20,
@@ -211,29 +241,25 @@ class _DashboardPageState extends State<DashboardPage> {
                     margin: const EdgeInsets.symmetric(horizontal: 3),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(4),
-                      color:
-                          _currentSlide == index
-                              ? Colors.white
-                              : Colors.white.withOpacity(0.4),
-                      boxShadow:
-                          _currentSlide == index
-                              ? [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                              : null,
+                      color: _currentSlide == index
+                          ? Colors.white
+                          : Colors.white.withOpacity(0.4),
+                      boxShadow: _currentSlide == index
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
                     ),
                   ),
                 ),
               ),
             ),
 
-          // Navigation arrows (only show if more than 1 image)
           if (_slideshowImages.length > 1) ...[
-            // Previous button
             Positioned(
               left: 16,
               top: 0,
@@ -241,10 +267,9 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Center(
                 child: GestureDetector(
                   onTap: () {
-                    final prevSlide =
-                        _currentSlide == 0
-                            ? _slideshowImages.length - 1
-                            : _currentSlide - 1;
+                    final prevSlide = _currentSlide == 0
+                        ? _slideshowImages.length - 1
+                        : _currentSlide - 1;
                     _pageController.animateToPage(
                       prevSlide,
                       duration: const Duration(milliseconds: 300),
@@ -273,8 +298,6 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ),
             ),
-
-            // Next button
             Positioned(
               right: 16,
               top: 0,
@@ -282,8 +305,7 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Center(
                 child: GestureDetector(
                   onTap: () {
-                    final nextSlide =
-                        (_currentSlide + 1) % _slideshowImages.length;
+                    final nextSlide = (_currentSlide + 1) % _slideshowImages.length;
                     _pageController.animateToPage(
                       nextSlide,
                       duration: const Duration(milliseconds: 300),
@@ -314,7 +336,6 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ],
 
-          // Slide counter (top right)
           if (_slideshowImages.length > 1)
             Positioned(
               top: 16,
@@ -337,128 +358,105 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // Tambahkan di build method
-  Widget _buildNotificationSection() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          const NotificationWidget(), // Widget notifikasi ringkas
-          const SizedBox(height: 16),
-          const RecentNotificationsWidget(limit: 3), // 3 notifikasi terbaru
-        ],
-      ),
-    );
-  }
-
   Widget _buildSlideItem(SlideshowItem slide) {
     return Container(
       width: double.infinity,
       height: 250,
-      child:
-          slide.imageUrl.startsWith('http')
-              ? CachedNetworkImage(
-                imageUrl: slide.imageUrl,
-                fit: BoxFit.fill,
-                placeholder:
-                    (context, url) => Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            AppColors.primaryBlue,
-                            const Color(0xFF6D4C41),
-                          ],
-                        ),
+      child: slide.imageUrl.startsWith('http')
+          ? CachedNetworkImage(
+              imageUrl: slide.imageUrl,
+              fit: BoxFit.fill,
+              placeholder: (context, url) => Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primaryBlue,
+                      const Color(0xFF6D4C41),
+                    ],
+                  ),
+                ),
+                child: const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
-                      child: const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                            SizedBox(height: 12),
-                            Text(
-                              'Loading image...',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
+                      SizedBox(height: 12),
+                      Text(
+                        'Loading image...',
+                        style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
-                    ),
-                errorWidget:
-                    (context, url, error) => Container(
-                      color: AppColors.primaryBlue,
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: Colors.white.withOpacity(0.7),
-                              size: 48,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Failed to load image',
-                              style: GoogleFonts.roboto(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-              )
-              : Image.asset(
-                slide.imageUrl,
-                fit: BoxFit.fill,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: AppColors.primaryBlue,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.image_not_supported,
-                            color: Colors.white.withOpacity(0.7),
-                            size: 48,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'SDM Korbrimob Polri',
-                            style: GoogleFonts.roboto(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Sistem Data Manajemen',
-                            style: GoogleFonts.roboto(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                    ],
+                  ),
+                ),
               ),
+              errorWidget: (context, url, error) => Container(
+                color: AppColors.primaryBlue,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: Colors.white.withOpacity(0.7),
+                        size: 48,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Failed to load image',
+                        style: GoogleFonts.roboto(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          : Image.asset(
+              slide.imageUrl,
+              fit: BoxFit.fill,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: AppColors.primaryBlue,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.image_not_supported,
+                          color: Colors.white.withOpacity(0.7),
+                          size: 48,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'SDM Korbrimob Polri',
+                          style: GoogleFonts.roboto(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Sistem Data Manajemen',
+                          style: GoogleFonts.roboto(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 
-  // Keep all other existing methods unchanged
   Widget _buildSectionTitle(String title) {
     return Center(
       child: Text(
@@ -599,55 +597,16 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildMenuGrid() {
+    // Simplified menu items (no role/protection)
     final List<Map<String, dynamic>> menuItems = [
-      {
-        'title': 'KORBRIMOB',
-        'asset': 'assets/korbrimob.png',
-        'id': 'korbrimob',
-        'isProtected': false,
-      },
-      {
-        'title': 'BINKAR',
-        'asset': 'assets/binkar.png',
-        'id': 'binkar',
-        'isProtected': true,
-      },
-      {
-        'title': 'DALPERS',
-        'asset': 'assets/dalpers.png',
-        'id': 'dalpers',
-        'isProtected': false,
-      },
-      {
-        'title': 'WATPERS',
-        'asset': 'assets/watpress.png',
-        'id': 'watpers',
-        'isProtected': false,
-      },
-      {
-        'title': 'PSIKOLOGI',
-        'asset': 'assets/psikologi.png',
-        'id': 'psikologi',
-        'isProtected': false,
-      },
-      {
-        'title': 'PERDANKOR',
-        'asset': 'assets/perdankor.png',
-        'id': 'perdankor',
-        'isProtected': false,
-      },
-      {
-        'title': 'PERKAP',
-        'asset': 'assets/perkap.png',
-        'id': 'perkap',
-        'isProtected': false,
-      },
-      {
-        'title': 'OTHER',
-        'asset': 'assets/other.png',
-        'id': 'other',
-        'isProtected': false,
-      },
+      {'title': 'KORBRIMOB', 'asset': 'assets/korbrimob.png', 'id': 'korbrimob'},
+      {'title': 'BINKAR', 'asset': 'assets/binkar.png', 'id': 'binkar'},
+      {'title': 'DALPERS', 'asset': 'assets/dalpers.png', 'id': 'dalpers'},
+      {'title': 'WATPERS', 'asset': 'assets/watpress.png', 'id': 'watpers'},
+      {'title': 'PSIKOLOGI', 'asset': 'assets/psikologi.png', 'id': 'psikologi'},
+      {'title': 'PERDANKOR', 'asset': 'assets/perdankor.png', 'id': 'perdankor'},
+      {'title': 'PERKAP', 'asset': 'assets/perkap.png', 'id': 'perkap'},
+      {'title': 'OTHER', 'asset': 'assets/other.png', 'id': 'other'},
     ];
 
     return Container(
@@ -681,10 +640,7 @@ class _DashboardPageState extends State<DashboardPage> {
     required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: () {
-        print('Item tapped: $title');
-        onTap();
-      },
+      onTap: onTap,
       behavior: HitTestBehavior.translucent,
       child: Container(
         padding: const EdgeInsets.all(8),
@@ -704,11 +660,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       color: Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
-                      Icons.folder,
-                      color: Colors.white,
-                      size: 30,
-                    ),
+                    child: const Icon(Icons.folder, color: Colors.white, size: 30),
                   );
                 },
               ),
@@ -733,48 +685,12 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildPedomanSection() {
     final List<Map<String, String>> pedomanItems = [
-      {
-        'title': 'Tri Brata',
-        'description': 'Pedoman hidup anggota Polri',
-        'id': 'tri_brata',
-        'assetPath': 'assets/tribrata.png',
-        'imageContent': 'assets/dc/tribrata.png',
-      },
-      {
-        'title': 'Catur Prasetya',
-        'description': 'Empat janji kerja anggota Polri',
-        'id': 'catur_prasetya',
-        'assetPath': 'assets/tribrata.png',
-        'imageContent': 'assets/dc/catutprasetya.png',
-      },
-      {
-        'title': 'Panca Prasetya',
-        'description': 'Lima prinsip khusus Korbrimob',
-        'id': 'panca_prasetya',
-        'assetPath': 'assets/brimob.png',
-        'imageContent': 'assets/dc/panca.png',
-      },
-      {
-        'title': 'Etika Profesi',
-        'description': 'Etika profesi Brimob',
-        'id': 'etika_profesi',
-        'assetPath': 'assets/brimob.png',
-        'imageContent': 'assets/dc/etika.png',
-      },
-      {
-        'title': 'Ikrar Brimob',
-        'description': 'Ikrar anggota Brimob',
-        'id': 'ikrar_brimob',
-        'assetPath': 'assets/brimob.png',
-        'imageContent': 'assets/dc/ikrar.png',
-      },
-      {
-        'title': 'Jati Diri Brimob',
-        'description': 'Jati diri Korbrimob Polri',
-        'id': 'jati_diri',
-        'assetPath': 'assets/korpri.png',
-        'imageContent': 'assets/dc/jatidiri.png',
-      },
+      {'title': 'Tri Brata', 'description': 'Pedoman hidup anggota Polri', 'id': 'tri_brata', 'assetPath': 'assets/tribrata.png', 'imageContent': 'assets/dc/tribrata.png'},
+      {'title': 'Catur Prasetya', 'description': 'Empat janji kerja anggota Polri', 'id': 'catur_prasetya', 'assetPath': 'assets/tribrata.png', 'imageContent': 'assets/dc/catutprasetya.png'},
+      {'title': 'Panca Prasetya', 'description': 'Lima prinsip khusus Korbrimob', 'id': 'panca_prasetya', 'assetPath': 'assets/brimob.png', 'imageContent': 'assets/dc/panca.png'},
+      {'title': 'Etika Profesi', 'description': 'Etika profesi Brimob', 'id': 'etika_profesi', 'assetPath': 'assets/brimob.png', 'imageContent': 'assets/dc/etika.png'},
+      {'title': 'Ikrar Brimob', 'description': 'Ikrar anggota Brimob', 'id': 'ikrar_brimob', 'assetPath': 'assets/brimob.png', 'imageContent': 'assets/dc/ikrar.png'},
+      {'title': 'Jati Diri Brimob', 'description': 'Jati diri Korbrimob Polri', 'id': 'jati_diri', 'assetPath': 'assets/korpri.png', 'imageContent': 'assets/dc/jatidiri.png'},
     ];
 
     return Column(
@@ -855,6 +771,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  // Navigation methods
   void _navigateToGalleryCategory(Map<String, dynamic> category) {
     Navigator.push(
       context,
@@ -868,204 +785,57 @@ class _DashboardPageState extends State<DashboardPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (context) => PedomanDetailPage(
-              title: item['title']!,
-              content: item['imageContent']!, // Pass image path instead of text
-              // color: _getPedomanColor(item['id']!),
-              icon: _getPedomanIcon(item['id']!),
-              assetPath: item['assetPath']!,
-              isImageContent: true, // Flag untuk indicate ini image content
-            ),
+        builder: (context) => PedomanDetailPage(
+          title: item['title']!,
+          content: item['imageContent']!,
+          icon: _getPedomanIcon(item['id']!),
+          assetPath: item['assetPath']!,
+          isImageContent: true,
+        ),
       ),
     );
   }
 
   Color _getPedomanColor(String id) {
     switch (id) {
-      case 'tri_brata':
-        return AppColors.primaryBlue;
-      case 'catur_prasetya':
-        return AppColors.red;
-      case 'panca_prasetya':
-        return AppColors.green;
-      case 'etika_profesi':
-        return AppColors.orange;
-      case 'ikrar_brimob':
-        return AppColors.purple;
-      case 'jati_diri':
-        return AppColors.indigo;
-      default:
-        return AppColors.darkGray;
+      case 'tri_brata': return AppColors.primaryBlue;
+      case 'catur_prasetya': return AppColors.red;
+      case 'panca_prasetya': return AppColors.green;
+      case 'etika_profesi': return AppColors.orange;
+      case 'ikrar_brimob': return AppColors.purple;
+      case 'jati_diri': return AppColors.indigo;
+      default: return AppColors.darkGray;
     }
   }
 
   IconData _getPedomanIcon(String id) {
     switch (id) {
-      case 'tri_brata':
-        return Icons.star;
-      case 'catur_prasetya':
-        return Icons.favorite;
-      case 'panca_prasetya':
-        return Icons.security;
-      case 'etika_profesi':
-        return Icons.school;
-      case 'ikrar_brimob':
-        return Icons.military_tech;
-      case 'jati_diri':
-        return Icons.badge;
-      default:
-        return Icons.book;
-    }
-  }
-
-  String _getPedomanContent(String id) {
-    switch (id) {
-      case 'tri_brata':
-        return '''TRI BRATA
-
-Tri Brata adalah pedoman hidup bagi setiap anggota Polri yang terdiri dari tiga bagian:
-
-KAMI POLISI INDONESIA:
-
-1. BERBAKTI KEPADA NUSA DAN BANGSA
-   "Berbakti kepada nusa dan bangsa dengan penuh ketakwaan terhadap Tuhan Yang Maha Esa."
-
-2. MENJUNJUNG TINGGI KEBENARAN, KEADILAN, DAN KEMANUSIAAN  
-   "Menjunjung tinggi kebenaran, keadilan, dan kemanusiaan dalam menegakkan hukum Negara Kesatuan Republik Indonesia yang berdasarkan Pancasila dan Undang-Undang Dasar 1945."
-
-3. MELINDUNGI, MENGAYOMI, DAN MELAYANI MASYARAKAT
-   "Senantiasa melindungi, mengayomi, dan melayani masyarakat dengan keikhlasan untuk mewujudkan keamanan dan ketertiban."
-
-Tri Brata pertama kali diucapkan dalam prosesi wisuda keserjanaan PTIK angkatan II tanggal 3 Mei 1954, kemudian diresmikan sebagai pedoman hidup Polri pada tanggal 1 Juli 1955.''';
-
-      case 'catur_prasetya':
-        return '''CATUR PRASETYA
-
-Catur Prasetya adalah empat janji kerja anggota Polri dalam melaksanakan tugas:
-
-SEBAGAI INSAN BHAYANGKARA, KEHORMATAN SAYA ADALAH BERKORBAN DEMI MASYARAKAT, BANGSA DAN NEGARA UNTUK:
-
-1. MENIADAKAN SEGALA BENTUK GANGGUAN KEAMANAN
-2. MENJAGA KESELAMATAN JIWA RAGA, HARTA BENDA, DAN HAK ASASI MANUSIA
-3. MENJAMIN KEPASTIAN BERDASARKAN HUKUM
-4. MEMELIHARA PERASAAN TENTRAM DAN DAMAI''';
-
-      case 'panca_prasetya':
-        return '''PANCA PRASETYA KORBRIMOB
-
-Lima prinsip khusus untuk anggota Korps Brimob Polri sebagai pasukan elite:
-
-1. JIWA KORSA YANG TINGGI
-2. DISIPLIN TINGGI  
-3. PROFESIONALISME
-4. LOYALITAS TOTAL
-5. PENGABDIAN DHARMA KARTIKA''';
-
-      case 'sapta_marga':
-        return '''SAPTA MARGA
-
-Tujuh pedoman hidup prajurit yang juga diadopsi dalam lingkungan Brimob:
-
-1. KAMI WARGA NEGARA KESATUAN REPUBLIK INDONESIA YANG BERSENDIKAN PANCASILA
-2. KAMI PATRIOT INDONESIA PENDUKUNG SERTA PEMBELA IDEOLOGI NEGARA
-3. KAMI KESATRIA INDONESIA YANG BERTAQWA KEPADA TUHAN YANG MAHA ESA
-4. KAMI PRAJURIT TENTARA NASIONAL INDONESIA ADALAH BHAYANGKARI NEGARA
-5. KAMI PRAJURIT TENTARA NASIONAL INDONESIA MEMEGANG TEGUH DISIPLIN
-6. KAMI PRAJURIT TENTARA NASIONAL INDONESIA MENGUTAMAKAN PERSATUAN
-7. KAMI PRAJURIT TENTARA NASIONAL INDONESIA SADAR AKAN TANGGUNG JAWAB''';
-
-      case 'asta_gatra':
-        return '''ASTA GATRA
-
-Delapan unsur kekuatan nasional yang menjadi dasar ketahanan nasional Indonesia:
-
-TRI GATRA (ASPEK ALAMIAH):
-1. GATRA GEOGRAFI
-2. GATRA DEMOGRAFI  
-3. GATRA SUMBER KEKAYAAN ALAM
-
-PANCA GATRA (ASPEK SOSIAL):
-4. GATRA IDEOLOGI
-5. GATRA POLITIK
-6. GATRA EKONOMI
-7. GATRA SOSIAL BUDAYA
-8. GATRA PERTAHANAN KEAMANAN (HANKAM)''';
-
-      case 'pancasila_prasetya':
-        return '''PANCASILA PRASETYA
-
-Sumpah setia kepada dasar negara Pancasila sebagai panduan moral dan etika:
-
-1. KETUHANAN YANG MAHA ESA
-2. KEMANUSIAAN YANG ADIL DAN BERADAB
-3. PERSATUAN INDONESIA
-4. KERAKYATAN YANG DIPIMPIN OLEH HIKMAT KEBIJAKSANAAN
-5. KEADILAN SOSIAL BAGI SELURUH RAKYAT INDONESIA''';
-
-      default:
-        return 'Konten sedang dalam pengembangan.';
+      case 'tri_brata': return Icons.star;
+      case 'catur_prasetya': return Icons.favorite;
+      case 'panca_prasetya': return Icons.security;
+      case 'etika_profesi': return Icons.school;
+      case 'ikrar_brimob': return Icons.military_tech;
+      case 'jati_diri': return Icons.badge;
+      default: return Icons.book;
     }
   }
 
   Future<void> _refreshData() async {
     setState(() => _isLoading = true);
     await Future.delayed(const Duration(seconds: 1));
-    await _loadSlideshowImages(); // Refresh slideshow images
+    await _loadSlideshowImages();
     setState(() => _isLoading = false);
   }
 
+  // Simplified menu tap handling (no protection logic)
   Future<void> _handleMenuTap(Map<String, dynamic> menu) async {
-    print('Menu tapped: ${menu['id']}');
-
-    bool isProtected = menu['isProtected'] ?? false;
-
-    if (isProtected) {
-      if (FirebaseService.isLoggedIn) {
-        final hasAccess = await FirebaseService.hasAccessToBinkar();
-        if (hasAccess) {
-          _navigateToContent(menu['id']);
-        } else {
-          _showAccessDeniedDialog();
-        }
-      } else {
-        _navigateToLogin(menu['id']);
-      }
-    } else {
-      _navigateToContent(menu['id']);
-    }
-  }
-
-  void _navigateToLogin(String targetMenu) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
-    );
+    _navigateToContent(menu['id']);
   }
 
   void _navigateToContent(String menuId) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => ContentPage(category: menuId)),
-    );
-  }
-
-  void _showAccessDeniedDialog() {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Akses Ditolak'),
-            content: const Text(
-              'Anda tidak memiliki akses ke menu BINKAR. Silakan hubungi administrator.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
     );
   }
 }

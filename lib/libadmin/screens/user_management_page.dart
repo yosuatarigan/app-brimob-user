@@ -998,6 +998,12 @@ class _UserManagementPageState extends State<UserManagementPage>
         return AdminColors.info;
       case UserRole.pasbrimobIII:
         return Colors.teal;
+      case UserRole.admin:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+      case UserRole.other:
+        // TODO: Handle this case.
+        throw UnimplementedError();
     }
   }
 

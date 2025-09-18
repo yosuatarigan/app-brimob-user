@@ -82,95 +82,73 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          print('=== TESTING CLOUD FUNCTIONS WITH AUTH FIX ===');
+       onPressed: () async {
+    print('🚀 === STARTING CLOUD FUNCTIONS TEST ===');
 
-          // Check authentication
-          final user = FirebaseAuth.instance.currentUser;
-          print('Current user: ${user?.uid}');
-          print('User email: ${user?.email}');
+    try {
+      // 1. Check Auth Status  
+      print('📋 Checking authentication...');
+      final authStatus = await CloudFunctionService.getAuthStatus();
+      print('Auth Status: $authStatus');
 
-          if (user == null) {
-            print('❌ USER NOT AUTHENTICATED');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Please login first'),
-                backgroundColor: Colors.red,
-              ),
-            );
-            return;
-          }
+      if (authStatus['authenticated'] != true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Not authenticated: ${authStatus['error']}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
 
-          print('✅ User authenticated: ${user.uid}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('✅ Authenticated as: ${authStatus['email']}'),
+          backgroundColor: Colors.green,
+        ),
+      );
 
-          // Test getting ID token
-          try {
-            print('Getting ID token...');
-            final String? token = await user.getIdToken(true);
-            print('✅ ID Token obtained: ${token?.substring(0, 20)}...');
-          } catch (e) {
-            print('❌ Failed to get ID token: $e');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to get ID token: $e'),
-                backgroundColor: Colors.red,
-              ),
-            );
-            return;
-          }
+      // 2. Test Firestore Function
+      print('🔥 Testing Firestore function...');
+      final result = await CloudFunctionService.testFirestore();
+      
+      if (result != null && result['success'] == true) {
+        print('✅ SUCCESS! Result: $result');
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('🎉 Cloud Functions working! Role: ${result['userData']['role']}'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      } else {
+        print('❌ FAILED! Result: $result');
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Test failed: ${result?['error'] ?? 'Unknown error'}'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
 
-          // Test Cloud Function with fixed auth
-          try {
-            print('Testing Cloud Function with fixed auth...');
-            final result = await CloudFunctionService.testFirestore();
+    } catch (e, stackTrace) {
+      print('💥 EXCEPTION: $e');
+      print('Stack: $stackTrace');
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('💥 Exception: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 4),
+        ),
+      );
+    }
 
-            print('Raw result: $result');
-
-            if (result != null && result['success'] == true) {
-              print('✅ SUCCESS!');
-              print('User exists: ${result['userExists']}');
-              print('User data: ${result['userData']}');
-
-              final userData = result['userData'];
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'SUCCESS! Role: ${userData['role']}, Name: ${userData['name']}',
-                  ),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            } else if (result != null && result['success'] == false) {
-              print('❌ Function returned error: ${result['error']}');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error: ${result['error']}'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            } else {
-              print('❌ Unexpected result: $result');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Unexpected result'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          } catch (e, stackTrace) {
-            print('❌ EXCEPTION: $e');
-            print('Stack trace: $stackTrace');
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Exception: $e'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-
-          print('=== END TEST ===');
-        },
+    print('🏁 === TEST COMPLETED ===');
+  },
       ),
       backgroundColor: AdminColors.background,
       body: SafeArea(

@@ -1,12 +1,85 @@
+// lib/models/notification_model.dart
+import 'package:app_brimob_user/models/user_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+// // Import UserRole from existing user model
+// enum UserRole {
+//   admin,
+//   makoKor,
+//   pasPelopor,
+//   pasGegana,
+//   pasbrimobI,
+//   pasbrimobII,
+//   pasbrimobIII,
+//   other;
+
+//   String get displayName {
+//     switch (this) {
+//       case UserRole.admin:
+//         return 'ADMINISTRATOR';
+//       case UserRole.makoKor:
+//         return 'MAKO KOR';
+//       case UserRole.pasPelopor:
+//         return 'PAS PELOPOR';
+//       case UserRole.pasGegana:
+//         return 'PAS GEGANA';
+//       case UserRole.pasbrimobI:
+//         return 'PASBRIMOB I';
+//       case UserRole.pasbrimobII:
+//         return 'PASBRIMOB II';
+//       case UserRole.pasbrimobIII:
+//         return 'PASBRIMOB III';
+//       case UserRole.other:
+//         return 'OTHER';
+//     }
+//   }
+
+//   String get topicName {
+//     switch (this) {
+//       case UserRole.admin:
+//         return 'admin_users';
+//       case UserRole.makoKor:
+//         return 'mako_kor_users';
+//       case UserRole.pasPelopor:
+//         return 'pas_pelopor_users';
+//       case UserRole.pasGegana:
+//         return 'pas_gegana_users';
+//       case UserRole.pasbrimobI:
+//         return 'pasbrimob_i_users';
+//       case UserRole.pasbrimobII:
+//         return 'pasbrimob_ii_users';
+//       case UserRole.pasbrimobIII:
+//         return 'pasbrimob_iii_users';
+//       case UserRole.other:
+//         return 'other_users';
+//     }
+//   }
+
+//   // Get role from string
+//   static UserRole fromString(String value) {
+//     return UserRole.values.firstWhere(
+//       (e) => e.name == value,
+//       orElse: () => UserRole.other,
+//     );
+//   }
+// }
+
+enum NotificationType {
+  general,      // Notifikasi umum
+  urgent,       // Urgent/penting
+  announcement, // Pengumuman
+  reminder,     // Pengingat
+  event,        // Event/kegiatan
+}
+
 class NotificationModel {
   final String id;
   final String title;
   final String message;
-  final String targetRole;
+  final UserRole targetRole;
   final String senderName;
   final DateTime createdAt;
   final bool isRead;
-  final String? imageUrl;
   final NotificationType type;
   final String? actionData;
 
@@ -18,21 +91,37 @@ class NotificationModel {
     required this.senderName,
     required this.createdAt,
     this.isRead = false,
-    this.imageUrl,
     this.type = NotificationType.general,
     this.actionData,
   });
+
+  factory NotificationModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return NotificationModel(
+      id: doc.id,
+      title: data['title'] ?? '',
+      message: data['message'] ?? '',
+      targetRole: UserRole.fromString(data['targetRole'] ?? 'other'),
+      senderName: data['senderName'] ?? 'Admin',
+      createdAt: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      isRead: data['isRead'] ?? false,
+      type: NotificationType.values.firstWhere(
+        (e) => e.name == data['type'],
+        orElse: () => NotificationType.general,
+      ),
+      actionData: data['actionData'],
+    );
+  }
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
       message: json['message'] ?? '',
-      targetRole: json['targetRole'] ?? '',
+      targetRole: UserRole.fromString(json['targetRole'] ?? 'other'),
       senderName: json['senderName'] ?? 'Admin',
       createdAt: DateTime.parse(json['createdAt']),
       isRead: json['isRead'] ?? false,
-      imageUrl: json['imageUrl'],
       type: NotificationType.values.firstWhere(
         (e) => e.name == json['type'],
         orElse: () => NotificationType.general,
@@ -41,16 +130,28 @@ class NotificationModel {
     );
   }
 
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'message': message,
+      'targetRole': targetRole.name,
+      'senderName': senderName,
+      'timestamp': FieldValue.serverTimestamp(),
+      'isRead': isRead,
+      'type': type.name,
+      'actionData': actionData,
+    };
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'title': title,
       'message': message,
-      'targetRole': targetRole,
+      'targetRole': targetRole.name,
       'senderName': senderName,
       'createdAt': createdAt.toIso8601String(),
       'isRead': isRead,
-      'imageUrl': imageUrl,
       'type': type.name,
       'actionData': actionData,
     };
@@ -60,11 +161,10 @@ class NotificationModel {
     String? id,
     String? title,
     String? message,
-    String? targetRole,
+    UserRole? targetRole,
     String? senderName,
     DateTime? createdAt,
     bool? isRead,
-    String? imageUrl,
     NotificationType? type,
     String? actionData,
   }) {
@@ -76,68 +176,9 @@ class NotificationModel {
       senderName: senderName ?? this.senderName,
       createdAt: createdAt ?? this.createdAt,
       isRead: isRead ?? this.isRead,
-      imageUrl: imageUrl ?? this.imageUrl,
       type: type ?? this.type,
       actionData: actionData ?? this.actionData,
     );
-  }
-}
-
-enum NotificationType {
-  general,      // Notifikasi umum
-  urgent,       // Urgent/penting
-  announcement, // Pengumuman
-  reminder,     // Pengingat
-  event,        // Event/kegiatan
-}
-
-enum UserRole {
-  admin,
-  binkar,
-  dalpers,
-  watpers,
-  psikologi,
-  perdankor,
-  perkap,
-  mako_kor,
-  pas_pelopor,
-  pas_gegana,
-  pasbrimob_i,
-  pasbrimob_ii,
-  pasbrimob_iii,
-  other;
-
-  String get displayName {
-    switch (this) {
-      case UserRole.admin:
-        return 'Administrator';
-      case UserRole.binkar:
-        return 'BINKAR';
-      case UserRole.dalpers:
-        return 'DALPERS';
-      case UserRole.watpers:
-        return 'WATPERS';
-      case UserRole.psikologi:
-        return 'PSIKOLOGI';
-      case UserRole.perdankor:
-        return 'PERDANKOR';
-      case UserRole.perkap:
-        return 'PERKAP';
-      case UserRole.mako_kor:
-        return 'MAKO KOR';
-      case UserRole.pas_pelopor:
-        return 'PAS PELOPOR';
-      case UserRole.pas_gegana:
-        return 'PAS GEGANA';
-      case UserRole.pasbrimob_i:
-        return 'PASBRIMOB I';
-      case UserRole.pasbrimob_ii:
-        return 'PASBRIMOB II';
-      case UserRole.pasbrimob_iii:
-        return 'PASBRIMOB III';
-      case UserRole.other:
-        return 'OTHER';
-    }
   }
 }
 
@@ -164,5 +205,15 @@ class NotificationStats {
       byRole: Map<String, int>.from(json['byRole'] ?? {}),
       byType: Map<String, int>.from(json['byType'] ?? {}),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'totalSent': totalSent,
+      'totalRead': totalRead,
+      'totalUnread': totalUnread,
+      'byRole': byRole,
+      'byType': byType,
+    };
   }
 }

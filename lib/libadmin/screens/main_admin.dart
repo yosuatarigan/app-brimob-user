@@ -2,6 +2,7 @@ import 'package:app_brimob_user/libadmin/admin_constant.dart';
 import 'package:app_brimob_user/libadmin/screens/admin_dashboard_page.dart';
 import 'package:app_brimob_user/libadmin/screens/admin_login_page.dart';
 import 'package:app_brimob_user/libadmin/screens/admin_splash_page.dart';
+import 'package:app_brimob_user/percobaannotif/admin_notification_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';

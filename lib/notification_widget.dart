@@ -1,161 +1,26 @@
+// lib/widgets/notification_widget.dart
+import 'package:app_brimob_user/admin_send_notification_page.dart';
+import 'package:app_brimob_user/models/user_model.dart';
 import 'package:app_brimob_user/notification_model.dart';
 import 'package:app_brimob_user/notification_service.dart';
+import 'package:app_brimob_user/percobaannotif/user_notifikasi_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_constants.dart';
-import 'user_notification_history_page.dart';
 
 class NotificationWidget extends StatelessWidget {
-  const NotificationWidget({super.key});
+  final UserRole? userRole;
+
+  const NotificationWidget({super.key, this.userRole});
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<int>(
-      stream: NotificationService.getUnreadCount(),
-      builder: (context, snapshot) {
-        final unreadCount = snapshot.data ?? 0;
-        
-        return GestureDetector(
-          onTap: () => _navigateToNotifications(context),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Stack(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryBlue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.notifications_outlined,
-                        color: AppColors.primaryBlue,
-                        size: 24,
-                      ),
-                    ),
-                    if (unreadCount > 0)
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
-                          ),
-                          child: Text(
-                            unreadCount > 99 ? '99+' : unreadCount.toString(),
-                            style: GoogleFonts.roboto(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Notifikasi',
-                        style: GoogleFonts.roboto(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.darkNavy,
-                        ),
-                      ),
-                      Text(
-                        unreadCount > 0 
-                          ? '$unreadCount pesan baru'
-                          : 'Tidak ada pesan baru',
-                        style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          color: AppColors.darkGray,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: AppColors.darkGray,
-                  size: 16,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _navigateToNotifications(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const UserNotificationHistoryPage(),
-      ),
-    );
-  }
-}
-
-// Widget untuk menampilkan notifikasi terbaru di dashboard
-class RecentNotificationsWidget extends StatelessWidget {
-  final int limit;
-  
-  const RecentNotificationsWidget({
-    super.key,
-    this.limit = 3,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<List<NotificationModel>>(
-      stream: NotificationService.getUserNotifications(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildLoadingState();
-        }
-
-        final notifications = snapshot.data ?? [];
-        final recentNotifications = notifications.take(limit).toList();
-
-        if (recentNotifications.isEmpty) {
-          return _buildEmptyState();
-        }
-
-        return _buildNotificationsList(context, recentNotifications);
-      },
-    );
-  }
-
-  Widget _buildLoadingState() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          colors: [AppColors.primaryBlue, AppColors.primaryBlue.withOpacity(0.8)],
+        ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -166,312 +31,402 @@ class RecentNotificationsWidget extends StatelessWidget {
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.notifications_outlined,
-                color: AppColors.primaryBlue,
+              const Icon(
+                Icons.notifications_active,
+                color: Colors.white,
+                size: 24,
               ),
-              const SizedBox(width: 8),
-              Text(
-                'Notifikasi Terbaru',
-                style: GoogleFonts.roboto(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.darkNavy,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.notifications_outlined,
-                color: AppColors.primaryBlue,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Notifikasi Terbaru',
-                style: GoogleFonts.roboto(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.darkNavy,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Icon(
-            Icons.notifications_none,
-            color: AppColors.darkGray.withOpacity(0.5),
-            size: 48,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Belum ada notifikasi',
-            style: GoogleFonts.roboto(
-              fontSize: 14,
-              color: AppColors.darkGray,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotificationsList(BuildContext context, List<NotificationModel> notifications) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.notifications_outlined,
-                    color: AppColors.primaryBlue,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Notifikasi BRIMOB',
+                  style: GoogleFonts.roboto(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Notifikasi Terbaru',
-                    style: GoogleFonts.roboto(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.darkNavy,
-                    ),
-                  ),
-                ],
+                ),
               ),
               TextButton(
-                onPressed: () => _navigateToNotifications(context),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserNotificationPage(userRole: userRole),
+                    ),
+                  );
+                },
                 child: Text(
                   'Lihat Semua',
                   style: GoogleFonts.roboto(
+                    color: Colors.white,
                     fontSize: 12,
-                    color: AppColors.primaryBlue,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: notifications.length,
-            separatorBuilder: (context, index) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final notification = notifications[index];
-              return _buildNotificationItem(context, notification);
-            },
+          Text(
+            userRole != null 
+                ? 'Menampilkan untuk: ${userRole!.displayName}'
+                : 'Pilih satuan BRIMOB untuk melihat notifikasi',
+            style: GoogleFonts.roboto(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 12,
+            ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildNotificationItem(BuildContext context, NotificationModel notification) {
-    return FutureBuilder<bool>(
-      future: NotificationService.isNotificationRead(notification.id),
-      builder: (context, snapshot) {
-        final isRead = snapshot.data ?? false;
-        
-        return InkWell(
-          onTap: () => _handleNotificationTap(context, notification),
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: isRead 
-                      ? AppColors.lightGray 
-                      : _getTypeColor(notification.type),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        notification.title,
-                        style: GoogleFonts.roboto(
-                          fontSize: 13,
-                          fontWeight: isRead ? FontWeight.w500 : FontWeight.bold,
-                          color: AppColors.darkNavy,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        notification.message,
-                        style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          color: AppColors.darkGray,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _formatTime(notification.createdAt),
-                  style: GoogleFonts.roboto(
-                    fontSize: 11,
-                    color: AppColors.darkGray,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+class RecentNotificationsWidget extends StatefulWidget {
+  final int limit;
+  final UserRole? userRole;
 
+  const RecentNotificationsWidget({
+    super.key,
+    this.limit = 3,
+    this.userRole,
+  });
+
+  @override
+  State<RecentNotificationsWidget> createState() => _RecentNotificationsWidgetState();
+}
+
+class _RecentNotificationsWidgetState extends State<RecentNotificationsWidget> {
   Color _getTypeColor(NotificationType type) {
     switch (type) {
       case NotificationType.general:
-        return AppColors.primaryBlue;
+        return Colors.blue;
       case NotificationType.urgent:
-        return AppColors.red;
+        return Colors.red;
       case NotificationType.announcement:
-        return AppColors.purple;
+        return Colors.purple;
       case NotificationType.reminder:
-        return AppColors.orange;
+        return Colors.orange;
       case NotificationType.event:
-        return AppColors.green;
+        return Colors.green;
     }
   }
 
-  String _formatTime(DateTime dateTime) {
+  IconData _getTypeIcon(NotificationType type) {
+    switch (type) {
+      case NotificationType.general:
+        return Icons.notifications;
+      case NotificationType.urgent:
+        return Icons.priority_high;
+      case NotificationType.announcement:
+        return Icons.campaign;
+      case NotificationType.reminder:
+        return Icons.schedule;
+      case NotificationType.event:
+        return Icons.event;
+    }
+  }
+
+  String _formatTimestamp(DateTime timestamp) {
     final now = DateTime.now();
-    final difference = now.difference(dateTime);
+    final difference = now.difference(timestamp);
 
-    if (difference.inDays > 0) {
-      return '${difference.inDays}h yang lalu';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}j yang lalu';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m yang lalu';
-    } else {
+    if (difference.inMinutes < 1) {
       return 'Baru saja';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d';
+    } else {
+      return '${timestamp.day}/${timestamp.month}';
     }
   }
 
-  Future<void> _handleNotificationTap(BuildContext context, NotificationModel notification) async {
-    await NotificationService.markAsRead(notification.id);
-    _navigateToNotifications(context);
-  }
+  @override
+  Widget build(BuildContext context) {
+    if (widget.userRole == null) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Icon(
+                Icons.person_outline,
+                size: 48,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Pilih Satuan BRIMOB',
+                style: GoogleFonts.roboto(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
+              ),
+              Text(
+                'Pilih satuan di menu utama untuk melihat notifikasi yang sesuai',
+                style: GoogleFonts.roboto(
+                  fontSize: 12,
+                  color: Colors.grey[500],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
-  void _navigateToNotifications(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const UserNotificationHistoryPage(),
-      ),
+    return StreamBuilder<List<NotificationModel>>(
+      stream: NotificationService.getAllUserNotifications(widget.userRole!),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  const Icon(Icons.error, color: Colors.red, size: 32),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Error loading notifications',
+                    style: GoogleFonts.roboto(color: Colors.red),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final notifications = (snapshot.data ?? []).take(widget.limit).toList();
+
+        if (notifications.isEmpty) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.notifications_off,
+                    size: 48,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Belum Ada Notifikasi',
+                    style: GoogleFonts.roboto(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  Text(
+                    'Notifikasi untuk ${widget.userRole!.displayName} akan muncul di sini',
+                    style: GoogleFonts.roboto(
+                      fontSize: 12,
+                      color: Colors.grey[500],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Column(
+          children: notifications.map((notification) {
+            final isBroadcast = true; // Using admin as broadcast indicator
+            
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: _getTypeColor(notification.type).withOpacity(0.1),
+                  child: Icon(
+                    _getTypeIcon(notification.type),
+                    color: _getTypeColor(notification.type),
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  notification.title,
+                  style: GoogleFonts.roboto(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      notification.message,
+                      style: GoogleFonts.roboto(fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isBroadcast 
+                                ? Colors.green.withOpacity(0.1)
+                                : Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            isBroadcast ? 'Broadcast' : notification.targetRole.displayName,
+                            style: GoogleFonts.roboto(
+                              fontSize: 10,
+                              color: isBroadcast ? Colors.green : Colors.blue,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          _formatTimestamp(notification.createdAt),
+                          style: GoogleFonts.roboto(
+                            fontSize: 10,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                isThreeLine: true,
+                dense: true,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserNotificationPage(userRole: widget.userRole),
+                    ),
+                  );
+                },
+              ),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 }
 
-// Widget badge untuk menampilkan jumlah notifikasi belum dibaca
-class NotificationBadge extends StatelessWidget {
-  final Widget child;
-  final double? badgeSize;
-  
-  const NotificationBadge({
-    super.key,
-    required this.child,
-    this.badgeSize = 16,
-  });
+// Quick Access Widget untuk tombol cepat ke admin panel
+class NotificationQuickAccessWidget extends StatelessWidget {
+  const NotificationQuickAccessWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<int>(
-      stream: NotificationService.getUnreadCount(),
-      builder: (context, snapshot) {
-        final unreadCount = snapshot.data ?? 0;
-        
-        return Stack(
-          children: [
-            child,
-            if (unreadCount > 0)
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(1),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  constraints: BoxConstraints(
-                    minWidth: badgeSize!,
-                    minHeight: badgeSize!,
-                  ),
-                  child: Text(
-                    unreadCount > 99 ? '99+' : unreadCount.toString(),
-                    style: GoogleFonts.roboto(
-                      color: Colors.white,
-                      fontSize: badgeSize! * 0.6,
-                      fontWeight: FontWeight.bold,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Card(
+              color: Colors.blue.shade50,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AdminSendNotificationPage(),
                     ),
-                    textAlign: TextAlign.center,
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.admin_panel_settings,
+                        color: Colors.blue.shade700,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Admin Panel',
+                        style: GoogleFonts.roboto(
+                          color: Colors.blue.shade700,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-          ],
-        );
-      },
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Card(
+              color: Colors.green.shade50,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const UserNotificationPage(),
+                    ),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.inbox,
+                        color: Colors.green.shade700,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Semua Notifikasi',
+                        style: GoogleFonts.roboto(
+                          color: Colors.green.shade700,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

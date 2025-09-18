@@ -1,7 +1,6 @@
 import 'package:app_brimob_user/libadmin/screens/main_admin.dart';
 import 'package:app_brimob_user/percobaannotif/fcm_service.dart';
 import 'package:app_brimob_user/screen/splash_page.dart';
-import 'package:app_brimob_user/services/notification_helper.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -9,12 +8,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'constants/app_constants.dart';
 import 'widgets/auth_wrapper.dart';
 
-void main() async { 
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await NotificationHelper.initialize();
-  await FCMService.initialize();
-
+   await FCMService.initialize();
   await FirebaseAppCheck.instance.activate(
     // Gunakan provider debug untuk pengembangan dan pengujian
     androidProvider: AndroidProvider.debug,
