@@ -12,7 +12,7 @@ import 'widgets/auth_wrapper.dart';
 void main() async { 
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await NotificationHelper.initialize();
+  await EmergencyNotificationHelper.initialize();
   await FCMService.initialize();
 
   await FirebaseAppCheck.instance.activate(
@@ -21,7 +21,7 @@ void main() async {
     appleProvider: AppleProvider.debug,
   );
 
-  runApp(const MyApp());
+  runApp(const AdminApp());
 }
 
 class MyApp extends StatelessWidget {

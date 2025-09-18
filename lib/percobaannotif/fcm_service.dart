@@ -1,51 +1,64 @@
-// lib/services/fcm_service.dart (UPDATE untuk admin)
+// lib/services/fcm_service.dart (UPDATED untuk Emergency)
 import 'package:app_brimob_user/models/user_model.dart';
 import 'package:app_brimob_user/services/notification_helper.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
-// Background message handler (TIDAK BERUBAH)
+// Background message handler (UPDATED)
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('Background message: ${message.notification?.title}');
+  
+  // Check if this is emergency notification
+  final isEmergency = message.data['priority'] == 'emergency' || 
+                     message.data['type'] == 'urgent';
+  
+  if (isEmergency) {
+    print('🚨 EMERGENCY notification in background');
+    await EmergencyNotificationHelper.showEmergencyNotification(message);
+  }
 }
 
 class FCMService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
-  // Initialize FCM with user role (UPDATE method signature)
+  // Initialize FCM with emergency support
   static Future<void> initialize({UserRole? userRole}) async {
     try {
-      // Request permission (TIDAK BERUBAH)
+      // Request permissions INCLUDING critical alerts
       await _messaging.requestPermission(
         alert: true,
         badge: true,
         sound: true,
+        criticalAlert: true, // CRITICAL: untuk iOS emergency
       );
 
-      // Set background message handler (TIDAK BERUBAH)
+      // Initialize emergency notification helper
+      await EmergencyNotificationHelper.initialize();
+
+      // Set background message handler
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-      // Subscribe to topics (UPDATE dengan role parameter)
+      // Subscribe to topics
       await _subscribeToTopics(userRole);
       
-      // Handle foreground messages (TIDAK BERUBAH)
+      // Handle foreground messages (UPDATED)
       FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
       
-      // Handle notification taps (TIDAK BERUBAH)
+      // Handle notification taps
       FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
       
-      // Check if app was opened from notification (TIDAK BERUBAH)
+      // Check if app was opened from notification
       _handleInitialMessage();
 
-      print('✅ FCM initialized successfully for role: ${userRole?.displayName ?? 'No Role'}');
+      print('✅ FCM initialized with emergency support for role: ${userRole?.displayName ?? 'No Role'}');
     } catch (e) {
       print('❌ Error in FCM initialize: $e');
-      throw e; // Re-throw untuk error handling di caller
+      throw e;
     }
   }
 
-  // ← UPDATE: Subscribe logic untuk admin dan user biasa
+  // Subscribe logic (TIDAK BERUBAH dari sebelumnya)
   static Future<void> _subscribeToTopics(UserRole? userRole) async {
     try {
       // Always subscribe to general notifications
@@ -55,7 +68,7 @@ class FCMService {
       // Handle role-specific subscriptions
       if (userRole != null) {
         if (userRole == UserRole.admin) {
-          // ← FIX: Admin subscribe ke SEMUA role topics
+          // Admin subscribe ke SEMUA role topics
           await _subscribeAdminToAllTopics();
         } else {
           // Regular user: subscribe ke topic role sendiri
@@ -71,7 +84,7 @@ class FCMService {
     }
   }
 
-  // ← TAMBAH: Method baru untuk admin subscribe ke semua topics
+  // Admin subscription (TIDAK BERUBAH)
   static Future<void> _subscribeAdminToAllTopics() async {
     try {
       final allRoleTopics = [
@@ -81,7 +94,6 @@ class FCMService {
         UserRole.pasbrimobI.topicName,
         UserRole.pasbrimobII.topicName,
         UserRole.pasbrimobIII.topicName,
-        // Tidak perlu admin.topicName dan other.topicName
       ];
 
       for (String topic in allRoleTopics) {
@@ -96,91 +108,81 @@ class FCMService {
     }
   }
 
-  // ← UPDATE: Update subscription logic untuk admin
-  static Future<void> updateRoleSubscription(UserRole newRole) async {
-    try {
-      if (newRole == UserRole.admin) {
-        // Admin: unsubscribe dari semua topic role lama, lalu subscribe ke semua
-        await _unsubscribeFromAllRoleTopics();
-        await _subscribeAdminToAllTopics();
-        print('🔄 Admin role subscription updated');
-      } else {
-        // Regular user: unsubscribe dari semua, lalu subscribe ke role baru
-        await _unsubscribeFromAllRoleTopics();
-        await _messaging.subscribeToTopic(newRole.topicName);
-        print('🔄 User role subscription updated to: ${newRole.topicName}');
-      }
-    } catch (e) {
-      print('❌ Error updating role subscription: $e');
-    }
-  }
-
-  // ← TAMBAH: Helper method untuk unsubscribe dari semua role topics
-  static Future<void> _unsubscribeFromAllRoleTopics() async {
-    try {
-      for (UserRole role in UserRole.values) {
-        if (role != UserRole.admin) { // Skip admin topic (tidak digunakan)
-          try {
-            await _messaging.unsubscribeFromTopic(role.topicName);
-            print('🗑️ Unsubscribed from: ${role.topicName}');
-          } catch (e) {
-            print('⚠️ Failed to unsubscribe from ${role.topicName}: $e');
-            // Continue dengan topic lainnya
-          }
-        }
-      }
-    } catch (e) {
-      print('❌ Error in unsubscribe all: $e');
-    }
-  }
-
-  // ← TAMBAH: Method untuk debug - lihat topics yang di-subscribe (opsional)
-  static Future<void> debugSubscribedTopics(UserRole? userRole) async {
-    print('📋 Expected subscriptions for ${userRole?.displayName ?? 'Unknown'}:');
-    print('  - all_users (general notifications)');
+  // UPDATED: Handle foreground messages dengan emergency detection
+  static void _handleForegroundMessage(RemoteMessage message) {
+    print('Foreground message: ${message.notification?.title}');
     
-    if (userRole == UserRole.admin) {
-      print('  - mako_kor_users');
-      print('  - pas_pelopor_users');
-      print('  - pas_gegana_users');
-      print('  - pasbrimob_i_users');
-      print('  - pasbrimob_ii_users');
-      print('  - pasbrimob_iii_users');
-      print('  (Admin receives all role notifications)');
-    } else if (userRole != null) {
-      print('  - ${userRole.topicName}');
+    // Check if this is emergency notification
+    final isEmergency = message.data['priority'] == 'emergency' || 
+                       message.data['type'] == 'urgent';
+    
+    if (isEmergency) {
+      print('🚨 EMERGENCY notification in foreground');
+      // Show emergency notification yang bypass silent mode
+      EmergencyNotificationHelper.showEmergencyNotification(message);
+      
+      // Also show emergency alert dialog if app is active
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        EmergencyNotificationHelper.showEmergencyAlert(
+          context,
+          message.notification?.title ?? '🚨 EMERGENCY ALERT',
+          message.notification?.body ?? 'Emergency notification received',
+        );
+      }
+    } else {
+      print('📢 Normal notification in foreground');
+      // Show normal local notification
+      EmergencyNotificationHelper.showEmergencyNotification(message);
+      
+      // Show in-app snackbar for normal notifications
+      _showInAppNotification(message);
     }
   }
 
-  // METHODS LAINNYA TIDAK BERUBAH...
-
-  // Handle when notification is tapped (TIDAK BERUBAH)
+  // Handle when notification is tapped
   static void _handleMessageOpenedApp(RemoteMessage message) {
     print('Notification tapped: ${message.notification?.title}');
-    // Navigate to specific screen if needed
+    
+    final isEmergency = message.data['priority'] == 'emergency' || 
+                       message.data['type'] == 'urgent';
+    
+    if (isEmergency) {
+      print('🚨 Emergency notification tapped');
+      // Navigate to emergency screen or show emergency info
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        // Show emergency info dialog
+        EmergencyNotificationHelper.showEmergencyAlert(
+          context,
+          message.notification?.title ?? '🚨 EMERGENCY ALERT',
+          message.notification?.body ?? 'Emergency notification',
+        );
+      }
+    } else {
+      print('📢 Normal notification tapped');
+      // Normal navigation handling
+    }
   }
 
-  // Handle when app is opened from terminated state via notification (TIDAK BERUBAH)
+  // Handle when app is opened from terminated state via notification
   static Future<void> _handleInitialMessage() async {
     RemoteMessage? initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null) {
       print('App opened from notification: ${initialMessage.notification?.title}');
-      // Navigate to specific screen if needed
+      
+      final isEmergency = initialMessage.data['priority'] == 'emergency' || 
+                         initialMessage.data['type'] == 'urgent';
+      
+      if (isEmergency) {
+        print('🚨 App opened from emergency notification');
+        // Handle emergency notification opening
+      }
     }
   }
 
-  // Handle foreground notifications (TIDAK BERUBAH)
-  static void _handleForegroundMessage(RemoteMessage message) {
-    print('Foreground message: ${message.notification?.title}');
-    // Show local notification for foreground
-    NotificationHelper.showNotification(message);
-    // Also show in-app snackbar
-    _showInAppNotification(message);
-  }
-
-  // Show in-app notification (TIDAK BERUBAH)
+  // Show normal in-app notification (untuk non-emergency)
   static void _showInAppNotification(RemoteMessage message) {
-    // Get current context (you'll need to implement this based on your navigation)
     final context = navigatorKey.currentContext;
     if (context != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -203,6 +205,86 @@ class FCMService {
     }
   }
 
+  // TAMBAH: Send emergency notification test
+  static Future<void> testEmergencyNotification() async {
+    await EmergencyNotificationHelper.testEmergencyNotification();
+  }
+
+  // TAMBAH: Check emergency notification permissions
+  static Future<bool> checkEmergencyPermissions() async {
+    try {
+      final settings = await _messaging.getNotificationSettings();
+      
+      final hasBasicPermission = settings.authorizationStatus == AuthorizationStatus.authorized;
+      final hasCriticalPermission = settings.criticalAlert == AppleNotificationSetting.enabled;
+      
+      print('📱 Notification permissions:');
+      print('  Basic: $hasBasicPermission');
+      print('  Critical: $hasCriticalPermission');
+      
+      return hasBasicPermission; // Critical permission is iOS only
+    } catch (e) {
+      print('❌ Error checking permissions: $e');
+      return false;
+    }
+  }
+
+  // TAMBAH: Request emergency permissions
+  static Future<void> requestEmergencyPermissions() async {
+    try {
+      final settings = await _messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        criticalAlert: true, // iOS only
+        provisional: false,
+      );
+      
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        print('✅ Emergency notification permissions granted');
+      } else {
+        print('❌ Emergency notification permissions denied');
+      }
+    } catch (e) {
+      print('❌ Error requesting emergency permissions: $e');
+    }
+  }
+
+  // Update subscription (TIDAK BERUBAH)
+  static Future<void> updateRoleSubscription(UserRole newRole) async {
+    try {
+      if (newRole == UserRole.admin) {
+        await _unsubscribeFromAllRoleTopics();
+        await _subscribeAdminToAllTopics();
+        print('🔄 Admin role subscription updated');
+      } else {
+        await _unsubscribeFromAllRoleTopics();
+        await _messaging.subscribeToTopic(newRole.topicName);
+        print('🔄 User role subscription updated to: ${newRole.topicName}');
+      }
+    } catch (e) {
+      print('❌ Error updating role subscription: $e');
+    }
+  }
+
+  // Helper methods (TIDAK BERUBAH)
+  static Future<void> _unsubscribeFromAllRoleTopics() async {
+    try {
+      for (UserRole role in UserRole.values) {
+        if (role != UserRole.admin) {
+          try {
+            await _messaging.unsubscribeFromTopic(role.topicName);
+            print('🗑️ Unsubscribed from: ${role.topicName}');
+          } catch (e) {
+            print('⚠️ Failed to unsubscribe from ${role.topicName}: $e');
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ Error in unsubscribe all: $e');
+    }
+  }
+
   // Get FCM token (TIDAK BERUBAH)
   static Future<String?> getToken() async {
     try {
@@ -216,5 +298,5 @@ class FCMService {
   }
 }
 
-// Add this to your main.dart (TIDAK BERUBAH)
+// Global navigator key (TIDAK BERUBAH)
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
