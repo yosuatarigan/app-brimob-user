@@ -2,67 +2,6 @@
 import 'package:app_brimob_user/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-// // Import UserRole from existing user model
-// enum UserRole {
-//   admin,
-//   makoKor,
-//   pasPelopor,
-//   pasGegana,
-//   pasbrimobI,
-//   pasbrimobII,
-//   pasbrimobIII,
-//   other;
-
-//   String get displayName {
-//     switch (this) {
-//       case UserRole.admin:
-//         return 'ADMINISTRATOR';
-//       case UserRole.makoKor:
-//         return 'MAKO KOR';
-//       case UserRole.pasPelopor:
-//         return 'PAS PELOPOR';
-//       case UserRole.pasGegana:
-//         return 'PAS GEGANA';
-//       case UserRole.pasbrimobI:
-//         return 'PASBRIMOB I';
-//       case UserRole.pasbrimobII:
-//         return 'PASBRIMOB II';
-//       case UserRole.pasbrimobIII:
-//         return 'PASBRIMOB III';
-//       case UserRole.other:
-//         return 'OTHER';
-//     }
-//   }
-
-//   String get topicName {
-//     switch (this) {
-//       case UserRole.admin:
-//         return 'admin_users';
-//       case UserRole.makoKor:
-//         return 'mako_kor_users';
-//       case UserRole.pasPelopor:
-//         return 'pas_pelopor_users';
-//       case UserRole.pasGegana:
-//         return 'pas_gegana_users';
-//       case UserRole.pasbrimobI:
-//         return 'pasbrimob_i_users';
-//       case UserRole.pasbrimobII:
-//         return 'pasbrimob_ii_users';
-//       case UserRole.pasbrimobIII:
-//         return 'pasbrimob_iii_users';
-//       case UserRole.other:
-//         return 'other_users';
-//     }
-//   }
-
-//   // Get role from string
-//   static UserRole fromString(String value) {
-//     return UserRole.values.firstWhere(
-//       (e) => e.name == value,
-//       orElse: () => UserRole.other,
-//     );
-//   }
-// }
 
 enum NotificationType {
   general,      // Notifikasi umum

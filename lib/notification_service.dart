@@ -27,7 +27,7 @@ class NotificationService {
 
       // Save to Firestore - Cloud Function akan auto trigger
       await _firestore.collection('role_notifications').add(
-        notification.toMap()..['targetTopic'] = targetRole.displayName,
+        notification.toMap()..['targetTopic'] = targetRole.topicName,
       );
 
       return true;
