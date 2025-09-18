@@ -1,3 +1,5 @@
+// lib/libadmin/screens/admin_dashboard_page.dart
+import 'package:app_brimob_user/admin_history_notifikasi_page.dart';
 import 'package:app_brimob_user/admin_send_notification_page.dart';
 import 'package:app_brimob_user/libadmin/admin_constant.dart';
 import 'package:app_brimob_user/libadmin/models/admin_model.dart';
@@ -6,6 +8,9 @@ import 'package:app_brimob_user/libadmin/screens/galery_management_page.dart';
 import 'package:app_brimob_user/libadmin/screens/slide_show_management.dart';
 import 'package:app_brimob_user/libadmin/widget/admin_witget.dart';
 import 'package:app_brimob_user/services/cloud_function_service.dart';
+import 'package:app_brimob_user/services/auth_service.dart'; // TAMBAH IMPORT
+import 'package:app_brimob_user/models/user_model.dart'; // TAMBAH IMPORT
+import 'package:app_brimob_user/percobaannotif/fcm_service.dart'; // TAMBAH IMPORT
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -31,11 +36,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
   bool _isLoading = true;
   String? _error;
 
+  // TAMBAH: FCM dan user management
+  bool _isFCMInitialized = false;
+  UserModel? _currentUser;
+  final AuthService _authService = AuthService();
+
   @override
   void initState() {
     super.initState();
     _initAnimations();
     _loadDashboardData();
+    _loadCurrentUserAndInitializeFCM(); // TAMBAH: Initialize FCM untuk admin
   }
 
   void _initAnimations() {
@@ -49,6 +60,55 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     );
 
     _animationController.forward();
+  }
+
+  // TAMBAH: Method untuk load current admin dan initialize FCM
+  Future<void> _loadCurrentUserAndInitializeFCM() async {
+    try {
+      final user = _authService.currentUser;
+      if (user != null) {
+        // Get user data dari Firestore
+        _currentUser = await _authService.getUserData(user.uid);
+
+        if (_currentUser != null) {
+          print('Admin user role: ${_currentUser!.role.displayName}');
+
+          // Initialize FCM dengan role admin
+          await FCMService.initialize(userRole: _currentUser!.role);
+          setState(() => _isFCMInitialized = true);
+
+          print(
+            'FCM initialized successfully for admin: ${_currentUser!.role.displayName}',
+          );
+        } else {
+          print(
+            'Admin data not found in users collection, checking admins collection...',
+          );
+
+          // Fallback: check if this is admin account in different collection
+          // Assume admin role for now
+          await FCMService.initialize(userRole: UserRole.admin);
+          setState(() => _isFCMInitialized = true);
+
+          print('FCM initialized with admin role (fallback)');
+        }
+      } else {
+        print('No authenticated user for admin dashboard');
+        // Still initialize FCM with admin role as fallback
+        await FCMService.initialize(userRole: UserRole.admin);
+        setState(() => _isFCMInitialized = true);
+      }
+    } catch (e) {
+      print('Error initializing admin FCM: $e');
+      // Fallback: initialize with admin role
+      try {
+        await FCMService.initialize(userRole: UserRole.admin);
+        setState(() => _isFCMInitialized = true);
+        print('Admin FCM initialized successfully (fallback)');
+      } catch (fallbackError) {
+        print('Admin FCM fallback also failed: $fallbackError');
+      }
+    }
   }
 
   Future<void> _loadDashboardData() async {
@@ -81,75 +141,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-       onPressed: () async {
-    print('🚀 === STARTING CLOUD FUNCTIONS TEST ===');
-
-    try {
-      // 1. Check Auth Status  
-      print('📋 Checking authentication...');
-      final authStatus = await CloudFunctionService.getAuthStatus();
-      print('Auth Status: $authStatus');
-
-      if (authStatus['authenticated'] != true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Not authenticated: ${authStatus['error']}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('✅ Authenticated as: ${authStatus['email']}'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      // 2. Test Firestore Function
-      print('🔥 Testing Firestore function...');
-      final result = await CloudFunctionService.testFirestore();
-      
-      if (result != null && result['success'] == true) {
-        print('✅ SUCCESS! Result: $result');
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('🎉 Cloud Functions working! Role: ${result['userData']['role']}'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 4),
-          ),
-        );
-      } else {
-        print('❌ FAILED! Result: $result');
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Test failed: ${result?['error'] ?? 'Unknown error'}'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 4),
-          ),
-        );
-      }
-
-    } catch (e, stackTrace) {
-      print('💥 EXCEPTION: $e');
-      print('Stack: $stackTrace');
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('💥 Exception: ${e.toString()}'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 4),
-        ),
-      );
-    }
-
-    print('🏁 === TEST COMPLETED ===');
-  },
-      ),
+     
       backgroundColor: AdminColors.background,
       body: SafeArea(
         child: _isLoading ? _buildLoadingState() : _buildContent(),
@@ -178,16 +170,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
         return FadeTransition(
           opacity: _fadeAnimation,
           child: RefreshIndicator(
-            onRefresh: _loadDashboardData,
+            onRefresh: () async {
+              await _loadDashboardData();
+              await _loadCurrentUserAndInitializeFCM(); // TAMBAH: Refresh FCM juga
+            },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeader(),
+                  _buildFCMStatusSection(), // TAMBAH: FCM status section
                   _buildStatsSection(),
                   _buildQuickActionsSection(),
-
                   _buildRecentActivitySection(),
                   const SizedBox(height: 80), // Bottom padding
                 ],
@@ -196,6 +191,70 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           ),
         );
       },
+    );
+  }
+
+  // TAMBAH: FCM Status Section untuk debug
+  Widget _buildFCMStatusSection() {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color:
+              _isFCMInitialized
+                  ? Colors.green.withOpacity(0.1)
+                  : Colors.orange.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: _isFCMInitialized ? Colors.green : Colors.orange,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              _isFCMInitialized ? Icons.check_circle : Icons.schedule,
+              color: _isFCMInitialized ? Colors.green : Colors.orange,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Admin Notification Status',
+                    style: GoogleFonts.roboto(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AdminColors.adminDark,
+                    ),
+                  ),
+                  Text(
+                    _isFCMInitialized
+                        ? 'Ready to receive all notifications (Broadcast + All Role Notifications)'
+                        : 'Initializing notification system...',
+                    style: GoogleFonts.roboto(
+                      fontSize: 10,
+                      color: AdminColors.darkGray,
+                    ),
+                  ),
+                  if (_currentUser != null)
+                    Text(
+                      'Role: ${_currentUser!.role.displayName}',
+                      style: GoogleFonts.roboto(
+                        fontSize: 10,
+                        color: AdminColors.darkGray,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -314,6 +373,39 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                         ],
                       ),
                     ),
+                    // TAMBAH: FCM Status indicator di header
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _isFCMInitialized ? Colors.green : Colors.orange,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _isFCMInitialized
+                                ? Icons.notifications_active
+                                : Icons.notifications_off,
+                            color: Colors.white,
+                            size: 12,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _isFCMInitialized ? 'FCM Ready' : 'FCM Loading',
+                            style: GoogleFonts.roboto(
+                              fontSize: 8,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     IconButton(
                       onPressed: _showLogoutDialog,
                       icon: const Icon(
@@ -663,189 +755,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     );
   }
 
-  Widget _buildUserRoleChart() {
-    final usersByRole = _analytics!.usersByRole;
-    final total = usersByRole.values.fold(0, (sum, count) => sum + count);
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Users by Role',
-              style: GoogleFonts.roboto(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AdminColors.adminDark,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                SizedBox(
-                  width: 60,
-                  height: 60,
-                  child: PieChart(
-                    PieChartData(
-                      sections:
-                          usersByRole.entries.map((entry) {
-                            final percentage =
-                                total > 0 ? (entry.value / total) * 100 : 0;
-                            return PieChartSectionData(
-                              color: _getRoleColor(entry.key),
-                              value: percentage.toDouble(),
-                              title: '${percentage.toStringAsFixed(0)}%',
-                              radius: 25,
-                              titleStyle: GoogleFonts.roboto(
-                                fontSize: 8,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            );
-                          }).toList(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    children:
-                        usersByRole.entries
-                            .map(
-                              (entry) => Padding(
-                                padding: const EdgeInsets.only(bottom: 2),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        color: _getRoleColor(entry.key),
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        '${entry.key}: ${entry.value}',
-                                        style: GoogleFonts.roboto(
-                                          fontSize: 10,
-                                          color: AdminColors.darkGray,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            )
-                            .toList(),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContentCategoryChart() {
-    final contentByCategory = _analytics!.contentByCategory;
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Content by Category',
-              style: GoogleFonts.roboto(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AdminColors.adminDark,
-              ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 80,
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY:
-                      contentByCategory.values.isNotEmpty
-                          ? contentByCategory.values
-                                  .reduce((a, b) => a > b ? a : b)
-                                  .toDouble() +
-                              1
-                          : 10,
-                  barTouchData: BarTouchData(enabled: false),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (double value, TitleMeta meta) {
-                          final categories = contentByCategory.keys.toList();
-                          if (value.toInt() < categories.length) {
-                            final category = categories[value.toInt()];
-                            return Text(
-                              category.length > 4
-                                  ? category.substring(0, 4).toUpperCase()
-                                  : category.toUpperCase(),
-                              style: GoogleFonts.roboto(
-                                fontSize: 8,
-                                color: AdminColors.darkGray,
-                              ),
-                            );
-                          }
-                          return const Text('');
-                        },
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  barGroups:
-                      contentByCategory.entries.toList().asMap().entries.map((
-                        entry,
-                      ) {
-                        return BarChartGroupData(
-                          x: entry.key,
-                          barRods: [
-                            BarChartRodData(
-                              toY: entry.value.value.toDouble(),
-                              color: _getCategoryColor(entry.value.key),
-                              width: 12,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildRecentActivitySection() {
     return Padding(
       padding: const EdgeInsets.all(12),
@@ -895,6 +804,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 icon: Icons.person_add,
                 color: AdminColors.primaryBlue,
                 onTap: () => _handleMenuTap('user_management'),
+              ),
+              const SizedBox(height: 6),
+              _buildCompactActionButton(
+                title: 'Kirim Notifikasi',
+                subtitle: 'Send notification to users',
+                icon: Icons.notifications_active,
+                color: AdminColors.error,
+                onTap: () => _handleMenuTap('send_notification'),
               ),
             ],
           ),
@@ -959,8 +876,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     );
   }
 
-  // Update method _handleMenuTap di AdminDashboardPage
-
+  // Method _handleMenuTap di AdminDashboardPage
   void _handleMenuTap(String menuId) {
     switch (menuId) {
       case 'content_management':
@@ -982,6 +898,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           context,
           MaterialPageRoute(
             builder: (context) => const AdminSendNotificationPage(),
+          ),
+        );
+        break;
+      case 'notification_history':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AdminNotificationHistoryPage(),
           ),
         );
         break;

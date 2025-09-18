@@ -131,6 +131,16 @@ class AdminMenus {
       'route': '/send-notification',
     },
     {
+      'id': 'notification_history',
+      'title': 'Notification History',
+      'subtitle': 'Lihat riwayat notifikasi',
+      'icon': Icons.history,
+      'color': AdminColors.adminRed,
+      'imageUrl':
+          'https://images.unsplash.com/photo-1553484771-371a605b060b?w=400&h=200&fit=crop',
+      'route': '/notification-history',
+    },
+    {
       'id': 'gallery_management',
       'title': 'Gallery Management',
       'subtitle': 'Kelola galeri satuan',

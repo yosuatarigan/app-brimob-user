@@ -57,15 +57,23 @@ class _DashboardPageState extends State<DashboardPage> {
       if (user != null) {
         // Get user data dari Firestore
         _currentUser = await _authService.getUserData(user.uid);
-        
+
         if (_currentUser != null) {
-          print('Current user role: ${_currentUser!.role.displayName}');
-          
+          debugPrint('Current user role: ${_currentUser!.role.displayName}');
+          debugPrint('🔍 DEBUG Admin - Full user data: ${_currentUser!.toMap()}');
+          debugPrint('🔍 DEBUG Admin - Role: ${_currentUser!.role}');
+          debugPrint('🔍 DEBUG Admin - Role name: ${_currentUser!.role.name}');
+          debugPrint(
+            '🔍 DEBUG Admin - Is admin: ${_currentUser!.role == UserRole.admin}',
+          );
+
           // Initialize FCM dengan role user
           await FCMService.initialize(userRole: _currentUser!.role);
           setState(() => _isFCMInitialized = true);
-          
-          print('FCM initialized successfully for ${_currentUser!.role.displayName}');
+
+          print(
+            'FCM initialized successfully for ${_currentUser!.role.displayName}',
+          );
         } else {
           print('User data not found, initializing FCM without role');
           await FCMService.initialize();
@@ -166,7 +174,7 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Column(
         children: [
           // Debug info (opsional - bisa dihapus nanti)
-          if (_currentUser != null) 
+          if (_currentUser != null)
             Container(
               padding: const EdgeInsets.all(8),
               margin: const EdgeInsets.only(bottom: 8),
@@ -185,7 +193,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ],
               ),
             ),
-          
+
           NotificationWidget(),
           const SizedBox(height: 16),
           RecentNotificationsWidget(limit: 3),
@@ -297,18 +305,20 @@ class _DashboardPageState extends State<DashboardPage> {
                     margin: const EdgeInsets.symmetric(horizontal: 3),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(4),
-                      color: _currentSlide == index
-                          ? Colors.white
-                          : Colors.white.withOpacity(0.4),
-                      boxShadow: _currentSlide == index
-                          ? [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
+                      color:
+                          _currentSlide == index
+                              ? Colors.white
+                              : Colors.white.withOpacity(0.4),
+                      boxShadow:
+                          _currentSlide == index
+                              ? [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                              : null,
                     ),
                   ),
                 ),
@@ -323,9 +333,10 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Center(
                 child: GestureDetector(
                   onTap: () {
-                    final prevSlide = _currentSlide == 0
-                        ? _slideshowImages.length - 1
-                        : _currentSlide - 1;
+                    final prevSlide =
+                        _currentSlide == 0
+                            ? _slideshowImages.length - 1
+                            : _currentSlide - 1;
                     _pageController.animateToPage(
                       prevSlide,
                       duration: const Duration(milliseconds: 300),
@@ -361,7 +372,8 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Center(
                 child: GestureDetector(
                   onTap: () {
-                    final nextSlide = (_currentSlide + 1) % _slideshowImages.length;
+                    final nextSlide =
+                        (_currentSlide + 1) % _slideshowImages.length;
                     _pageController.animateToPage(
                       nextSlide,
                       duration: const Duration(milliseconds: 300),
@@ -418,98 +430,106 @@ class _DashboardPageState extends State<DashboardPage> {
     return Container(
       width: double.infinity,
       height: 250,
-      child: slide.imageUrl.startsWith('http')
-          ? CachedNetworkImage(
-              imageUrl: slide.imageUrl,
-              fit: BoxFit.fill,
-              placeholder: (context, url) => Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primaryBlue,
-                      const Color(0xFF6D4C41),
-                    ],
-                  ),
-                ),
-                child: const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        'Loading image...',
-                        style: TextStyle(color: Colors.white, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              errorWidget: (context, url, error) => Container(
-                color: AppColors.primaryBlue,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: Colors.white.withOpacity(0.7),
-                        size: 48,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Failed to load image',
-                        style: GoogleFonts.roboto(
-                          color: Colors.white,
-                          fontSize: 16,
+      child:
+          slide.imageUrl.startsWith('http')
+              ? CachedNetworkImage(
+                imageUrl: slide.imageUrl,
+                fit: BoxFit.fill,
+                placeholder:
+                    (context, url) => Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.primaryBlue,
+                            const Color(0xFF6D4C41),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            )
-          : Image.asset(
-              slide.imageUrl,
-              fit: BoxFit.fill,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: AppColors.primaryBlue,
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.image_not_supported,
-                          color: Colors.white.withOpacity(0.7),
-                          size: 48,
+                      child: const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 12),
+                            Text(
+                              'Loading image...',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'SDM Korbrimob Polri',
-                          style: GoogleFonts.roboto(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'Sistem Data Manajemen',
-                          style: GoogleFonts.roboto(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                errorWidget:
+                    (context, url, error) => Container(
+                      color: AppColors.primaryBlue,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.white.withOpacity(0.7),
+                              size: 48,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Failed to load image',
+                              style: GoogleFonts.roboto(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+              )
+              : Image.asset(
+                slide.imageUrl,
+                fit: BoxFit.fill,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: AppColors.primaryBlue,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.image_not_supported,
+                            color: Colors.white.withOpacity(0.7),
+                            size: 48,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'SDM Korbrimob Polri',
+                            style: GoogleFonts.roboto(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Sistem Data Manajemen',
+                            style: GoogleFonts.roboto(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
     );
   }
 
@@ -655,12 +675,24 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildMenuGrid() {
     // Simplified menu items (no role/protection)
     final List<Map<String, dynamic>> menuItems = [
-      {'title': 'KORBRIMOB', 'asset': 'assets/korbrimob.png', 'id': 'korbrimob'},
+      {
+        'title': 'KORBRIMOB',
+        'asset': 'assets/korbrimob.png',
+        'id': 'korbrimob',
+      },
       {'title': 'BINKAR', 'asset': 'assets/binkar.png', 'id': 'binkar'},
       {'title': 'DALPERS', 'asset': 'assets/dalpers.png', 'id': 'dalpers'},
       {'title': 'WATPERS', 'asset': 'assets/watpress.png', 'id': 'watpers'},
-      {'title': 'PSIKOLOGI', 'asset': 'assets/psikologi.png', 'id': 'psikologi'},
-      {'title': 'PERDANKOR', 'asset': 'assets/perdankor.png', 'id': 'perdankor'},
+      {
+        'title': 'PSIKOLOGI',
+        'asset': 'assets/psikologi.png',
+        'id': 'psikologi',
+      },
+      {
+        'title': 'PERDANKOR',
+        'asset': 'assets/perdankor.png',
+        'id': 'perdankor',
+      },
       {'title': 'PERKAP', 'asset': 'assets/perkap.png', 'id': 'perkap'},
       {'title': 'OTHER', 'asset': 'assets/other.png', 'id': 'other'},
     ];
@@ -716,7 +748,11 @@ class _DashboardPageState extends State<DashboardPage> {
                       color: Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.folder, color: Colors.white, size: 30),
+                    child: const Icon(
+                      Icons.folder,
+                      color: Colors.white,
+                      size: 30,
+                    ),
                   );
                 },
               ),
@@ -741,12 +777,48 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildPedomanSection() {
     final List<Map<String, String>> pedomanItems = [
-      {'title': 'Tri Brata', 'description': 'Pedoman hidup anggota Polri', 'id': 'tri_brata', 'assetPath': 'assets/tribrata.png', 'imageContent': 'assets/dc/tribrata.png'},
-      {'title': 'Catur Prasetya', 'description': 'Empat janji kerja anggota Polri', 'id': 'catur_prasetya', 'assetPath': 'assets/tribrata.png', 'imageContent': 'assets/dc/catutprasetya.png'},
-      {'title': 'Panca Prasetya', 'description': 'Lima prinsip khusus Korbrimob', 'id': 'panca_prasetya', 'assetPath': 'assets/brimob.png', 'imageContent': 'assets/dc/panca.png'},
-      {'title': 'Etika Profesi', 'description': 'Etika profesi Brimob', 'id': 'etika_profesi', 'assetPath': 'assets/brimob.png', 'imageContent': 'assets/dc/etika.png'},
-      {'title': 'Ikrar Brimob', 'description': 'Ikrar anggota Brimob', 'id': 'ikrar_brimob', 'assetPath': 'assets/brimob.png', 'imageContent': 'assets/dc/ikrar.png'},
-      {'title': 'Jati Diri Brimob', 'description': 'Jati diri Korbrimob Polri', 'id': 'jati_diri', 'assetPath': 'assets/korpri.png', 'imageContent': 'assets/dc/jatidiri.png'},
+      {
+        'title': 'Tri Brata',
+        'description': 'Pedoman hidup anggota Polri',
+        'id': 'tri_brata',
+        'assetPath': 'assets/tribrata.png',
+        'imageContent': 'assets/dc/tribrata.png',
+      },
+      {
+        'title': 'Catur Prasetya',
+        'description': 'Empat janji kerja anggota Polri',
+        'id': 'catur_prasetya',
+        'assetPath': 'assets/tribrata.png',
+        'imageContent': 'assets/dc/catutprasetya.png',
+      },
+      {
+        'title': 'Panca Prasetya',
+        'description': 'Lima prinsip khusus Korbrimob',
+        'id': 'panca_prasetya',
+        'assetPath': 'assets/brimob.png',
+        'imageContent': 'assets/dc/panca.png',
+      },
+      {
+        'title': 'Etika Profesi',
+        'description': 'Etika profesi Brimob',
+        'id': 'etika_profesi',
+        'assetPath': 'assets/brimob.png',
+        'imageContent': 'assets/dc/etika.png',
+      },
+      {
+        'title': 'Ikrar Brimob',
+        'description': 'Ikrar anggota Brimob',
+        'id': 'ikrar_brimob',
+        'assetPath': 'assets/brimob.png',
+        'imageContent': 'assets/dc/ikrar.png',
+      },
+      {
+        'title': 'Jati Diri Brimob',
+        'description': 'Jati diri Korbrimob Polri',
+        'id': 'jati_diri',
+        'assetPath': 'assets/korpri.png',
+        'imageContent': 'assets/dc/jatidiri.png',
+      },
     ];
 
     return Column(
@@ -841,38 +913,53 @@ class _DashboardPageState extends State<DashboardPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PedomanDetailPage(
-          title: item['title']!,
-          content: item['imageContent']!,
-          icon: _getPedomanIcon(item['id']!),
-          assetPath: item['assetPath']!,
-          isImageContent: true,
-        ),
+        builder:
+            (context) => PedomanDetailPage(
+              title: item['title']!,
+              content: item['imageContent']!,
+              icon: _getPedomanIcon(item['id']!),
+              assetPath: item['assetPath']!,
+              isImageContent: true,
+            ),
       ),
     );
   }
 
   Color _getPedomanColor(String id) {
     switch (id) {
-      case 'tri_brata': return AppColors.primaryBlue;
-      case 'catur_prasetya': return AppColors.red;
-      case 'panca_prasetya': return AppColors.green;
-      case 'etika_profesi': return AppColors.orange;
-      case 'ikrar_brimob': return AppColors.purple;
-      case 'jati_diri': return AppColors.indigo;
-      default: return AppColors.darkGray;
+      case 'tri_brata':
+        return AppColors.primaryBlue;
+      case 'catur_prasetya':
+        return AppColors.red;
+      case 'panca_prasetya':
+        return AppColors.green;
+      case 'etika_profesi':
+        return AppColors.orange;
+      case 'ikrar_brimob':
+        return AppColors.purple;
+      case 'jati_diri':
+        return AppColors.indigo;
+      default:
+        return AppColors.darkGray;
     }
   }
 
   IconData _getPedomanIcon(String id) {
     switch (id) {
-      case 'tri_brata': return Icons.star;
-      case 'catur_prasetya': return Icons.favorite;
-      case 'panca_prasetya': return Icons.security;
-      case 'etika_profesi': return Icons.school;
-      case 'ikrar_brimob': return Icons.military_tech;
-      case 'jati_diri': return Icons.badge;
-      default: return Icons.book;
+      case 'tri_brata':
+        return Icons.star;
+      case 'catur_prasetya':
+        return Icons.favorite;
+      case 'panca_prasetya':
+        return Icons.security;
+      case 'etika_profesi':
+        return Icons.school;
+      case 'ikrar_brimob':
+        return Icons.military_tech;
+      case 'jati_diri':
+        return Icons.badge;
+      default:
+        return Icons.book;
     }
   }
 
