@@ -1,6 +1,8 @@
 // lib/pages/dashboard_page.dart
 import 'package:app_brimob_user/notification_widget.dart';
 import 'package:app_brimob_user/percobaannotif/fcm_service.dart';
+import 'package:app_brimob_user/services/auth_service.dart'; // TAMBAH IMPORT
+import 'package:app_brimob_user/models/user_model.dart'; // TAMBAH IMPORT
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -25,6 +27,10 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _isLoading = false;
   bool _isFCMInitialized = false;
 
+  // TAMBAH: Current user data
+  UserModel? _currentUser;
+  final AuthService _authService = AuthService();
+
   // Slideshow variables
   final PageController _pageController = PageController();
   List<SlideshowItem> _slideshowImages = [];
@@ -35,7 +41,7 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _loadSlideshowImages();
-    _initializeNotificationSystem();
+    _loadCurrentUserAndInitializeFCM(); // GANTI dari _initializeNotificationSystem()
   }
 
   @override
@@ -44,13 +50,42 @@ class _DashboardPageState extends State<DashboardPage> {
     super.dispose();
   }
 
-  // Initialize FCM for notifications
-  Future<void> _initializeNotificationSystem() async {
+  // TAMBAH: Method baru untuk load current user dan initialize FCM
+  Future<void> _loadCurrentUserAndInitializeFCM() async {
     try {
-      await FCMService.initialize();
-      setState(() => _isFCMInitialized = true);
+      final user = _authService.currentUser;
+      if (user != null) {
+        // Get user data dari Firestore
+        _currentUser = await _authService.getUserData(user.uid);
+        
+        if (_currentUser != null) {
+          print('Current user role: ${_currentUser!.role.displayName}');
+          
+          // Initialize FCM dengan role user
+          await FCMService.initialize(userRole: _currentUser!.role);
+          setState(() => _isFCMInitialized = true);
+          
+          print('FCM initialized successfully for ${_currentUser!.role.displayName}');
+        } else {
+          print('User data not found, initializing FCM without role');
+          await FCMService.initialize();
+          setState(() => _isFCMInitialized = true);
+        }
+      } else {
+        print('No authenticated user, initializing FCM without role');
+        await FCMService.initialize();
+        setState(() => _isFCMInitialized = true);
+      }
     } catch (e) {
       print('Error initializing FCM: $e');
+      // Fallback: initialize tanpa role agar app tidak crash
+      try {
+        await FCMService.initialize();
+        setState(() => _isFCMInitialized = true);
+        print('FCM initialized successfully (fallback)');
+      } catch (fallbackError) {
+        print('FCM fallback also failed: $fallbackError');
+      }
     }
   }
 
@@ -124,12 +159,33 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // Simplified Notification Section (no role dependency)
+  // UPDATE: Notification section dengan debug info
   Widget _buildNotificationSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
+          // Debug info (opsional - bisa dihapus nanti)
+          if (_currentUser != null) 
+            Container(
+              padding: const EdgeInsets.all(8),
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info, size: 16, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Text(
+                    'FCM: ${_isFCMInitialized ? "Ready" : "Loading"} | Role: ${_currentUser!.role.displayName}',
+                    style: TextStyle(fontSize: 12, color: Colors.blue),
+                  ),
+                ],
+              ),
+            ),
+          
           NotificationWidget(),
           const SizedBox(height: 16),
           RecentNotificationsWidget(limit: 3),
@@ -820,10 +876,12 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  // UPDATE: Refresh data termasuk FCM
   Future<void> _refreshData() async {
     setState(() => _isLoading = true);
     await Future.delayed(const Duration(seconds: 1));
     await _loadSlideshowImages();
+    await _loadCurrentUserAndInitializeFCM(); // Reload user dan FCM juga
     setState(() => _isLoading = false);
   }
 
