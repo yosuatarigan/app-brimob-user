@@ -12,14 +12,14 @@ import 'widgets/auth_wrapper.dart';
 void main() async { 
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await EmergencyNotificationHelper.initialize();
+  await NotificationHelper.initialize();
   await FCMService.initialize();
 
   await FirebaseAppCheck.instance.activate(
     // Gunakan provider debug untuk pengembangan dan pengujian
     androidProvider: AndroidProvider.debug,
     appleProvider: AppleProvider.debug,
-  );
+  );      
 
   runApp(const AdminApp());
 }
