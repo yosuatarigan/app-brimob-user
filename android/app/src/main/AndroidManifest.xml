@@ -13,7 +13,7 @@
 
     
     <application
-        android:label="app_brimob_user"
+        android:label="app_brimob"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         

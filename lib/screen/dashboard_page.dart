@@ -1,8 +1,8 @@
 // lib/pages/dashboard_page.dart
 import 'package:app_brimob_user/notification_widget.dart';
 import 'package:app_brimob_user/percobaannotif/fcm_service.dart';
-import 'package:app_brimob_user/services/auth_service.dart'; // TAMBAH IMPORT
-import 'package:app_brimob_user/models/user_model.dart'; // TAMBAH IMPORT
+import 'package:app_brimob_user/services/auth_service.dart';
+import 'package:app_brimob_user/models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -27,7 +27,7 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _isLoading = false;
   bool _isFCMInitialized = false;
 
-  // TAMBAH: Current user data
+  // Current user data
   UserModel? _currentUser;
   final AuthService _authService = AuthService();
 
@@ -41,7 +41,7 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _loadSlideshowImages();
-    _loadCurrentUserAndInitializeFCM(); // GANTI dari _initializeNotificationSystem()
+    _loadCurrentUserAndInitializeFCM();
   }
 
   @override
@@ -50,47 +50,491 @@ class _DashboardPageState extends State<DashboardPage> {
     super.dispose();
   }
 
-  // TAMBAH: Method baru untuk load current user dan initialize FCM
+  Widget _buildProfileSection() {
+    if (_currentUser == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF2E3440), Color(0xFF3B4252)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header Section
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.account_circle,
+                  color: Colors.white.withOpacity(0.9),
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'PROFIL SAYA',
+                  style: GoogleFonts.roboto(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(_currentUser!.status),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _currentUser!.status.displayName,
+                    style: GoogleFonts.roboto(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Profile Content
+          Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                // Avatar dan Info Utama
+                Row(
+                  children: [
+                    // Avatar
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 3,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child:
+                          _currentUser!.photoUrl != null
+                              ? ClipOval(
+                                child: CachedNetworkImage(
+                                  imageUrl: _currentUser!.photoUrl!,
+                                  fit: BoxFit.cover,
+                                  width: 80,
+                                  height: 80,
+                                  placeholder:
+                                      (context, url) => Container(
+                                        color: Colors.grey[300],
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      ),
+                                  errorWidget:
+                                      (context, url, error) => Container(
+                                        color: Colors.grey[400],
+                                        child: Icon(
+                                          Icons.person,
+                                          size: 40,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                ),
+                              )
+                              : Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withOpacity(0.1),
+                                ),
+                                child: Icon(
+                                  Icons.person,
+                                  size: 40,
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
+                              ),
+                    ),
+
+                    const SizedBox(width: 16),
+
+                    // Info Utama
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _currentUser!.displayName,
+                            style: GoogleFonts.roboto(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _getRoleColor(_currentUser!.role),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _currentUser!.role.displayName,
+                              style: GoogleFonts.roboto(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'NRP: ${_currentUser!.nrp}',
+                            style: GoogleFonts.roboto(
+                              fontSize: 13,
+                              color: Colors.white.withOpacity(0.8),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // Info Cards
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildInfoCard(
+                        'Usia',
+                        '${_currentUser!.age} tahun',
+                        Icons.cake,
+                        Colors.blue[400]!,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildInfoCard(
+                        'Masa Dinas',
+                        '${_currentUser!.yearsOfService} tahun',
+                        Icons.military_tech,
+                        Colors.green[400]!,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Email dan Join Date
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.email,
+                            size: 16,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _currentUser!.email,
+                              style: GoogleFonts.roboto(
+                                fontSize: 13,
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.date_range,
+                            size: 16,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Bergabung: ${_currentUser!.formattedMilitaryJoinDate}',
+                            style: GoogleFonts.roboto(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Logout Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _showLogoutConfirmation,
+                    icon: const Icon(Icons.logout, size: 20),
+                    label: Text(
+                      'Keluar dari Aplikasi',
+                      style: GoogleFonts.roboto(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red[600],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method untuk info card
+  Widget _buildInfoCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: GoogleFonts.roboto(
+              fontSize: 11,
+              color: Colors.white.withOpacity(0.8),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: GoogleFonts.roboto(
+              fontSize: 14,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Method untuk konfirmasi logout
+  void _showLogoutConfirmation() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.logout, color: Colors.red[600], size: 24),
+              const SizedBox(width: 12),
+              Text(
+                'Konfirmasi Keluar',
+                style: GoogleFonts.roboto(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Apakah Anda yakin ingin keluar dari aplikasi?',
+            style: GoogleFonts.roboto(fontSize: 14, color: Colors.grey[600]),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Batal',
+                style: GoogleFonts.roboto(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _handleLogout();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[600],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Keluar',
+                style: GoogleFonts.roboto(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Method untuk handle logout
+  Future<void> _handleLogout() async {
+    try {
+      // Show loading
+    
+
+      // Sign out
+      await _authService.signOut();
+
+      // Close loading dialog
+      // 
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal keluar: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Helper methods untuk warna
+  Color _getStatusColor(UserStatus status) {
+    switch (status) {
+      case UserStatus.pending:
+        return Colors.orange[600]!;
+      case UserStatus.approved:
+        return Colors.green[600]!;
+      case UserStatus.rejected:
+        return Colors.red[600]!;
+    }
+  }
+
+  Color _getRoleColor(UserRole role) {
+    switch (role) {
+      case UserRole.admin:
+        return Colors.purple[600]!;
+      case UserRole.makoKor:
+        return Colors.blue[600]!;
+      case UserRole.pasPelopor:
+        return Colors.red[600]!;
+      case UserRole.pasGegana:
+        return Colors.green[600]!;
+      case UserRole.pasbrimobI:
+        return Colors.orange[600]!;
+      case UserRole.pasbrimobII:
+        return Colors.indigo[600]!;
+      case UserRole.pasbrimobIII:
+        return Colors.teal[600]!;
+      case UserRole.other:
+        return Colors.grey[600]!;
+    }
+  }
+
   Future<void> _loadCurrentUserAndInitializeFCM() async {
     try {
       final user = _authService.currentUser;
       if (user != null) {
-        // Get user data dari Firestore
         _currentUser = await _authService.getUserData(user.uid);
 
         if (_currentUser != null) {
-          debugPrint('Current user role: ${_currentUser!.role.displayName}');
-          debugPrint('🔍 DEBUG Admin - Full user data: ${_currentUser!.toMap()}');
-          debugPrint('🔍 DEBUG Admin - Role: ${_currentUser!.role}');
-          debugPrint('🔍 DEBUG Admin - Role name: ${_currentUser!.role.name}');
-          debugPrint(
-            '🔍 DEBUG Admin - Is admin: ${_currentUser!.role == UserRole.admin}',
-          );
-
-          // Initialize FCM dengan role user
           await FCMService.initialize(userRole: _currentUser!.role);
           setState(() => _isFCMInitialized = true);
-
-          print(
-            'FCM initialized successfully for ${_currentUser!.role.displayName}',
-          );
         } else {
-          print('User data not found, initializing FCM without role');
           await FCMService.initialize();
           setState(() => _isFCMInitialized = true);
         }
       } else {
-        print('No authenticated user, initializing FCM without role');
         await FCMService.initialize();
         setState(() => _isFCMInitialized = true);
       }
     } catch (e) {
-      print('Error initializing FCM: $e');
-      // Fallback: initialize tanpa role agar app tidak crash
       try {
         await FCMService.initialize();
         setState(() => _isFCMInitialized = true);
-        print('FCM initialized successfully (fallback)');
       } catch (fallbackError) {
         print('FCM fallback also failed: $fallbackError');
       }
@@ -154,11 +598,11 @@ class _DashboardPageState extends State<DashboardPage> {
               children: [
                 Image.asset('assets/welcome.png'),
                 _buildSlideshowHeader(),
-                _buildNotificationSection(),
-                _buildNotificationQuickAccess(),
                 _buildGaleriSatuan(),
                 _buildMenuGrid(),
                 _buildPedomanSection(),
+                _buildNotificationSection(), // Dipindah ke bawah
+                _buildProfileSection(),
               ],
             ),
           ),
@@ -167,44 +611,220 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // UPDATE: Notification section dengan debug info
+  // Clean notification section - hanya riwayat notifikasi
   Widget _buildNotificationSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
+        ),
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Debug info (opsional - bisa dihapus nanti)
-          if (_currentUser != null)
-            Container(
-              padding: const EdgeInsets.all(8),
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+          // Header Section
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.notifications_active,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
-              child: Row(
-                children: [
-                  Icon(Icons.info, size: 16, color: Colors.blue),
-                  SizedBox(width: 8),
-                  Text(
-                    'FCM: ${_isFCMInitialized ? "Ready" : "Loading"} | Role: ${_currentUser!.role.displayName}',
-                    style: TextStyle(fontSize: 12, color: Colors.blue),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'NOTIFIKASI',
+                      style: GoogleFonts.roboto(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Riwayat pemberitahuan sistem',
+                      style: GoogleFonts.roboto(
+                        fontSize: 13,
+                        color: Colors.white.withOpacity(0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Status FCM
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: _isFCMInitialized ? Colors.green : Colors.orange,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _isFCMInitialized
+                          ? Icons.check_circle
+                          : Icons.access_time,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _isFCMInitialized ? 'Aktif' : 'Loading',
+                      style: GoogleFonts.roboto(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // Notification Content
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Notification Widget Section
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.campaign,
+                            color: Colors.blue[600],
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Kirim Notifikasi',
+                            style: GoogleFonts.roboto(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      NotificationWidget(),
+                    ],
                   ),
-                ],
+                ),
+
+                // Divider
+                Divider(height: 1, color: Colors.grey[200]),
+
+                // Recent Notifications Section
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.history,
+                            color: Colors.green[600],
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Riwayat Notifikasi',
+                            style: GoogleFonts.roboto(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue[50],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '5 Terbaru',
+                              style: GoogleFonts.roboto(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.blue[600],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      RecentNotificationsWidget(limit: 5),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Footer info
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                'Swipe untuk refresh • Notifikasi realtime aktif',
+                style: GoogleFonts.roboto(
+                  fontSize: 12,
+                  color: Colors.white.withOpacity(0.8),
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
-
-          NotificationWidget(),
-          const SizedBox(height: 16),
-          RecentNotificationsWidget(limit: 3),
+          ),
         ],
       ),
     );
-  }
-
-  // Quick Access to Notification Features
-  Widget _buildNotificationQuickAccess() {
-    return const NotificationQuickAccessWidget();
   }
 
   Widget _buildSlideshowHeader() {
@@ -673,7 +1293,6 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildMenuGrid() {
-    // Simplified menu items (no role/protection)
     final List<Map<String, dynamic>> menuItems = [
       {
         'title': 'KORBRIMOB',
@@ -963,16 +1582,14 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  // UPDATE: Refresh data termasuk FCM
   Future<void> _refreshData() async {
     setState(() => _isLoading = true);
     await Future.delayed(const Duration(seconds: 1));
     await _loadSlideshowImages();
-    await _loadCurrentUserAndInitializeFCM(); // Reload user dan FCM juga
+    await _loadCurrentUserAndInitializeFCM();
     setState(() => _isLoading = false);
   }
 
-  // Simplified menu tap handling (no protection logic)
   Future<void> _handleMenuTap(Map<String, dynamic> menu) async {
     _navigateToContent(menu['id']);
   }
