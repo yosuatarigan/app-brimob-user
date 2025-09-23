@@ -102,8 +102,6 @@ class _UserManagementPageState extends State<UserManagementPage>
 
   Widget _buildHeader() {
     final pendingCount = _allUsers.where((u) => u.status == UserStatus.pending).length;
-    final approvedCount = _allUsers.where((u) => u.status == UserStatus.approved).length;
-    final rejectedCount = _allUsers.where((u) => u.status == UserStatus.rejected).length;
 
     return Container(
       width: double.infinity,
@@ -202,46 +200,11 @@ class _UserManagementPageState extends State<UserManagementPage>
                     color: Colors.white.withOpacity(0.9),
                   ),
                 ),
-                // const SizedBox(height: AdminSizes.paddingS),
-                // Row(
-                //   children: [
-                //     _buildQuickStat('Total Users', '${_allUsers.length}'),
-                //     const SizedBox(width: AdminSizes.paddingL),
-                //     _buildQuickStat('Pending', '$pendingCount', color: AppColors.goldYellow),
-                //     const SizedBox(width: AdminSizes.paddingL),
-                //     _buildQuickStat('Approved', '$approvedCount', color: AppColors.green),
-                //     const SizedBox(width: AdminSizes.paddingL),
-                //     _buildQuickStat('Rejected', '$rejectedCount', color: AppColors.red),
-                //   ],
-                // ),
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildQuickStat(String label, String value, {Color? color}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          value,
-          style: GoogleFonts.roboto(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: color ?? AdminColors.adminGold,
-          ),
-        ),
-        Text(
-          label,
-          style: GoogleFonts.roboto(
-            fontSize: 12,
-            color: Colors.white.withOpacity(0.8),
-          ),
-        ),
-      ],
     );
   }
 
@@ -374,15 +337,15 @@ class _UserManagementPageState extends State<UserManagementPage>
           _filterUsers();
         },
         backgroundColor: Colors.white,
-        selectedColor: AdminColors.success.withOpacity(0.1),
-        checkmarkColor: AdminColors.success,
+        selectedColor: AppColors.green.withOpacity(0.1),
+        checkmarkColor: AppColors.green,
         labelStyle: GoogleFonts.roboto(
-          color: isSelected ? AdminColors.success : AdminColors.darkGray,
+          color: isSelected ? AppColors.green : AdminColors.darkGray,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           fontSize: 12,
         ),
         side: BorderSide(
-          color: isSelected ? AdminColors.success : AdminColors.borderColor,
+          color: isSelected ? AppColors.green : AdminColors.borderColor,
         ),
       ),
     );
@@ -434,28 +397,6 @@ class _UserManagementPageState extends State<UserManagementPage>
           Tab(text: 'Rejected ($rejectedCount)'),
           Tab(text: 'Recent'),
         ],
-        onTap: (index) {
-          setState(() {
-            switch (index) {
-              case 0:
-                _filteredUsers = _allUsers;
-                break;
-              case 1:
-                _filteredUsers = _allUsers.where((u) => u.status == UserStatus.pending).toList();
-                break;
-              case 2:
-                _filteredUsers = _allUsers.where((u) => u.status == UserStatus.approved).toList();
-                break;
-              case 3:
-                _filteredUsers = _allUsers.where((u) => u.status == UserStatus.rejected).toList();
-                break;
-              case 4:
-                _filteredUsers = List.from(_allUsers)
-                  ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-                break;
-            }
-          });
-        },
       ),
     );
   }
@@ -473,7 +414,7 @@ class _UserManagementPageState extends State<UserManagementPage>
       );
     }
 
-    if (_filteredUsers.isEmpty) {
+    if (_allUsers.isEmpty) {
       return AdminEmptyState(
         icon: Icons.people_outline,
         title: 'Belum Ada User',
@@ -483,21 +424,35 @@ class _UserManagementPageState extends State<UserManagementPage>
       );
     }
 
+    // Siapkan data untuk setiap tab
+    final allUsers = _allUsers;
+    final pendingUsers = _allUsers.where((u) => u.status == UserStatus.pending).toList();
+    final approvedUsers = _allUsers.where((u) => u.status == UserStatus.approved).toList();
+    final rejectedUsers = _allUsers.where((u) => u.status == UserStatus.rejected).toList();
+    final recentUsers = List.from(_allUsers)
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
     return TabBarView(
       controller: _tabController,
       children: [
-        _buildUserList(_filteredUsers),
-        _buildUserList(_allUsers.where((u) => u.status == UserStatus.pending).toList()),
-        _buildUserList(_allUsers.where((u) => u.status == UserStatus.approved).toList()),
-        _buildUserList(_allUsers.where((u) => u.status == UserStatus.rejected).toList()),
-        _buildUserList(
-          List.from(_allUsers)..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
-        ),
+        _buildUserList(allUsers),
+        _buildUserList(pendingUsers),
+        _buildUserList(approvedUsers),
+        _buildUserList(rejectedUsers),
+        _buildUserList(recentUsers.cast<UserModel>()),
       ],
     );
   }
 
   Widget _buildUserList(List<UserModel> users) {
+    if (users.isEmpty) {
+      return AdminEmptyState(
+        icon: Icons.people_outline,
+        title: 'Tidak Ada Data',
+        message: 'Tidak ada user untuk kategori ini',
+      );
+    }
+
     return RefreshIndicator(
       onRefresh: _loadUsers,
       child: ListView.builder(
@@ -528,10 +483,10 @@ class _UserManagementPageState extends State<UserManagementPage>
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: _getRoleColor(user.role).withOpacity(0.1),
-                  backgroundImage: user.photoUrl != null
+                  backgroundImage: user.photoUrl != null && user.photoUrl!.isNotEmpty
                       ? CachedNetworkImageProvider(user.photoUrl!)
                       : null,
-                  child: user.photoUrl == null
+                  child: user.photoUrl == null || user.photoUrl!.isEmpty
                       ? Icon(
                           Icons.person,
                           size: 30,
@@ -575,17 +530,15 @@ class _UserManagementPageState extends State<UserManagementPage>
                       const SizedBox(height: AdminSizes.paddingXS),
                       Row(
                         children: [
-                          AdminStatusChip(
+                          _buildStatusChipWidget(
                             text: user.role.displayName,
                             color: _getRoleColor(user.role),
-                            // fontSize: 10,
                           ),
                           const SizedBox(width: AdminSizes.paddingS),
-                          AdminStatusChip(
+                          _buildStatusChipWidget(
                             text: user.status.displayName,
                             color: _getStatusColor(user.status),
                             icon: _getStatusIcon(user.status),
-                            // fontSize: 10,
                           ),
                         ],
                       ),
@@ -734,6 +687,47 @@ class _UserManagementPageState extends State<UserManagementPage>
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChipWidget({
+    required String text,
+    required Color color,
+    IconData? icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AdminSizes.paddingS,
+        vertical: AdminSizes.paddingXS,
+      ),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AdminSizes.radiusS),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(
+              icon,
+              size: 14,
+              color: color,
+            ),
+            const SizedBox(width: AdminSizes.paddingXS),
+          ],
+          Text(
+            text,
+            style: GoogleFonts.roboto(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -898,7 +892,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Password reset email sent!'),
-                      backgroundColor: AdminColors.success,
+                      backgroundColor: AppColors.green,
                     ),
                   );
                 }
@@ -907,7 +901,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Error: ${e.toString()}'),
-                      backgroundColor: AdminColors.error,
+                      backgroundColor: AppColors.red,
                     ),
                   );
                 }
@@ -956,7 +950,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('User deleted successfully'),
-                      backgroundColor: AdminColors.success,
+                      backgroundColor: AppColors.green,
                     ),
                   );
                 }
@@ -965,14 +959,14 @@ class _UserManagementPageState extends State<UserManagementPage>
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Error: ${e.toString()}'),
-                      backgroundColor: AdminColors.error,
+                      backgroundColor: AppColors.red,
                     ),
                   );
                 }
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AdminColors.error,
+              backgroundColor: AppColors.red,
             ),
             child: Text(
               'Delete',
@@ -984,26 +978,25 @@ class _UserManagementPageState extends State<UserManagementPage>
     );
   }
 
+  // Helper methods untuk warna yang diperbaiki
   Color _getRoleColor(UserRole role) {
     switch (role) {
-      case UserRole.makoKor:
-        return AdminColors.error;
-      case UserRole.pasPelopor:
-        return AdminColors.adminPurple;
-      case UserRole.pasGegana:
-        return AdminColors.success;
-      case UserRole.pasbrimobI:
-        return AdminColors.warning;
-      case UserRole.pasbrimobII:
-        return AdminColors.info;
-      case UserRole.pasbrimobIII:
-        return Colors.teal;
       case UserRole.admin:
-        // TODO: Handle this case.
-        throw UnimplementedError();
+        return AppColors.purple;
+      case UserRole.makoKor:
+        return AppColors.red;
+      case UserRole.pasPelopor:
+        return AppColors.purple;
+      case UserRole.pasGegana:
+        return AppColors.green;
+      case UserRole.pasbrimobI:
+        return AppColors.orange;
+      case UserRole.pasbrimobII:
+        return AppColors.info;
+      case UserRole.pasbrimobIII:
+        return AppColors.teal;
       case UserRole.other:
-        // TODO: Handle this case.
-        throw UnimplementedError();
+        return AppColors.darkGray;
     }
   }
 
@@ -1244,7 +1237,7 @@ class UserDetailDialog extends StatelessWidget {
   }
 }
 
-// Simplified Create and Edit dialogs can be added here
+// Create User Dialog
 class CreateUserDialog extends StatefulWidget {
   final VoidCallback onUserCreated;
 
@@ -1380,27 +1373,11 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
     setState(() => _isLoading = true);
 
     try {
-      // Create user with UserModel system (approved by default when created by admin)
-      final userModel = UserModel(
-        id: '', // Will be set by Firestore
-        email: _emailController.text.trim(),
-        fullName: _nameController.text.trim(),
-        nrp: 'AUTO-${DateTime.now().millisecondsSinceEpoch}', // Auto generate for admin-created users
-        rank: 'BHARADA', // Default rank
-        role: _selectedRole,
-        status: UserStatus.approved, // Admin-created users are approved by default
-        dateOfBirth: DateTime.now().subtract(const Duration(days: 365 * 25)), // Default age 25
-        militaryJoinDate: DateTime.now().subtract(const Duration(days: 365 * 2)), // Default 2 years service
-        createdAt: DateTime.now(),
-      );
-
-      // This would need a new method in AdminFirebaseService for creating UserModel directly
-      // For now, show message that this feature needs implementation
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Direct user creation feature coming soon. Users should register through app.'),
-          backgroundColor: AdminColors.warning,
+          backgroundColor: AppColors.orange,
         ),
       );
     } catch (e) {
@@ -1408,7 +1385,7 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
-            backgroundColor: AdminColors.error,
+            backgroundColor: AppColors.red,
           ),
         );
       }
@@ -1420,6 +1397,7 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
   }
 }
 
+// Edit User Dialog
 class EditUserDialog extends StatefulWidget {
   final UserModel user;
   final VoidCallback onUserUpdated;
@@ -1601,7 +1579,7 @@ class _EditUserDialogState extends State<EditUserDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('User updated successfully!'),
-            backgroundColor: AdminColors.success,
+            backgroundColor: AppColors.green,
           ),
         );
       }
@@ -1610,7 +1588,7 @@ class _EditUserDialogState extends State<EditUserDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
-            backgroundColor: AdminColors.error,
+            backgroundColor: AppColors.red,
           ),
         );
       }
