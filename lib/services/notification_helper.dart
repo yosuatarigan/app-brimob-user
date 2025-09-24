@@ -118,7 +118,7 @@ class NotificationHelper {
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
-          sound: 'audionotif.mpeg', // custom sound dengan extension untuk iOS
+          sound: 'audionotif.mp3', // custom sound dengan extension untuk iOS
           badgeNumber: 1,
         );
 
@@ -169,7 +169,7 @@ class NotificationHelper {
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
-          sound: 'audionotif.mpeg',
+          sound: 'audionotif.mp3',
           badgeNumber: 1,
           interruptionLevel: InterruptionLevel.critical, // Untuk bypass silent mode iOS
         );
@@ -233,7 +233,7 @@ class NotificationHelper {
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
-          sound: 'audionotif.mpeg',
+          sound: 'audionotif.mp3',
           badgeNumber: 1,
           interruptionLevel: isCritical 
             ? InterruptionLevel.critical 
