@@ -1,6 +1,5 @@
+import 'package:app_brimob_user/create_user_page.dart';
 import 'package:app_brimob_user/libadmin/widget/admin_witget.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -27,6 +26,9 @@ class _UserManagementPageState extends State<UserManagementPage>
   String _selectedRole = 'all';
   String _selectedStatus = 'all';
   String _searchQuery = '';
+  
+  // Track loading states for individual users
+  Set<String> _loadingUsers = <String>{};
 
   @override
   void initState() {
@@ -36,6 +38,8 @@ class _UserManagementPageState extends State<UserManagementPage>
   }
 
   Future<void> _loadUsers() async {
+    if (!mounted) return;
+    
     try {
       setState(() {
         _isLoading = true;
@@ -43,17 +47,22 @@ class _UserManagementPageState extends State<UserManagementPage>
       });
 
       final users = await AdminFirebaseService.getAllUsersWithApproval();
-
-      setState(() {
-        _allUsers = users;
-        _filteredUsers = users;
-        _isLoading = false;
-      });
+      
+      if (mounted) {
+        setState(() {
+          _allUsers = users;
+          _filteredUsers = users;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      print('Error loading users: $e');
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -74,6 +83,19 @@ class _UserManagementPageState extends State<UserManagementPage>
 
             return matchesRole && matchesStatus && matchesSearch;
           }).toList();
+    });
+  }
+
+  // Navigate to create user page
+  void _navigateToCreateUser() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CreateUserPage(),
+      ),
+    ).then((_) {
+      // Reload users after returning from create page
+      _loadUsers();
     });
   }
 
@@ -102,7 +124,7 @@ class _UserManagementPageState extends State<UserManagementPage>
       floatingActionButton: AdminFloatingActionButton(
         icon: Icons.person_add,
         label: 'Tambah User',
-        onPressed: _showCreateUserDialog,
+        onPressed: _navigateToCreateUser, // Updated to navigate to page
       ),
     );
   }
@@ -440,7 +462,7 @@ class _UserManagementPageState extends State<UserManagementPage>
         title: 'Belum Ada User',
         message: 'Tambah user pertama untuk aplikasi',
         actionText: 'Tambah User',
-        onAction: _showCreateUserDialog,
+        onAction: _navigateToCreateUser,
       );
     }
 
@@ -796,18 +818,6 @@ class _UserManagementPageState extends State<UserManagementPage>
     );
   }
 
-  void _showCreateUserDialog() {
-    showDialog(
-      context: context,
-      builder:
-          (context) => CreateUserDialog(
-            onUserCreated: () {
-              _loadUsers();
-            },
-          ),
-    );
-  }
-
   void _handleUserAction(String action, UserModel user) {
     switch (action) {
       case 'view':
@@ -839,24 +849,57 @@ class _UserManagementPageState extends State<UserManagementPage>
   }
 
   Future<void> _approveUser(UserModel user) async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext loadingContext) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: AdminSizes.paddingM),
+            Text(
+              'Menyetujui user...',
+              style: GoogleFonts.roboto(),
+            ),
+          ],
+        ),
+      ),
+    );
+
     try {
       await AdminFirebaseService.approveUser(user.id);
-      _loadUsers();
-
+      
+      // Close loading dialog
       if (mounted) {
+        Navigator.pop(context);
+      }
+      
+      // Refresh and show success
+      if (mounted) {
+        _loadUsers();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('User ${user.fullName} telah disetujui'),
             backgroundColor: AppColors.green,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (e) {
+      // Close loading dialog
+      if (mounted) {
+        Navigator.pop(context);
+      }
+      
+      // Show error
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
             backgroundColor: AppColors.red,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -870,24 +913,57 @@ class _UserManagementPageState extends State<UserManagementPage>
     );
 
     if (result != null) {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext loadingContext) => AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: AdminSizes.paddingM),
+              Text(
+                'Menolak user...',
+                style: GoogleFonts.roboto(),
+              ),
+            ],
+          ),
+        ),
+      );
+
       try {
         await AdminFirebaseService.rejectUser(user.id, result);
-        _loadUsers();
-
+        
+        // Close loading dialog
         if (mounted) {
+          Navigator.pop(context);
+        }
+        
+        // Refresh and show success
+        if (mounted) {
+          _loadUsers();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('User ${user.fullName} telah ditolak'),
               backgroundColor: AppColors.red,
+              behavior: SnackBarBehavior.floating,
             ),
           );
         }
       } catch (e) {
+        // Close loading dialog
+        if (mounted) {
+          Navigator.pop(context);
+        }
+        
+        // Show error
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error: ${e.toString()}'),
               backgroundColor: AppColors.red,
+              behavior: SnackBarBehavior.floating,
             ),
           );
         }
@@ -896,131 +972,286 @@ class _UserManagementPageState extends State<UserManagementPage>
   }
 
   void _showEditUserDialog(UserModel user) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => EditUserDialog(
-            user: user,
-            onUserUpdated: () {
-              _loadUsers();
-            },
-          ),
+    // For now, navigate to create page with edit mode (could be enhanced later)
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Feature edit akan ditambahkan di versi selanjutnya'),
+        backgroundColor: AppColors.info,
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
   void _showResetPasswordDialog(UserModel user) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text(
-              'Reset Password',
-              style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Reset Password',
+          style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Send password reset email to ${user.email}?',
+          style: GoogleFonts.roboto(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.roboto(color: AdminColors.darkGray),
             ),
-            content: Text(
-              'Send password reset email to ${user.email}?',
-              style: GoogleFonts.roboto(),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.roboto(color: AdminColors.darkGray),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  try {
-                    await AdminFirebaseService.resetUserPassword(user.email);
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Password reset email sent!'),
-                          backgroundColor: AppColors.green,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error: ${e.toString()}'),
-                          backgroundColor: AppColors.red,
-                        ),
-                      );
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AdminColors.primaryBlue,
-                ),
-                child: Text(
-                  'Send Email',
-                  style: GoogleFonts.roboto(color: Colors.white),
-                ),
-              ),
-            ],
           ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close confirmation dialog
+              
+              // Show loading dialog
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext loadingContext) => AlertDialog(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: AdminSizes.paddingM),
+                      Text(
+                        'Mengirim email reset...',
+                        style: GoogleFonts.roboto(),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+
+              try {
+                await AdminFirebaseService.resetUserPassword(user.email);
+                
+                // Close loading dialog
+                if (mounted) {
+                  Navigator.pop(context);
+                }
+                
+                // Show success
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Password reset email sent!'),
+                      backgroundColor: AppColors.green,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } catch (e) {
+                // Close loading dialog
+                if (mounted) {
+                  Navigator.pop(context);
+                }
+                
+                // Show error
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: ${e.toString()}'),
+                      backgroundColor: AppColors.red,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AdminColors.primaryBlue,
+            ),
+            child: Text(
+              'Send Email',
+              style: GoogleFonts.roboto(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   void _showDeleteConfirmation(UserModel user) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text(
-              'Delete User',
-              style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Delete User',
+          style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Are you sure you want to delete ${user.fullName}? This action cannot be undone.',
+          style: GoogleFonts.roboto(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.roboto(color: AdminColors.darkGray),
             ),
-            content: Text(
-              'Are you sure you want to delete ${user.fullName}? This action cannot be undone.',
-              style: GoogleFonts.roboto(),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteUserSimple(user);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.roboto(color: Colors.white),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.roboto(color: AdminColors.darkGray),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  try {
-                    await AdminFirebaseService.deleteUser(user.id);
-                    _loadUsers();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('User deleted successfully'),
-                          backgroundColor: AppColors.green,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error: ${e.toString()}'),
-                          backgroundColor: AppColors.red,
-                        ),
-                      );
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
-                child: Text(
-                  'Delete',
-                  style: GoogleFonts.roboto(color: Colors.white),
-                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteUserSimple(UserModel user) async {
+    // Set loading state for this user
+    setState(() {
+      _loadingUsers.add(user.id);
+    });
+
+    try {
+      final result = await AdminFirebaseService.deleteUserCompletely(user.id);
+      
+      if (mounted) {
+        // Clear loading state
+        setState(() {
+          _loadingUsers.remove(user.id);
+        });
+        
+        if (result['success'] == true) {
+          // Refresh user list
+          await _loadUsers();
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'User berhasil dihapus'),
+              backgroundColor: AppColors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Gagal menghapus user'),
+              backgroundColor: AppColors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        // Clear loading state
+        setState(() {
+          _loadingUsers.remove(user.id);
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: AppColors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _performDeleteUser(UserModel user) async {
+    // Show loading dialog
+    final loadingDialog = showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => WillPopScope(
+        onWillPop: () async => false,
+        child: AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: AdminSizes.paddingM),
+              Text(
+                'Menghapus user ${user.fullName}...',
+                style: GoogleFonts.roboto(),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
+        ),
+      ),
     );
+
+    try {
+      print('Starting delete operation for user: ${user.id}');
+      final result = await AdminFirebaseService.deleteUserCompletely(user.id);
+      print('Delete operation completed: ${result.toString()}');
+      
+      // Force close loading dialog
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      
+      // Small delay to ensure dialog is closed
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      if (mounted) {
+        if (result['success'] == true) {
+          print('Delete successful, refreshing user list...');
+          await _loadUsers(); // Refresh list
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'User berhasil dihapus'),
+              backgroundColor: AppColors.green,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        } else {
+          print('Delete failed: ${result['message']}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Gagal menghapus user'),
+              backgroundColor: AppColors.red,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Delete error: $e');
+      
+      // Force close loading dialog
+      if (mounted) {
+        try {
+          Navigator.of(context, rootNavigator: true).pop();
+        } catch (navError) {
+          print('Error closing dialog: $navError');
+        }
+      }
+      
+      // Small delay
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: AppColors.red,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
   }
 
   // Helper methods untuk warna yang diperbaiki
@@ -1085,6 +1316,7 @@ class _UserManagementPageState extends State<UserManagementPage>
   }
 }
 
+// Keep existing dialogs for now (RejectUserDialog, UserDetailDialog)
 // Dialog for rejecting user with reason
 class RejectUserDialog extends StatefulWidget {
   @override
@@ -1251,7 +1483,7 @@ class UserDetailDialog extends StatelessWidget {
             ),
             _buildDetailRow('Masa Dinas', '${user.yearsOfService} tahun'),
             _buildDetailRow('Status', user.status.displayName),
-            _buildDetailRow('Tanggal Daftar', user.formattedDateOfBirth),
+            _buildDetailRow('Tanggal Daftar', user.formattedMilitaryJoinDate ),
             if (user.rejectionReason != null)
               _buildDetailRow('Alasan Penolakan', user.rejectionReason!),
           ],
@@ -1281,467 +1513,5 @@ class UserDetailDialog extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-// Create User Dialog
-class CreateUserDialog extends StatefulWidget {
-  final VoidCallback onUserCreated;
-
-  const CreateUserDialog({super.key, required this.onUserCreated});
-
-  @override
-  State<CreateUserDialog> createState() => _CreateUserDialogState();
-}
-
-class _CreateUserDialogState extends State<CreateUserDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _nameController = TextEditingController();
-
-  UserRole _selectedRole = UserRole.makoKor;
-  bool _isLoading = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(
-        'Create New User',
-        style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-      ),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Full Name',
-                prefixIcon: Icon(Icons.person),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Name is required';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AdminSizes.paddingM),
-            TextFormField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                prefixIcon: Icon(Icons.email),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Email is required';
-                }
-                if (!RegExp(
-                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                ).hasMatch(value)) {
-                  return 'Invalid email format';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AdminSizes.paddingM),
-            TextFormField(
-              controller: _passwordController,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                prefixIcon: Icon(Icons.lock),
-              ),
-              obscureText: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Password is required';
-                }
-                if (value.length < 6) {
-                  return 'Password must be at least 6 characters';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AdminSizes.paddingM),
-            DropdownButtonFormField<UserRole>(
-              value: _selectedRole,
-              decoration: const InputDecoration(
-                labelText: 'Role/Satuan',
-                prefixIcon: Icon(Icons.security),
-              ),
-              items:
-                  UserRole.values
-                      .map(
-                        (role) => DropdownMenuItem(
-                          value: role,
-                          child: Text(role.displayName),
-                        ),
-                      )
-                      .toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedRole = value!;
-                });
-              },
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: Text(
-            'Cancel',
-            style: GoogleFonts.roboto(color: AdminColors.darkGray),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _createUser,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AdminColors.primaryBlue,
-          ),
-          child:
-              _isLoading
-                  ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                  : Text(
-                    'Create',
-                    style: GoogleFonts.roboto(color: Colors.white),
-                  ),
-        ),
-      ],
-    );
-  }
-
-  void _createUser() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      // Create user with Firebase Auth first
-      final credential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-            email: _emailController.text.trim(),
-            password: _passwordController.text.trim(),
-          );
-
-      if (credential.user != null) {
-        // Create UserModel document (bukan AdminUser)
-        final newUser = UserModel(
-          id: credential.user!.uid,
-          email: _emailController.text.trim(),
-          fullName: _nameController.text.trim(),
-          nrp:
-              'ADMIN-${DateTime.now().millisecondsSinceEpoch}', // Auto-generate NRP
-          rank: 'BHARADA', // Default rank
-          role: _selectedRole,
-          status:
-              UserStatus.approved, // Admin-created users approved by default
-          dateOfBirth: DateTime.now().subtract(
-            const Duration(days: 365 * 25),
-          ), // Default 25 years old
-          militaryJoinDate: DateTime.now().subtract(
-            const Duration(days: 365 * 2),
-          ), // Default 2 years service
-          createdAt: DateTime.now(),
-        );
-
-        // Save to Firestore with proper Timestamp format
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(credential.user!.uid)
-            .set(newUser.toFirestore()); // This uses Timestamp format
-
-        // Log admin action
-        if (AdminFirebaseService.currentUser != null) {
-          await FirebaseFirestore.instance.collection('admin_logs').add({
-            'action': 'CREATE_USER',
-            'description':
-                'Created user: ${_nameController.text} (${_emailController.text}) with role: ${_selectedRole.displayName}',
-            'adminId': AdminFirebaseService.currentUser!.uid,
-            'adminName': AdminFirebaseService.currentUser!.email ?? 'Unknown',
-            'targetType': 'user',
-            'targetId': credential.user!.uid,
-            'timestamp': Timestamp.fromDate(DateTime.now()),
-            'password_akun' : _passwordController.text.trim(),
-          });
-        }
-
-        if (mounted) {
-          Navigator.pop(context);
-          widget.onUserCreated();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('User ${_nameController.text} berhasil dibuat!'),
-              backgroundColor: AppColors.green,
-            ),
-          );
-        }
-      }
-    } on FirebaseAuthException catch (e) {
-      String errorMessage;
-      switch (e.code) {
-        case 'weak-password':
-          errorMessage = 'Password terlalu lemah';
-          break;
-        case 'email-already-in-use':
-          errorMessage = 'Email sudah digunakan';
-          break;
-        case 'invalid-email':
-          errorMessage = 'Format email tidak valid';
-          break;
-        default:
-          errorMessage = 'Error Firebase Auth: ${e.message}';
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage), backgroundColor: AppColors.red),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-}
-
-// Edit User Dialog
-class EditUserDialog extends StatefulWidget {
-  final UserModel user;
-  final VoidCallback onUserUpdated;
-
-  const EditUserDialog({
-    super.key,
-    required this.user,
-    required this.onUserUpdated,
-  });
-
-  @override
-  State<EditUserDialog> createState() => _EditUserDialogState();
-}
-
-class _EditUserDialogState extends State<EditUserDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _nrpController = TextEditingController();
-  final _rankController = TextEditingController();
-
-  late UserRole _selectedRole;
-  late UserStatus _selectedStatus;
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController.text = widget.user.fullName;
-    _nrpController.text = widget.user.nrp;
-    _rankController.text = widget.user.rank;
-    _selectedRole = widget.user.role;
-    _selectedStatus = widget.user.status;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(
-        'Edit User',
-        style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-      ),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Full Name',
-                prefixIcon: Icon(Icons.person),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Name is required';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AdminSizes.paddingM),
-            TextFormField(
-              controller: _nrpController,
-              decoration: const InputDecoration(
-                labelText: 'NRP',
-                prefixIcon: Icon(Icons.badge),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'NRP is required';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AdminSizes.paddingM),
-            DropdownButtonFormField<String>(
-              value:
-                  _rankController.text.isEmpty
-                      ? MenuData.militaryRanks.first
-                      : _rankController.text,
-              decoration: const InputDecoration(
-                labelText: 'Rank',
-                prefixIcon: Icon(Icons.military_tech),
-              ),
-              items:
-                  MenuData.militaryRanks
-                      .map(
-                        (rank) =>
-                            DropdownMenuItem(value: rank, child: Text(rank)),
-                      )
-                      .toList(),
-              onChanged: (value) {
-                setState(() {
-                  _rankController.text = value!;
-                });
-              },
-            ),
-            const SizedBox(height: AdminSizes.paddingM),
-            DropdownButtonFormField<UserRole>(
-              value: _selectedRole,
-              decoration: const InputDecoration(
-                labelText: 'Role/Satuan',
-                prefixIcon: Icon(Icons.group),
-              ),
-              items:
-                  UserRole.values
-                      .map(
-                        (role) => DropdownMenuItem(
-                          value: role,
-                          child: Text(role.displayName),
-                        ),
-                      )
-                      .toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedRole = value!;
-                });
-              },
-            ),
-            const SizedBox(height: AdminSizes.paddingM),
-            DropdownButtonFormField<UserStatus>(
-              value: _selectedStatus,
-              decoration: const InputDecoration(
-                labelText: 'Status',
-                prefixIcon: Icon(Icons.check_circle),
-              ),
-              items:
-                  UserStatus.values
-                      .map(
-                        (status) => DropdownMenuItem(
-                          value: status,
-                          child: Text(status.displayName),
-                        ),
-                      )
-                      .toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedStatus = value!;
-                });
-              },
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: Text(
-            'Cancel',
-            style: GoogleFonts.roboto(color: AdminColors.darkGray),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _updateUser,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AdminColors.primaryBlue,
-          ),
-          child:
-              _isLoading
-                  ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                  : Text(
-                    'Update',
-                    style: GoogleFonts.roboto(color: Colors.white),
-                  ),
-        ),
-      ],
-    );
-  }
-
-  void _updateUser() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final updatedUser = widget.user.copyWith(
-        fullName: _nameController.text.trim(),
-        nrp: _nrpController.text.trim(),
-        rank: _rankController.text.trim(),
-        role: _selectedRole,
-        status: _selectedStatus,
-        updatedAt: DateTime.now(),
-      );
-
-      await AdminFirebaseService.updateUserModel(widget.user.id, updatedUser);
-
-      if (mounted) {
-        Navigator.pop(context);
-        widget.onUserUpdated();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User updated successfully!'),
-            backgroundColor: AppColors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
   }
 }

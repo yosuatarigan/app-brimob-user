@@ -12,13 +12,18 @@ class AdminFirebaseService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final FirebaseStorage _storage = FirebaseStorage.instance;
-  static final CollectionReference _slideshowCollection = _firestore.collection('slideshow');
+  static final CollectionReference _slideshowCollection = _firestore.collection(
+    'slideshow',
+  );
 
   // Auth Methods
   static User? get currentUser => _auth.currentUser;
   static bool get isLoggedIn => _auth.currentUser != null;
 
-  static Future<UserCredential?> signInAsAdmin(String email, String password) async {
+  static Future<UserCredential?> signInAsAdmin(
+    String email,
+    String password,
+  ) async {
     try {
       final credential = await _auth.signInWithEmailAndPassword(
         email: email,
@@ -26,22 +31,23 @@ class AdminFirebaseService {
       );
 
       // Verify admin role
-      final userDoc = await _firestore.collection('users').doc(credential.user!.uid).get();
+      final userDoc =
+          await _firestore.collection('users').doc(credential.user!.uid).get();
 
       if (userDoc.exists) {
         final userData = userDoc.data()!;
-        
+
         // Check for admin role - support both old system and new UserModel
         bool isAdmin = false;
-        
+
         // Check old admin system
         if (userData['role'] == 'admin') {
           isAdmin = true;
         }
-        
+
         // Check new UserModel system - admin emails
         final userModel = UserModel.fromFirestore(userDoc);
-        if (userModel.email == 'admin@korbrimob.polri.go.id' || 
+        if (userModel.email == 'admin@korbrimob.polri.go.id' ||
             userModel.email.endsWith('@admin.korbrimob.polri.go.id')) {
           isAdmin = true;
         }
@@ -105,7 +111,7 @@ class AdminFirebaseService {
       for (var doc in usersSnapshot.docs) {
         final data = doc.data();
         String role = 'public';
-        
+
         // Check new UserModel system
         if (data.containsKey('status')) {
           final userModel = UserModel.fromFirestore(doc);
@@ -115,7 +121,7 @@ class AdminFirebaseService {
         else if (data.containsKey('role')) {
           role = data['role'] ?? 'public';
         }
-        
+
         usersByRole[role] = (usersByRole[role] ?? 0) + 1;
       }
 
@@ -144,10 +150,11 @@ class AdminFirebaseService {
   // Content Management
   static Future<List<ContentItem>> getAllContent() async {
     try {
-      final snapshot = await _firestore
-          .collection('content')
-          .orderBy('updatedAt', descending: true)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('content')
+              .orderBy('updatedAt', descending: true)
+              .get();
 
       return snapshot.docs
           .map((doc) => ContentItem.fromMap(doc.data(), doc.id))
@@ -171,7 +178,10 @@ class AdminFirebaseService {
     }
   }
 
-  static Future<void> updateContent(String contentId, ContentItem content) async {
+  static Future<void> updateContent(
+    String contentId,
+    ContentItem content,
+  ) async {
     try {
       await _firestore
           .collection('content')
@@ -210,14 +220,13 @@ class AdminFirebaseService {
   // User Management - Supporting both new UserModel and old AdminUser
   static Future<List<UserModel>> getAllUsersWithApproval() async {
     try {
-      final snapshot = await _firestore
-          .collection('users')
-          .orderBy('createdAt', descending: true)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('users')
+              .orderBy('createdAt', descending: true)
+              .get();
 
-      return snapshot.docs
-          .map((doc) => UserModel.fromFirestore(doc))
-          .toList();
+      return snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
     } catch (e) {
       throw Exception('Error fetching users: ${e.toString()}');
     }
@@ -226,10 +235,11 @@ class AdminFirebaseService {
   // Legacy method for old AdminUser system
   static Future<List<AdminUser>> getAllUsers() async {
     try {
-      final snapshot = await _firestore
-          .collection('users')
-          .orderBy('createdAt', descending: true)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('users')
+              .orderBy('createdAt', descending: true)
+              .get();
 
       return snapshot.docs
           .map((doc) => AdminUser.fromMap(doc.data(), doc.id))
@@ -242,15 +252,14 @@ class AdminFirebaseService {
   // Get pending users only (UserModel system)
   static Future<List<UserModel>> getPendingUsers() async {
     try {
-      final snapshot = await _firestore
-          .collection('users')
-          .where('status', isEqualTo: 'pending')
-          .orderBy('createdAt', descending: true)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('users')
+              .where('status', isEqualTo: 'pending')
+              .orderBy('createdAt', descending: true)
+              .get();
 
-      return snapshot.docs
-          .map((doc) => UserModel.fromFirestore(doc))
-          .toList();
+      return snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
     } catch (e) {
       throw Exception('Error fetching pending users: ${e.toString()}');
     }
@@ -269,20 +278,18 @@ class AdminFirebaseService {
     String? photoUrl,
   }) async {
     FirebaseApp? tempApp;
-    
+
     try {
       // Create temporary Firebase app instance
       tempApp = await Firebase.initializeApp(
-        name: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+        name: email, // Use email as unique name
         options: Firebase.app().options,
       );
 
       // Create user with temporary app instance
-      final UserCredential userCredential = await FirebaseAuth.instanceFor(app: tempApp)
-          .createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      final UserCredential userCredential = await FirebaseAuth.instanceFor(
+        app: tempApp,
+      ).createUserWithEmailAndPassword(email: email, password: password);
 
       if (userCredential.user != null) {
         // Create UserModel document dengan status approved (admin created)
@@ -302,11 +309,14 @@ class AdminFirebaseService {
           approvedAt: DateTime.now(),
         );
 
+        final userData = newUser.toFirestore();
+        userData['password_akun'] = password;
         // Save to Firestore using main app instance
+
         await _firestore
             .collection('users')
             .doc(userCredential.user!.uid)
-            .set(newUser.toFirestore());
+            .set(userData);
 
         // Log admin action
         await _logAdminAction(
@@ -323,10 +333,7 @@ class AdminFirebaseService {
         };
       }
 
-      return {
-        'success': false,
-        'message': 'Gagal membuat user',
-      };
+      return {'success': false, 'message': 'Gagal membuat user'};
     } on FirebaseAuthException catch (e) {
       String errorMessage;
       switch (e.code) {
@@ -345,11 +352,8 @@ class AdminFirebaseService {
         default:
           errorMessage = 'Error Firebase Auth: ${e.message}';
       }
-      
-      return {
-        'success': false,
-        'message': errorMessage,
-      };
+
+      return {'success': false, 'message': errorMessage};
     } catch (e) {
       return {
         'success': false,
@@ -367,68 +371,131 @@ class AdminFirebaseService {
     }
   }
 
-  // Simple delete user - menghapus dari Auth dan Firestore
-  static Future<void> deleteUserCompletely(String userId) async {
+  // NEW: Create admin user dengan separate Firebase app instance
+  static Future<Map<String, dynamic>> createAdminUser({
+    required String email,
+    required String password,
+    required String fullName,
+    String? photoUrl,
+  }) async {
     FirebaseApp? tempApp;
-    
+
     try {
-      // Get user data first
-      final userDoc = await _firestore.collection('users').doc(userId).get();
-      
-      if (!userDoc.exists) {
-        throw Exception('User data not found');
-      }
-
-      final userData = userDoc.data()!;
-      final userEmail = userData['email'] ?? '';
-      final userPassword = userData['password_akun'] ?? userData['password'] ?? '';
-      
-      if (userEmail.isEmpty || userPassword.isEmpty) {
-        throw Exception('Email or password not found for user deletion');
-      }
-
-      // Create Firebase app instance
+      // Create Firebase app dengan nama email
       tempApp = await Firebase.initializeApp(
-        name: userEmail,
+        name: email,
         options: Firebase.app().options,
       );
 
-      // Sign in as user
-      UserCredential userCredential = await FirebaseAuth.instanceFor(app: tempApp)
-          .signInWithEmailAndPassword(
-        email: userEmail,
-        password: userPassword,
-      );
+      // Create user dengan temporary app
+      UserCredential userCredential = await FirebaseAuth.instanceFor(
+        app: tempApp,
+      ).createUserWithEmailAndPassword(email: email, password: password);
 
-      // Get current user and delete
-      User usernya = FirebaseAuth.instanceFor(app: tempApp).currentUser!;
-      await usernya.delete();
+      if (userCredential.user != null) {
+        // Create admin UserModel
+        final newAdmin = UserModel(
+          id: userCredential.user!.uid,
+          email: email,
+          fullName: fullName,
+          nrp: 'ADMIN-${DateTime.now().millisecondsSinceEpoch}',
+          rank: 'ADMINISTRATOR',
+          role: UserRole.admin,
+          status: UserStatus.approved,
+          photoUrl: photoUrl,
+          dateOfBirth: DateTime(1990, 1, 1),
+          militaryJoinDate: DateTime.now(),
+          createdAt: DateTime.now(),
+          approvedBy: currentUser?.uid,
+          approvedAt: DateTime.now(),
+        );
 
-      // Delete from Firestore
-      await userDoc.reference.delete();
+        // Save ke Firestore dengan password_akun
+        final adminData = newAdmin.toFirestore();
+        adminData['password_akun'] = password;
 
-      await _logAdminAction(
-        'DELETE_USER_COMPLETELY',
-        'Deleted user: $userEmail from Authentication and Firestore',
-        'user',
-        userId,
-      );
+        await _firestore
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set(adminData);
 
+        return {'success': true, 'message': 'Admin $fullName berhasil dibuat'};
+      }
+
+      return {'success': false, 'message': 'Gagal membuat admin'};
     } catch (e) {
-      throw Exception('Error deleting user: ${e.toString()}');
+      return {'success': false, 'message': 'Error: ${e.toString()}'};
     } finally {
-      // Clean up temp app
       if (tempApp != null) {
         try {
           await tempApp.delete();
         } catch (e) {
-          print('Error cleaning up temp app: $e');
+          print('Error deleting temp app: $e');
         }
       }
     }
   }
 
+  // Simple delete user - menghapus dari Auth dan Firestore
+  static Future<Map<String, dynamic>> deleteUserCompletely(
+    String userId,
+  ) async {
+    FirebaseApp? tempApp;
 
+    try {
+      // Get user document
+      final document = await _firestore.collection('users').doc(userId).get();
+
+      if (!document.exists) {
+        return {'success': false, 'message': 'User tidak ditemukan'};
+      }
+
+      final data = document.data()!;
+      final email = data['email'] ?? '';
+      final passwordAkun = data['password_akun'] ?? '';
+      final userName = data['fullName'] ?? 'Unknown';
+
+      if (email.isEmpty || passwordAkun.isEmpty) {
+        return {
+          'success': false,
+          'message': 'Data email atau password tidak lengkap',
+        };
+      }
+
+      // Create Firebase app dengan nama email
+      tempApp = await Firebase.initializeApp(
+        name: email,
+        options: Firebase.app().options,
+      );
+
+      // Sign in dengan email dan password_akun
+      UserCredential userCredential = await FirebaseAuth.instanceFor(
+        app: tempApp,
+      ).signInWithEmailAndPassword(email: email, password: passwordAkun);
+
+      // Get current user dan delete
+      User usernya = FirebaseAuth.instanceFor(app: tempApp).currentUser!;
+      await usernya.delete();
+
+      // Delete document dari Firestore
+      await document.reference.delete();
+
+      return {'success': true, 'message': 'User $userName berhasil dihapus'};
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error menghapus user: ${e.toString()}',
+      };
+    } finally {
+      if (tempApp != null) {
+        try {
+          await tempApp.delete();
+        } catch (e) {
+          print('Error deleting temp app: $e');
+        }
+      }
+    }
+  }
 
   // Alternative: Disable user account instead of delete from Auth
   static Future<void> disableUserAccount(String userId) async {
@@ -453,18 +520,79 @@ class AdminFirebaseService {
     }
   }
 
+  static Future<Map<String, dynamic>> deleteUserFromFirestore(
+    String userId,
+  ) async {
+    try {
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+
+      if (!userDoc.exists) {
+        return {'success': false, 'message': 'User tidak ditemukan'};
+      }
+
+      final userData = userDoc.data()!;
+      final userName = userData['fullName'] ?? userData['name'] ?? 'Unknown';
+
+      // Delete from Firestore
+      await userDoc.reference.delete();
+
+      await _logAdminAction(
+        'DELETE_USER',
+        'Deleted user from Firestore: $userName',
+        'user',
+        userId,
+      );
+
+      return {
+        'success': true,
+        'message': 'User $userName berhasil dihapus dari database',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error menghapus user: ${e.toString()}',
+      };
+    }
+  }
+
+  // NEW: Upload image method for CreateUserPage
+  static Future<String> uploadUserPhoto(File imageFile) async {
+    try {
+      final fileName = 'user_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final ref = _storage.ref().child('user_photos').child(fileName);
+
+      final uploadTask = ref.putFile(
+        imageFile,
+        SettableMetadata(
+          contentType: 'image/jpeg',
+          customMetadata: {
+            'uploadedBy': currentUser?.uid ?? 'admin',
+            'uploadedAt': DateTime.now().toIso8601String(),
+          },
+        ),
+      );
+
+      final snapshot = await uploadTask;
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+
+      return downloadUrl;
+    } catch (e) {
+      throw Exception('Gagal mengupload foto: ${e.toString()}');
+    }
+  }
+
   // NEW: Helper method untuk check if user exists in Auth
   static Future<bool> checkUserExistsInAuth(String email) async {
     FirebaseApp? tempApp;
-    
+
     try {
       tempApp = await Firebase.initializeApp(
-        name: 'temp_check_${DateTime.now().millisecondsSinceEpoch}',
+        name: 'check_${DateTime.now().millisecondsSinceEpoch}',
         options: Firebase.app().options,
       );
 
       final tempAuth = FirebaseAuth.instanceFor(app: tempApp);
-      
+
       // Try to send password reset email to check if user exists
       await tempAuth.sendPasswordResetEmail(email: email);
       return true;
@@ -568,7 +696,10 @@ class AdminFirebaseService {
   }
 
   // Bulk reject users
-  static Future<void> bulkRejectUsers(List<String> userIds, String reason) async {
+  static Future<void> bulkRejectUsers(
+    List<String> userIds,
+    String reason,
+  ) async {
     try {
       final batch = _firestore.batch();
       final now = Timestamp.fromDate(DateTime.now());
@@ -600,7 +731,7 @@ class AdminFirebaseService {
   // NEW: Batch delete users (with auth deletion)
   static Future<void> batchDeleteUsers(List<String> userIds) async {
     final List<String> failedDeletions = [];
-    
+
     for (final userId in userIds) {
       try {
         await deleteUserCompletely(userId);
@@ -618,7 +749,9 @@ class AdminFirebaseService {
     );
 
     if (failedDeletions.isNotEmpty) {
-      throw Exception('Failed to delete ${failedDeletions.length} users: ${failedDeletions.join(', ')}');
+      throw Exception(
+        'Failed to delete ${failedDeletions.length} users: ${failedDeletions.join(', ')}',
+      );
     }
   }
 
@@ -753,7 +886,11 @@ class AdminFirebaseService {
   }
 
   // Send approval/rejection notification
-  static Future<void> _sendApprovalNotification(String userId, bool approved, [String? reason]) async {
+  static Future<void> _sendApprovalNotification(
+    String userId,
+    bool approved, [
+    String? reason,
+  ]) async {
     try {
       final user = await getUserById(userId);
       if (user == null) return;
@@ -762,7 +899,7 @@ class AdminFirebaseService {
       // For now, we'll just log it
       final status = approved ? 'approved' : 'rejected';
       print('Notification sent to ${user.email}: Account $status');
-      
+
       if (!approved && reason != null) {
         print('Rejection reason: $reason');
       }
@@ -777,23 +914,26 @@ class AdminFirebaseService {
   static Future<Map<String, dynamic>> getApprovalStatistics() async {
     try {
       final allUsers = await getAllUsersWithApproval();
-      
+
       final totalUsers = allUsers.length;
-      final pendingUsers = allUsers.where((u) => u.status == UserStatus.pending).length;
-      final approvedUsers = allUsers.where((u) => u.status == UserStatus.approved).length;
-      final rejectedUsers = allUsers.where((u) => u.status == UserStatus.rejected).length;
+      final pendingUsers =
+          allUsers.where((u) => u.status == UserStatus.pending).length;
+      final approvedUsers =
+          allUsers.where((u) => u.status == UserStatus.approved).length;
+      final rejectedUsers =
+          allUsers.where((u) => u.status == UserStatus.rejected).length;
 
       // Statistics by role
       final usersByRole = <String, int>{};
       for (final role in UserRole.values) {
-        usersByRole[role.displayName] = allUsers.where((u) => u.role == role).length;
+        usersByRole[role.displayName] =
+            allUsers.where((u) => u.role == role).length;
       }
 
       // Recent registrations (last 7 days)
       final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
-      final recentRegistrations = allUsers
-          .where((u) => u.createdAt.isAfter(sevenDaysAgo))
-          .length;
+      final recentRegistrations =
+          allUsers.where((u) => u.createdAt.isAfter(sevenDaysAgo)).length;
 
       return {
         'totalUsers': totalUsers,
@@ -802,7 +942,8 @@ class AdminFirebaseService {
         'rejectedUsers': rejectedUsers,
         'usersByRole': usersByRole,
         'recentRegistrations': recentRegistrations,
-        'approvalRate': totalUsers > 0 ? (approvedUsers / totalUsers * 100).round() : 0,
+        'approvalRate':
+            totalUsers > 0 ? (approvedUsers / totalUsers * 100).round() : 0,
       };
     } catch (e) {
       throw Exception('Error getting approval statistics: ${e.toString()}');
@@ -814,10 +955,10 @@ class AdminFirebaseService {
     try {
       final allUsers = await getAllUsersWithApproval();
       final stats = await getApprovalStatistics();
-      
+
       int authActiveUsers = 0;
       int orphanedUsers = 0;
-      
+
       for (final user in allUsers) {
         final existsInAuth = await checkUserExistsInAuth(user.email);
         if (existsInAuth) {
@@ -834,7 +975,9 @@ class AdminFirebaseService {
         'authSyncStatus': orphanedUsers == 0 ? 'synced' : 'has_orphans',
       };
     } catch (e) {
-      throw Exception('Error getting user statistics with auth: ${e.toString()}');
+      throw Exception(
+        'Error getting user statistics with auth: ${e.toString()}',
+      );
     }
   }
 
@@ -860,10 +1003,11 @@ class AdminFirebaseService {
   // Media Management
   static Future<List<MediaFile>> getAllMedia() async {
     try {
-      final snapshot = await _firestore
-          .collection('media')
-          .orderBy('uploadedAt', descending: true)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('media')
+              .orderBy('uploadedAt', descending: true)
+              .get();
 
       return snapshot.docs
           .map((doc) => MediaFile.fromMap(doc.data(), doc.id))
@@ -937,7 +1081,8 @@ class AdminFirebaseService {
   // Gallery Management
   static Future<List<GalleryItem>> getAllGallery() async {
     try {
-      final snapshot = await _firestore.collection('galeri').orderBy('order').get();
+      final snapshot =
+          await _firestore.collection('galeri').orderBy('order').get();
 
       return snapshot.docs
           .map((doc) => GalleryItem.fromMap(doc.data(), doc.id))
@@ -978,7 +1123,10 @@ class AdminFirebaseService {
   }
 
   // Settings Management
-  static Future<void> updateAppSetting(String key, Map<String, dynamic> value) async {
+  static Future<void> updateAppSetting(
+    String key,
+    Map<String, dynamic> value,
+  ) async {
     try {
       await _firestore.collection('settings').doc(key).set(value);
 
@@ -1032,11 +1180,12 @@ class AdminFirebaseService {
 
   static Future<List<AdminLog>> getAdminLogs({int limit = 50}) async {
     try {
-      final snapshot = await _firestore
-          .collection('admin_logs')
-          .orderBy('timestamp', descending: true)
-          .limit(limit)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('admin_logs')
+              .orderBy('timestamp', descending: true)
+              .limit(limit)
+              .get();
 
       return snapshot.docs
           .map((doc) => AdminLog.fromMap(doc.data(), doc.id))
@@ -1070,9 +1219,12 @@ class AdminFirebaseService {
     try {
       // Get the next order number
       final existingItems = await getSlideshowItems();
-      final maxOrder = existingItems.isEmpty
-          ? 0
-          : existingItems.map((e) => e.order).reduce((a, b) => a > b ? a : b);
+      final maxOrder =
+          existingItems.isEmpty
+              ? 0
+              : existingItems
+                  .map((e) => e.order)
+                  .reduce((a, b) => a > b ? a : b);
 
       final newItem = item.copyWith(
         order: maxOrder + 1,
@@ -1131,7 +1283,9 @@ class AdminFirebaseService {
   }
 
   // Update slideshow order
-  static Future<void> updateSlideshowOrder(List<SlideshowItem> orderedItems) async {
+  static Future<void> updateSlideshowOrder(
+    List<SlideshowItem> orderedItems,
+  ) async {
     try {
       final batch = _firestore.batch();
 
@@ -1215,12 +1369,13 @@ class AdminFirebaseService {
         'totalItems': items.length,
         'activeItems': activeCount,
         'inactiveItems': inactiveCount,
-        'lastUpdated': items.isNotEmpty
-            ? items
-                .where((item) => item.updatedAt != null)
-                .map((item) => item.updatedAt!)
-                .reduce((a, b) => a.isAfter(b) ? a : b)
-            : null,
+        'lastUpdated':
+            items.isNotEmpty
+                ? items
+                    .where((item) => item.updatedAt != null)
+                    .map((item) => item.updatedAt!)
+                    .reduce((a, b) => a.isAfter(b) ? a : b)
+                : null,
       };
     } catch (e) {
       print('Error getting slideshow analytics: $e');
