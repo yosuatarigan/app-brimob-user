@@ -367,86 +367,89 @@ class AdminFirebaseService {
     }
   }
 
-  // NEW: Enhanced delete user - menghapus dari Auth dan Firestore
+  // Simple delete user - menghapus dari Auth dan Firestore
   static Future<void> deleteUserCompletely(String userId) async {
+    FirebaseApp? tempApp;
+    
     try {
-      // Get user data first for logging and email
+      // Get user data first
       final userDoc = await _firestore.collection('users').doc(userId).get();
       
       if (!userDoc.exists) {
-        throw Exception('User data not found in Firestore');
+        throw Exception('User data not found');
       }
 
       final userData = userDoc.data()!;
-      String userName = 'Unknown';
-      String userEmail = '';
+      final userEmail = userData['email'] ?? '';
+      final userPassword = userData['password_akun'] ?? userData['password'] ?? '';
       
-      // Check if it's UserModel or AdminUser
-      if (userData.containsKey('fullName')) {
-        userName = userData['fullName'] ?? 'Unknown';
-        userEmail = userData['email'] ?? '';
-      } else if (userData.containsKey('name')) {
-        userName = userData['name'] ?? 'Unknown';
-        userEmail = userData['email'] ?? '';
+      if (userEmail.isEmpty || userPassword.isEmpty) {
+        throw Exception('Email or password not found for user deletion');
       }
 
-      // Step 1: Delete user photo from storage if exists
-      if (userData.containsKey('photoUrl') && userData['photoUrl'] != null) {
-        try {
-          final photoUrl = userData['photoUrl'] as String;
-          if (photoUrl.contains('firebasestorage.googleapis.com')) {
-            await _storage.refFromURL(photoUrl).delete();
-          }
-        } catch (e) {
-          print('Error deleting user photo: $e');
-          // Continue with user deletion even if photo deletion fails
-        }
-      }
+      // Create Firebase app instance
+      tempApp = await Firebase.initializeApp(
+        name: userEmail,
+        options: Firebase.app().options,
+      );
 
-      // Step 2: Try to delete from Firebase Auth via Cloud Function
-      if (userEmail.isNotEmpty) {
-        try {
-          await deleteUserAuthViaCloudFunction(userId, userEmail);
-        } catch (e) {
-          print('Cloud Function delete failed, user auth needs manual deletion: $e');
-          // Continue with Firestore deletion
-        }
-      }
+      // Sign in as user
+      UserCredential userCredential = await FirebaseAuth.instanceFor(app: tempApp)
+          .signInWithEmailAndPassword(
+        email: userEmail,
+        password: userPassword,
+      );
 
-      // Step 3: Delete from Firestore
-      await _firestore.collection('users').doc(userId).delete();
+      // Get current user and delete
+      User usernya = FirebaseAuth.instanceFor(app: tempApp).currentUser!;
+      await usernya.delete();
 
-      // Step 4: Log admin action
+      // Delete from Firestore
+      await userDoc.reference.delete();
+
       await _logAdminAction(
         'DELETE_USER_COMPLETELY',
-        'Deleted user completely: $userName ($userEmail)',
+        'Deleted user: $userEmail from Authentication and Firestore',
         'user',
         userId,
       );
 
     } catch (e) {
-      throw Exception('Error deleting user completely: ${e.toString()}');
+      throw Exception('Error deleting user: ${e.toString()}');
+    } finally {
+      // Clean up temp app
+      if (tempApp != null) {
+        try {
+          await tempApp.delete();
+        } catch (e) {
+          print('Error cleaning up temp app: $e');
+        }
+      }
     }
   }
 
-  // NEW: Cloud Function untuk delete user auth (requires Cloud Function implementation)
-  static Future<void> deleteUserAuthViaCloudFunction(String userId, String email) async {
+
+
+  // Alternative: Disable user account instead of delete from Auth
+  static Future<void> disableUserAccount(String userId) async {
     try {
-      // Call cloud function to delete user from Authentication
-      final httpsCallable = FirebaseFunctions.instance.httpsCallable('deleteUserAuth');
-      
-      final result = await httpsCallable.call({
-        'userId': userId,
-        'email': email,
+      await _firestore.collection('users').doc(userId).update({
+        'status': UserStatus.rejected.name,
+        'rejectionReason': 'Account disabled by admin',
+        'isActive': false,
+        'disabledAt': Timestamp.fromDate(DateTime.now()),
+        'disabledBy': currentUser?.uid,
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
       });
 
-      if (result.data['success'] != true) {
-        throw Exception(result.data['error'] ?? 'Failed to delete auth account');
-      }
+      await _logAdminAction(
+        'DISABLE_USER',
+        'Disabled user account (user cannot login but auth account remains)',
+        'user',
+        userId,
+      );
     } catch (e) {
-      // Don't throw error, just log it
-      print('Error calling delete user cloud function: ${e.toString()}');
-      print('Note: User authentication account needs manual deletion from Firebase Console');
+      throw Exception('Error disabling user: ${e.toString()}');
     }
   }
 
