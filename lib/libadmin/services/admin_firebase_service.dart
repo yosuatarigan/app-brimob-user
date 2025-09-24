@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'dart:io';
 import '../../models/user_model.dart';
 import '../models/admin_model.dart';
@@ -254,6 +256,234 @@ class AdminFirebaseService {
     }
   }
 
+  // NEW: Create user dengan separate Firebase app instance (tidak mengganggu admin session)
+  static Future<Map<String, dynamic>> createUserWithSeparateAuth({
+    required String email,
+    required String password,
+    required String fullName,
+    required String nrp,
+    required String rank,
+    required UserRole role,
+    required DateTime dateOfBirth,
+    required DateTime militaryJoinDate,
+    String? photoUrl,
+  }) async {
+    FirebaseApp? tempApp;
+    
+    try {
+      // Create temporary Firebase app instance
+      tempApp = await Firebase.initializeApp(
+        name: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+        options: Firebase.app().options,
+      );
+
+      // Create user with temporary app instance
+      final UserCredential userCredential = await FirebaseAuth.instanceFor(app: tempApp)
+          .createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (userCredential.user != null) {
+        // Create UserModel document dengan status approved (admin created)
+        final newUser = UserModel(
+          id: userCredential.user!.uid,
+          email: email,
+          fullName: fullName,
+          nrp: nrp,
+          rank: rank,
+          role: role,
+          status: UserStatus.approved, // Auto-approved for admin created users
+          photoUrl: photoUrl,
+          dateOfBirth: dateOfBirth,
+          militaryJoinDate: militaryJoinDate,
+          createdAt: DateTime.now(),
+          approvedBy: currentUser?.uid,
+          approvedAt: DateTime.now(),
+        );
+
+        // Save to Firestore using main app instance
+        await _firestore
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set(newUser.toFirestore());
+
+        // Log admin action
+        await _logAdminAction(
+          'CREATE_USER',
+          'Created user: $fullName ($email) with role: ${role.displayName}',
+          'user',
+          userCredential.user!.uid,
+        );
+
+        return {
+          'success': true,
+          'message': 'User $fullName berhasil dibuat dan disetujui',
+          'user': newUser,
+        };
+      }
+
+      return {
+        'success': false,
+        'message': 'Gagal membuat user',
+      };
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      switch (e.code) {
+        case 'weak-password':
+          errorMessage = 'Password terlalu lemah (minimal 6 karakter)';
+          break;
+        case 'email-already-in-use':
+          errorMessage = 'Email sudah digunakan oleh akun lain';
+          break;
+        case 'invalid-email':
+          errorMessage = 'Format email tidak valid';
+          break;
+        case 'operation-not-allowed':
+          errorMessage = 'Pendaftaran email/password tidak diizinkan';
+          break;
+        default:
+          errorMessage = 'Error Firebase Auth: ${e.message}';
+      }
+      
+      return {
+        'success': false,
+        'message': errorMessage,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Terjadi kesalahan: ${e.toString()}',
+      };
+    } finally {
+      // Clean up: delete temporary app instance
+      if (tempApp != null) {
+        try {
+          await tempApp.delete();
+        } catch (e) {
+          print('Error deleting temp app: $e');
+        }
+      }
+    }
+  }
+
+  // NEW: Enhanced delete user - menghapus dari Auth dan Firestore
+  static Future<void> deleteUserCompletely(String userId) async {
+    try {
+      // Get user data first for logging and email
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+      
+      if (!userDoc.exists) {
+        throw Exception('User data not found in Firestore');
+      }
+
+      final userData = userDoc.data()!;
+      String userName = 'Unknown';
+      String userEmail = '';
+      
+      // Check if it's UserModel or AdminUser
+      if (userData.containsKey('fullName')) {
+        userName = userData['fullName'] ?? 'Unknown';
+        userEmail = userData['email'] ?? '';
+      } else if (userData.containsKey('name')) {
+        userName = userData['name'] ?? 'Unknown';
+        userEmail = userData['email'] ?? '';
+      }
+
+      // Step 1: Delete user photo from storage if exists
+      if (userData.containsKey('photoUrl') && userData['photoUrl'] != null) {
+        try {
+          final photoUrl = userData['photoUrl'] as String;
+          if (photoUrl.contains('firebasestorage.googleapis.com')) {
+            await _storage.refFromURL(photoUrl).delete();
+          }
+        } catch (e) {
+          print('Error deleting user photo: $e');
+          // Continue with user deletion even if photo deletion fails
+        }
+      }
+
+      // Step 2: Try to delete from Firebase Auth via Cloud Function
+      if (userEmail.isNotEmpty) {
+        try {
+          await deleteUserAuthViaCloudFunction(userId, userEmail);
+        } catch (e) {
+          print('Cloud Function delete failed, user auth needs manual deletion: $e');
+          // Continue with Firestore deletion
+        }
+      }
+
+      // Step 3: Delete from Firestore
+      await _firestore.collection('users').doc(userId).delete();
+
+      // Step 4: Log admin action
+      await _logAdminAction(
+        'DELETE_USER_COMPLETELY',
+        'Deleted user completely: $userName ($userEmail)',
+        'user',
+        userId,
+      );
+
+    } catch (e) {
+      throw Exception('Error deleting user completely: ${e.toString()}');
+    }
+  }
+
+  // NEW: Cloud Function untuk delete user auth (requires Cloud Function implementation)
+  static Future<void> deleteUserAuthViaCloudFunction(String userId, String email) async {
+    try {
+      // Call cloud function to delete user from Authentication
+      final httpsCallable = FirebaseFunctions.instance.httpsCallable('deleteUserAuth');
+      
+      final result = await httpsCallable.call({
+        'userId': userId,
+        'email': email,
+      });
+
+      if (result.data['success'] != true) {
+        throw Exception(result.data['error'] ?? 'Failed to delete auth account');
+      }
+    } catch (e) {
+      // Don't throw error, just log it
+      print('Error calling delete user cloud function: ${e.toString()}');
+      print('Note: User authentication account needs manual deletion from Firebase Console');
+    }
+  }
+
+  // NEW: Helper method untuk check if user exists in Auth
+  static Future<bool> checkUserExistsInAuth(String email) async {
+    FirebaseApp? tempApp;
+    
+    try {
+      tempApp = await Firebase.initializeApp(
+        name: 'temp_check_${DateTime.now().millisecondsSinceEpoch}',
+        options: Firebase.app().options,
+      );
+
+      final tempAuth = FirebaseAuth.instanceFor(app: tempApp);
+      
+      // Try to send password reset email to check if user exists
+      await tempAuth.sendPasswordResetEmail(email: email);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        return false;
+      }
+      // For other errors, assume user exists
+      return true;
+    } catch (e) {
+      return false;
+    } finally {
+      if (tempApp != null) {
+        try {
+          await tempApp.delete();
+        } catch (e) {
+          print('Error deleting temp app: $e');
+        }
+      }
+    }
+  }
+
   // Approve user
   static Future<void> approveUser(String userId) async {
     try {
@@ -361,6 +591,31 @@ class AdminFirebaseService {
       );
     } catch (e) {
       throw Exception('Error bulk rejecting users: ${e.toString()}');
+    }
+  }
+
+  // NEW: Batch delete users (with auth deletion)
+  static Future<void> batchDeleteUsers(List<String> userIds) async {
+    final List<String> failedDeletions = [];
+    
+    for (final userId in userIds) {
+      try {
+        await deleteUserCompletely(userId);
+      } catch (e) {
+        failedDeletions.add(userId);
+        print('Failed to delete user $userId: $e');
+      }
+    }
+
+    await _logAdminAction(
+      'BATCH_DELETE_USERS',
+      'Batch deleted ${userIds.length - failedDeletions.length}/${userIds.length} users',
+      'user',
+      null,
+    );
+
+    if (failedDeletions.isNotEmpty) {
+      throw Exception('Failed to delete ${failedDeletions.length} users: ${failedDeletions.join(', ')}');
     }
   }
 
@@ -473,35 +728,9 @@ class AdminFirebaseService {
     }
   }
 
-  // Delete user
+  // Updated delete user method to use complete deletion
   static Future<void> deleteUser(String userId) async {
-    try {
-      // Get user data first for logging
-      final userDoc = await _firestore.collection('users').doc(userId).get();
-      String userName = 'Unknown';
-      
-      if (userDoc.exists) {
-        final data = userDoc.data()!;
-        // Check if it's UserModel or AdminUser
-        if (data.containsKey('fullName')) {
-          userName = data['fullName'] ?? 'Unknown';
-        } else if (data.containsKey('name')) {
-          userName = data['name'] ?? 'Unknown';
-        }
-      }
-
-      // Delete user document
-      await _firestore.collection('users').doc(userId).delete();
-
-      await _logAdminAction(
-        'DELETE_USER',
-        'Deleted user: $userName',
-        'user',
-        userId,
-      );
-    } catch (e) {
-      throw Exception('Error deleting user: ${e.toString()}');
-    }
+    await deleteUserCompletely(userId);
   }
 
   // Reset user password
@@ -574,6 +803,54 @@ class AdminFirebaseService {
       };
     } catch (e) {
       throw Exception('Error getting approval statistics: ${e.toString()}');
+    }
+  }
+
+  // NEW: Get user statistics with auth status
+  static Future<Map<String, dynamic>> getUserStatisticsWithAuth() async {
+    try {
+      final allUsers = await getAllUsersWithApproval();
+      final stats = await getApprovalStatistics();
+      
+      int authActiveUsers = 0;
+      int orphanedUsers = 0;
+      
+      for (final user in allUsers) {
+        final existsInAuth = await checkUserExistsInAuth(user.email);
+        if (existsInAuth) {
+          authActiveUsers++;
+        } else {
+          orphanedUsers++;
+        }
+      }
+
+      return {
+        ...stats,
+        'authActiveUsers': authActiveUsers,
+        'orphanedUsers': orphanedUsers,
+        'authSyncStatus': orphanedUsers == 0 ? 'synced' : 'has_orphans',
+      };
+    } catch (e) {
+      throw Exception('Error getting user statistics with auth: ${e.toString()}');
+    }
+  }
+
+  // NEW: Clean up orphaned users (exists in Firestore but not in Auth)
+  static Future<List<UserModel>> findOrphanedUsers() async {
+    try {
+      final allUsers = await getAllUsersWithApproval();
+      final orphanedUsers = <UserModel>[];
+
+      for (final user in allUsers) {
+        final existsInAuth = await checkUserExistsInAuth(user.email);
+        if (!existsInAuth) {
+          orphanedUsers.add(user);
+        }
+      }
+
+      return orphanedUsers;
+    } catch (e) {
+      throw Exception('Error finding orphaned users: ${e.toString()}');
     }
   }
 

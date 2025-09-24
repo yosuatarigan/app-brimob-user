@@ -1373,13 +1373,24 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
     setState(() => _isLoading = true);
 
     try {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Direct user creation feature coming soon. Users should register through app.'),
-          backgroundColor: AppColors.orange,
-        ),
+      // Create user with AdminFirebaseService
+      await AdminFirebaseService.createUser(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+        _nameController.text.trim(),
+        _selectedRole.name,
       );
+
+      if (mounted) {
+        Navigator.pop(context);
+        widget.onUserCreated();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('User ${_nameController.text} berhasil dibuat!'),
+            backgroundColor: AppColors.green,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
