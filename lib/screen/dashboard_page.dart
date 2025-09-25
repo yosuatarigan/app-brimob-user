@@ -1,6 +1,7 @@
 // lib/pages/dashboard_page.dart
 import 'package:app_brimob_user/notification_widget.dart';
 import 'package:app_brimob_user/percobaannotif/fcm_service.dart';
+import 'package:app_brimob_user/profile_section_widget.dart';
 import 'package:app_brimob_user/services/auth_service.dart';
 import 'package:app_brimob_user/models/user_model.dart';
 import 'package:flutter/material.dart';
@@ -48,309 +49,6 @@ class _DashboardPageState extends State<DashboardPage> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
-  }
-
-  Widget _buildProfileSection() {
-    if (_currentUser == null) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      margin: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF2E3440), Color(0xFF3B4252)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header Section
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.account_circle,
-                  color: Colors.white.withOpacity(0.9),
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'PROFIL SAYA',
-                  style: GoogleFonts.roboto(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(_currentUser!.status),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _currentUser!.status.displayName,
-                    style: GoogleFonts.roboto(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Profile Content
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                // Avatar dan Info Utama
-                Row(
-                  children: [
-                    // Avatar
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 3,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child:
-                          _currentUser!.photoUrl != null
-                              ? ClipOval(
-                                child: CachedNetworkImage(
-                                  imageUrl: _currentUser!.photoUrl!,
-                                  fit: BoxFit.cover,
-                                  width: 80,
-                                  height: 80,
-                                  placeholder:
-                                      (context, url) => Container(
-                                        color: Colors.grey[300],
-                                        child: const Center(
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        ),
-                                      ),
-                                  errorWidget:
-                                      (context, url, error) => Container(
-                                        color: Colors.grey[400],
-                                        child: Icon(
-                                          Icons.person,
-                                          size: 40,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                ),
-                              )
-                              : Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.white.withOpacity(0.1),
-                                ),
-                                child: Icon(
-                                  Icons.person,
-                                  size: 40,
-                                  color: Colors.white.withOpacity(0.8),
-                                ),
-                              ),
-                    ),
-
-                    const SizedBox(width: 16),
-
-                    // Info Utama
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _currentUser!.displayName,
-                            style: GoogleFonts.roboto(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getRoleColor(_currentUser!.role),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              _currentUser!.role.displayName,
-                              style: GoogleFonts.roboto(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'NRP: ${_currentUser!.nrp}',
-                            style: GoogleFonts.roboto(
-                              fontSize: 13,
-                              color: Colors.white.withOpacity(0.8),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // Info Cards
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildInfoCard(
-                        'Usia',
-                        '${_currentUser!.age} tahun',
-                        Icons.cake,
-                        Colors.blue[400]!,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildInfoCard(
-                        'Masa Dinas',
-                        '${_currentUser!.yearsOfService} tahun',
-                        Icons.military_tech,
-                        Colors.green[400]!,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Email dan Join Date
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.email,
-                            size: 16,
-                            color: Colors.white.withOpacity(0.7),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _currentUser!.email,
-                              style: GoogleFonts.roboto(
-                                fontSize: 13,
-                                color: Colors.white.withOpacity(0.9),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.date_range,
-                            size: 16,
-                            color: Colors.white.withOpacity(0.7),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Bergabung: ${_currentUser!.formattedMilitaryJoinDate}',
-                            style: GoogleFonts.roboto(
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Logout Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _showLogoutConfirmation,
-                    icon: const Icon(Icons.logout, size: 20),
-                    label: Text(
-                      'Keluar dari Aplikasi',
-                      style: GoogleFonts.roboto(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red[600],
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   // Helper method untuk info card
@@ -458,13 +156,12 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> _handleLogout() async {
     try {
       // Show loading
-    
 
       // Sign out
       await _authService.signOut();
 
       // Close loading dialog
-      // 
+      //
     } catch (e) {
       // Close loading dialog
       if (mounted) {
@@ -602,7 +299,14 @@ class _DashboardPageState extends State<DashboardPage> {
                 _buildMenuGrid(),
                 _buildPedomanSection(),
                 _buildNotificationSection(), // Dipindah ke bawah
-                _buildProfileSection(),
+                ProfileSectionWidget(
+                  currentUser: _currentUser!,
+                  onLogout: () {
+                    // Handle logout logic
+                    _authService.signOut();
+                    Navigator.pushReplacementNamed(context, '/login');
+                  },
+                ),
               ],
             ),
           ),
