@@ -68,21 +68,17 @@ class _UserManagementPageState extends State<UserManagementPage>
 
   void _filterUsers() {
     setState(() {
-      _filteredUsers =
-          _allUsers.where((user) {
-            final matchesRole =
-                _selectedRole == 'all' || user.role.name == _selectedRole;
-            final matchesStatus =
-                _selectedStatus == 'all' || user.status.name == _selectedStatus;
-            final matchesSearch =
-                user.fullName.toLowerCase().contains(
-                  _searchQuery.toLowerCase(),
-                ) ||
-                user.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                user.nrp.toLowerCase().contains(_searchQuery.toLowerCase());
+      _filteredUsers = _allUsers.where((user) {
+        final matchesRole = _selectedRole == 'all' || user.role.name == _selectedRole;
+        final matchesStatus = _selectedStatus == 'all' || user.status.name == _selectedStatus;
+        final matchesSearch = user.fullName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            user.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            user.nrp.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            (user.jabatan.isNotEmpty && user.jabatan.toLowerCase().contains(_searchQuery.toLowerCase())) ||
+            (user.rank.isNotEmpty && user.rank.toLowerCase().contains(_searchQuery.toLowerCase()));
 
-            return matchesRole && matchesStatus && matchesSearch;
-          }).toList();
+        return matchesRole && matchesStatus && matchesSearch;
+      }).toList();
     });
   }
 
@@ -124,14 +120,13 @@ class _UserManagementPageState extends State<UserManagementPage>
       floatingActionButton: AdminFloatingActionButton(
         icon: Icons.person_add,
         label: 'Tambah User',
-        onPressed: _navigateToCreateUser, // Updated to navigate to page
+        onPressed: _navigateToCreateUser,
       ),
     );
   }
 
   Widget _buildHeader() {
-    final pendingCount =
-        _allUsers.where((u) => u.status == UserStatus.pending).length;
+    final pendingCount = _allUsers.where((u) => u.status == UserStatus.pending).length;
 
     return Container(
       width: double.infinity,
@@ -147,18 +142,16 @@ class _UserManagementPageState extends State<UserManagementPage>
             width: double.infinity,
             height: double.infinity,
             fit: BoxFit.cover,
-            placeholder:
-                (context, url) => Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(colors: AdminColors.adminGradient),
-                  ),
-                ),
-            errorWidget:
-                (context, url, error) => Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(colors: AdminColors.adminGradient),
-                  ),
-                ),
+            placeholder: (context, url) => Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: AdminColors.adminGradient),
+              ),
+            ),
+            errorWidget: (context, url, error) => Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: AdminColors.adminGradient),
+              ),
+            ),
           ),
 
           // Gradient overlay
@@ -190,9 +183,9 @@ class _UserManagementPageState extends State<UserManagementPage>
                     const SizedBox(width: AdminSizes.paddingS),
                     Expanded(
                       child: Text(
-                        'User Management',
+                        'Manajemen Personel Brimob',
                         style: GoogleFonts.roboto(
-                          fontSize: 24,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -226,7 +219,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                 ),
                 const Spacer(),
                 Text(
-                  'Kelola pengguna dan persetujuan pendaftaran',
+                  'Kelola data personel dan persetujuan pendaftaran',
                   style: GoogleFonts.roboto(
                     fontSize: 14,
                     color: Colors.white.withOpacity(0.9),
@@ -253,7 +246,7 @@ class _UserManagementPageState extends State<UserManagementPage>
               _filterUsers();
             },
             decoration: InputDecoration(
-              hintText: 'Cari pengguna (nama, email, NRP)...',
+              hintText: 'Cari personel (nama, email, NRP, jabatan, pangkat)...',
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AdminSizes.radiusM),
@@ -279,7 +272,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                   child: Row(
                     children: [
                       Text(
-                        'Role: ',
+                        'Satuan: ',
                         style: GoogleFonts.roboto(
                           fontWeight: FontWeight.w600,
                           color: AdminColors.darkGray,
@@ -314,8 +307,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                       ),
                       _buildStatusChip('all', 'Semua'),
                       ...UserStatus.values.map(
-                        (status) =>
-                            _buildStatusChip(status.name, status.displayName),
+                        (status) => _buildStatusChip(status.name, status.displayName),
                       ),
                     ],
                   ),
@@ -385,12 +377,9 @@ class _UserManagementPageState extends State<UserManagementPage>
   }
 
   Widget _buildTabBar() {
-    final pendingCount =
-        _allUsers.where((u) => u.status == UserStatus.pending).length;
-    final approvedCount =
-        _allUsers.where((u) => u.status == UserStatus.approved).length;
-    final rejectedCount =
-        _allUsers.where((u) => u.status == UserStatus.rejected).length;
+    final pendingCount = _allUsers.where((u) => u.status == UserStatus.pending).length;
+    final approvedCount = _allUsers.where((u) => u.status == UserStatus.approved).length;
+    final rejectedCount = _allUsers.where((u) => u.status == UserStatus.rejected).length;
 
     return Container(
       color: Colors.white,
@@ -444,7 +433,7 @@ class _UserManagementPageState extends State<UserManagementPage>
   }
 
   Widget _buildLoadingState() {
-    return const AdminLoadingWidget(message: 'Memuat users...');
+    return const AdminLoadingWidget(message: 'Memuat data personel...');
   }
 
   Widget _buildContent() {
@@ -459,21 +448,18 @@ class _UserManagementPageState extends State<UserManagementPage>
     if (_allUsers.isEmpty) {
       return AdminEmptyState(
         icon: Icons.people_outline,
-        title: 'Belum Ada User',
-        message: 'Tambah user pertama untuk aplikasi',
-        actionText: 'Tambah User',
+        title: 'Belum Ada Personel',
+        message: 'Tambah data personel pertama untuk aplikasi',
+        actionText: 'Tambah Personel',
         onAction: _navigateToCreateUser,
       );
     }
 
     // Siapkan data untuk setiap tab
     final allUsers = _allUsers;
-    final pendingUsers =
-        _allUsers.where((u) => u.status == UserStatus.pending).toList();
-    final approvedUsers =
-        _allUsers.where((u) => u.status == UserStatus.approved).toList();
-    final rejectedUsers =
-        _allUsers.where((u) => u.status == UserStatus.rejected).toList();
+    final pendingUsers = _allUsers.where((u) => u.status == UserStatus.pending).toList();
+    final approvedUsers = _allUsers.where((u) => u.status == UserStatus.approved).toList();
+    final rejectedUsers = _allUsers.where((u) => u.status == UserStatus.rejected).toList();
     final recentUsers = List.from(_allUsers)
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
@@ -494,7 +480,7 @@ class _UserManagementPageState extends State<UserManagementPage>
       return AdminEmptyState(
         icon: Icons.people_outline,
         title: 'Tidak Ada Data',
-        message: 'Tidak ada user untuk kategori ini',
+        message: 'Tidak ada personel untuk kategori ini',
       );
     }
 
@@ -526,20 +512,19 @@ class _UserManagementPageState extends State<UserManagementPage>
               children: [
                 // Avatar
                 CircleAvatar(
-                  radius: 30,
+                  radius: 35,
                   backgroundColor: _getRoleColor(user.role).withOpacity(0.1),
                   backgroundImage:
                       user.photoUrl != null && user.photoUrl!.isNotEmpty
                           ? CachedNetworkImageProvider(user.photoUrl!)
                           : null,
-                  child:
-                      user.photoUrl == null || user.photoUrl!.isEmpty
-                          ? Icon(
-                            Icons.person,
-                            size: 30,
-                            color: _getRoleColor(user.role),
-                          )
-                          : null,
+                  child: user.photoUrl == null || user.photoUrl!.isEmpty
+                      ? Icon(
+                          Icons.person,
+                          size: 35,
+                          color: _getRoleColor(user.role),
+                        )
+                      : null,
                 ),
 
                 const SizedBox(width: AdminSizes.paddingM),
@@ -550,7 +535,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user.displayName,
+                        user.fullName,
                         style: GoogleFonts.roboto(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -558,14 +543,30 @@ class _UserManagementPageState extends State<UserManagementPage>
                         ),
                       ),
                       const SizedBox(height: AdminSizes.paddingXS),
+                      
+                      // Pangkat & Jabatan
+                      if (user.rank.isNotEmpty || user.jabatan.isNotEmpty)
+                        Text(
+                          [user.rank, user.jabatan].where((s) => s.isNotEmpty).join(' • '),
+                          style: GoogleFonts.roboto(
+                            fontSize: 14,
+                            color: AdminColors.darkGray,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      
+                      const SizedBox(height: AdminSizes.paddingXS),
+                      
                       Text(
                         user.email,
                         style: GoogleFonts.roboto(
-                          fontSize: 14,
+                          fontSize: 13,
                           color: AdminColors.darkGray,
                         ),
                       ),
+                      
                       const SizedBox(height: AdminSizes.paddingXS),
+                      
                       Text(
                         'NRP: ${user.nrp}',
                         style: GoogleFonts.roboto(
@@ -574,12 +575,15 @@ class _UserManagementPageState extends State<UserManagementPage>
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: AdminSizes.paddingXS),
+                      
+                      const SizedBox(height: AdminSizes.paddingS),
+                      
                       Row(
                         children: [
                           _buildStatusChipWidget(
                             text: user.role.displayName,
                             color: _getRoleColor(user.role),
+                            icon: Icons.group,
                           ),
                           const SizedBox(width: AdminSizes.paddingS),
                           _buildStatusChipWidget(
@@ -596,121 +600,152 @@ class _UserManagementPageState extends State<UserManagementPage>
                 // Actions menu
                 PopupMenuButton<String>(
                   onSelected: (value) => _handleUserAction(value, user),
-                  itemBuilder:
-                      (context) => [
-                        const PopupMenuItem(
-                          value: 'view',
-                          child: Row(
-                            children: [
-                              Icon(Icons.visibility, size: 18),
-                              SizedBox(width: 8),
-                              Text('View Details'),
-                            ],
-                          ),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'view',
+                      child: Row(
+                        children: [
+                          Icon(Icons.visibility, size: 18),
+                          SizedBox(width: 8),
+                          Text('Lihat Detail'),
+                        ],
+                      ),
+                    ),
+                    if (user.status == UserStatus.pending) ...[
+                      const PopupMenuItem(
+                        value: 'approve',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              size: 18,
+                              color: Colors.green,
+                            ),
+                            SizedBox(width: 8),
+                            Text('Setujui'),
+                          ],
                         ),
-                        if (user.status == UserStatus.pending) ...[
-                          const PopupMenuItem(
-                            value: 'approve',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.check_circle,
-                                  size: 18,
-                                  color: Colors.green,
-                                ),
-                                SizedBox(width: 8),
-                                Text('Approve'),
-                              ],
+                      ),
+                      const PopupMenuItem(
+                        value: 'reject',
+                        child: Row(
+                          children: [
+                            Icon(Icons.cancel, size: 18, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Tolak'),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (user.status == UserStatus.rejected) ...[
+                      const PopupMenuItem(
+                        value: 'approve',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              size: 18,
+                              color: Colors.green,
                             ),
-                          ),
-                          const PopupMenuItem(
-                            value: 'reject',
-                            child: Row(
-                              children: [
-                                Icon(Icons.cancel, size: 18, color: Colors.red),
-                                SizedBox(width: 8),
-                                Text('Reject'),
-                              ],
-                            ),
+                            SizedBox(width: 8),
+                            Text('Setujui'),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, size: 18),
+                          SizedBox(width: 8),
+                          Text('Edit'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'reset_password',
+                      child: Row(
+                        children: [
+                          Icon(Icons.lock_reset, size: 18),
+                          SizedBox(width: 8),
+                          Text('Reset Password'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, size: 18, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text(
+                            'Hapus',
+                            style: TextStyle(color: Colors.red),
                           ),
                         ],
-                        if (user.status == UserStatus.rejected) ...[
-                          const PopupMenuItem(
-                            value: 'approve',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.check_circle,
-                                  size: 18,
-                                  color: Colors.green,
-                                ),
-                                SizedBox(width: 8),
-                                Text('Approve'),
-                              ],
-                            ),
-                          ),
-                        ],
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit, size: 18),
-                              SizedBox(width: 8),
-                              Text('Edit'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'reset_password',
-                          child: Row(
-                            children: [
-                              Icon(Icons.lock_reset, size: 18),
-                              SizedBox(width: 8),
-                              Text('Reset Password'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete, size: 18, color: Colors.red),
-                              SizedBox(width: 8),
-                              Text(
-                                'Delete',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
 
             const SizedBox(height: AdminSizes.paddingM),
 
-            // User stats
+            // Additional Info Card
             Container(
               padding: const EdgeInsets.all(AdminSizes.paddingM),
               decoration: BoxDecoration(
                 color: AdminColors.background,
                 borderRadius: BorderRadius.circular(AdminSizes.radiusS),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+              child: Column(
                 children: [
-                  _buildUserStat('Umur', '${user.age} tahun', Icons.cake),
-                  _buildUserStat(
-                    'Masa Dinas',
-                    '${user.yearsOfService} tahun',
-                    Icons.military_tech,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildUserStat(
+                        'Umur', 
+                        user.dateOfBirth != null ? '${user.age} thn' : '-', 
+                        Icons.cake
+                      ),
+                      _buildUserStat(
+                        'Masa Dinas',
+                        user.militaryJoinDate != null ? '${user.yearsOfService} thn' : '-',
+                        Icons.military_tech,
+                      ),
+                      _buildUserStat(
+                        'Daftar',
+                        _formatDate(user.createdAt),
+                        Icons.calendar_today,
+                      ),
+                    ],
                   ),
-                  _buildUserStat(
-                    'Tanggal Daftar',
-                    _formatDate(user.createdAt),
-                    Icons.calendar_today,
-                  ),
+                  
+                  // Additional info row
+                  if (user.tempatLahir != null || user.agama != null || user.statusPersonel != null)
+                    ...[
+                      const SizedBox(height: AdminSizes.paddingS),
+                      const Divider(height: 1),
+                      const SizedBox(height: AdminSizes.paddingS),
+                      Row(
+                        children: [
+                          if (user.tempatLahir != null)
+                            Expanded(
+                              child: _buildInfoItem('Tempat Lahir', user.tempatLahir!, Icons.location_on),
+                            ),
+                          if (user.agama != null)
+                            Expanded(
+                              child: _buildInfoItem('Agama', user.agama!, Icons.mosque),
+                            ),
+                          if (user.statusPersonel != null)
+                            Expanded(
+                              child: _buildInfoItem('Status', user.statusPersonel!, Icons.person_pin),
+                            ),
+                        ],
+                      ),
+                    ],
                 ],
               ),
             ),
@@ -724,7 +759,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                     child: ElevatedButton.icon(
                       onPressed: () => _approveUser(user),
                       icon: const Icon(Icons.check_circle, size: 18),
-                      label: const Text('Approve'),
+                      label: const Text('Setujui'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.green,
                         foregroundColor: Colors.white,
@@ -741,7 +776,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                     child: ElevatedButton.icon(
                       onPressed: () => _rejectUser(user),
                       icon: const Icon(Icons.cancel, size: 18),
-                      label: const Text('Reject'),
+                      label: const Text('Tolak'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.red,
                         foregroundColor: Colors.white,
@@ -818,6 +853,31 @@ class _UserManagementPageState extends State<UserManagementPage>
     );
   }
 
+  Widget _buildInfoItem(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, size: 14, color: AdminColors.lightGray),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: GoogleFonts.roboto(
+            fontSize: 9,
+            color: AdminColors.lightGray,
+          ),
+        ),
+        Text(
+          value,
+          style: GoogleFonts.roboto(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: AdminColors.darkGray,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
   void _handleUserAction(String action, UserModel user) {
     switch (action) {
       case 'view':
@@ -860,7 +920,7 @@ class _UserManagementPageState extends State<UserManagementPage>
             const CircularProgressIndicator(),
             const SizedBox(height: AdminSizes.paddingM),
             Text(
-              'Menyetujui user...',
+              'Menyetujui personel...',
               style: GoogleFonts.roboto(),
             ),
           ],
@@ -881,7 +941,7 @@ class _UserManagementPageState extends State<UserManagementPage>
         _loadUsers();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('User ${user.fullName} telah disetujui'),
+            content: Text('Personel ${user.fullName} telah disetujui'),
             backgroundColor: AppColors.green,
             behavior: SnackBarBehavior.floating,
           ),
@@ -924,7 +984,7 @@ class _UserManagementPageState extends State<UserManagementPage>
               const CircularProgressIndicator(),
               const SizedBox(height: AdminSizes.paddingM),
               Text(
-                'Menolak user...',
+                'Menolak personel...',
                 style: GoogleFonts.roboto(),
               ),
             ],
@@ -945,7 +1005,7 @@ class _UserManagementPageState extends State<UserManagementPage>
           _loadUsers();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('User ${user.fullName} telah ditolak'),
+              content: Text('Personel ${user.fullName} telah ditolak'),
               backgroundColor: AppColors.red,
               behavior: SnackBarBehavior.floating,
             ),
@@ -975,7 +1035,7 @@ class _UserManagementPageState extends State<UserManagementPage>
     // For now, navigate to create page with edit mode (could be enhanced later)
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Feature edit akan ditambahkan di versi selanjutnya'),
+        content: Text('Fitur edit akan ditambahkan di versi selanjutnya'),
         backgroundColor: AppColors.info,
         behavior: SnackBarBehavior.floating,
       ),
@@ -991,14 +1051,14 @@ class _UserManagementPageState extends State<UserManagementPage>
           style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
         ),
         content: Text(
-          'Send password reset email to ${user.email}?',
+          'Kirim email reset password ke ${user.email}?',
           style: GoogleFonts.roboto(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Cancel',
+              'Batal',
               style: GoogleFonts.roboto(color: AdminColors.darkGray),
             ),
           ),
@@ -1037,7 +1097,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Password reset email sent!'),
+                      content: Text('Email reset password telah dikirim!'),
                       backgroundColor: AppColors.green,
                       behavior: SnackBarBehavior.floating,
                     ),
@@ -1065,7 +1125,7 @@ class _UserManagementPageState extends State<UserManagementPage>
               backgroundColor: AdminColors.primaryBlue,
             ),
             child: Text(
-              'Send Email',
+              'Kirim Email',
               style: GoogleFonts.roboto(color: Colors.white),
             ),
           ),
@@ -1079,18 +1139,18 @@ class _UserManagementPageState extends State<UserManagementPage>
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          'Delete User',
+          'Hapus Personel',
           style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
         ),
         content: Text(
-          'Are you sure you want to delete ${user.fullName}? This action cannot be undone.',
+          'Yakin ingin menghapus ${user.fullName}? Tindakan ini tidak dapat dibatalkan.',
           style: GoogleFonts.roboto(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Cancel',
+              'Batal',
               style: GoogleFonts.roboto(color: AdminColors.darkGray),
             ),
           ),
@@ -1101,7 +1161,7 @@ class _UserManagementPageState extends State<UserManagementPage>
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
             child: Text(
-              'Delete',
+              'Hapus',
               style: GoogleFonts.roboto(color: Colors.white),
             ),
           ),
@@ -1131,7 +1191,7 @@ class _UserManagementPageState extends State<UserManagementPage>
           
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['message'] ?? 'User berhasil dihapus'),
+              content: Text(result['message'] ?? 'Personel berhasil dihapus'),
               backgroundColor: AppColors.green,
               behavior: SnackBarBehavior.floating,
             ),
@@ -1139,7 +1199,7 @@ class _UserManagementPageState extends State<UserManagementPage>
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['message'] ?? 'Gagal menghapus user'),
+              content: Text(result['message'] ?? 'Gagal menghapus personel'),
               backgroundColor: AppColors.red,
               behavior: SnackBarBehavior.floating,
             ),
@@ -1158,96 +1218,6 @@ class _UserManagementPageState extends State<UserManagementPage>
             content: Text('Error: ${e.toString()}'),
             backgroundColor: AppColors.red,
             behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _performDeleteUser(UserModel user) async {
-    // Show loading dialog
-    final loadingDialog = showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => false,
-        child: AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: AdminSizes.paddingM),
-              Text(
-                'Menghapus user ${user.fullName}...',
-                style: GoogleFonts.roboto(),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    try {
-      print('Starting delete operation for user: ${user.id}');
-      final result = await AdminFirebaseService.deleteUserCompletely(user.id);
-      print('Delete operation completed: ${result.toString()}');
-      
-      // Force close loading dialog
-      if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
-      }
-      
-      // Small delay to ensure dialog is closed
-      await Future.delayed(const Duration(milliseconds: 100));
-      
-      if (mounted) {
-        if (result['success'] == true) {
-          print('Delete successful, refreshing user list...');
-          await _loadUsers(); // Refresh list
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message'] ?? 'User berhasil dihapus'),
-              backgroundColor: AppColors.green,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        } else {
-          print('Delete failed: ${result['message']}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message'] ?? 'Gagal menghapus user'),
-              backgroundColor: AppColors.red,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 4),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      print('Delete error: $e');
-      
-      // Force close loading dialog
-      if (mounted) {
-        try {
-          Navigator.of(context, rootNavigator: true).pop();
-        } catch (navError) {
-          print('Error closing dialog: $navError');
-        }
-      }
-      
-      // Small delay
-      await Future.delayed(const Duration(milliseconds: 100));
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.red,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -1316,7 +1286,6 @@ class _UserManagementPageState extends State<UserManagementPage>
   }
 }
 
-// Keep existing dialogs for now (RejectUserDialog, UserDetailDialog)
 // Dialog for rejecting user with reason
 class RejectUserDialog extends StatefulWidget {
   @override
@@ -1337,7 +1306,7 @@ class _RejectUserDialogState extends State<RejectUserDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-        'Reject User',
+        'Alasan Penolakan',
         style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
       ),
       content: Column(
@@ -1366,10 +1335,9 @@ class _RejectUserDialogState extends State<RejectUserDialog> {
           RadioListTile<String>(
             title: Text('Lainnya', style: GoogleFonts.roboto(fontSize: 14)),
             value: 'custom',
-            groupValue:
-                _reasonController.text.isEmpty
-                    ? null
-                    : _predefinedReasons.contains(_reasonController.text)
+            groupValue: _reasonController.text.isEmpty
+                ? null
+                : _predefinedReasons.contains(_reasonController.text)
                     ? null
                     : 'custom',
             onChanged: (value) {
@@ -1397,98 +1365,318 @@ class _RejectUserDialogState extends State<RejectUserDialog> {
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(
-            'Cancel',
+            'Batal',
             style: GoogleFonts.roboto(color: AdminColors.darkGray),
           ),
         ),
         ElevatedButton(
-          onPressed:
-              _reasonController.text.isNotEmpty
-                  ? () => Navigator.pop(context, _reasonController.text)
-                  : null,
+          onPressed: _reasonController.text.isNotEmpty
+              ? () => Navigator.pop(context, _reasonController.text)
+              : null,
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
-          child: Text('Reject', style: GoogleFonts.roboto(color: Colors.white)),
+          child: Text('Tolak', style: GoogleFonts.roboto(color: Colors.white)),
         ),
       ],
     );
   }
 }
 
-// User Detail Dialog
+// Enhanced User Detail Dialog with complete personnel information
 class UserDetailDialog extends StatelessWidget {
   final UserModel user;
 
   const UserDetailDialog({super.key, required this.user});
 
+  String _formatDate(DateTime? date) {
+    if (date == null) return '-';
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
       child: Container(
-        width: 500,
-        padding: const EdgeInsets.all(AdminSizes.paddingL),
+        width: 600,
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundImage:
-                      user.photoUrl != null
-                          ? CachedNetworkImageProvider(user.photoUrl!)
-                          : null,
-                  child:
-                      user.photoUrl == null
-                          ? const Icon(Icons.person, size: 30)
-                          : null,
-                ),
-                const SizedBox(width: AdminSizes.paddingM),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user.displayName,
-                        style: GoogleFonts.roboto(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        user.role.displayName,
-                        style: GoogleFonts.roboto(
-                          fontSize: 14,
-                          color: AdminColors.darkGray,
-                        ),
-                      ),
-                    ],
+            // Header
+            Container(
+              padding: const EdgeInsets.all(AdminSizes.paddingL),
+              decoration: BoxDecoration(
+                color: AdminColors.primaryBlue,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(AdminSizes.radiusM)),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.white,
+                    backgroundImage:
+                        user.photoUrl != null && user.photoUrl!.isNotEmpty
+                            ? CachedNetworkImageProvider(user.photoUrl!)
+                            : null,
+                    child: user.photoUrl == null || user.photoUrl!.isEmpty
+                        ? const Icon(Icons.person, size: 30, color: AdminColors.primaryBlue)
+                        : null,
                   ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
+                  const SizedBox(width: AdminSizes.paddingM),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user.fullName,
+                          style: GoogleFonts.roboto(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        if (user.rank.isNotEmpty || user.jabatan.isNotEmpty)
+                          Text(
+                            [user.rank, user.jabatan].where((s) => s.isNotEmpty).join(' • '),
+                            style: GoogleFonts.roboto(
+                              fontSize: 14,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        Text(
+                          user.role.displayName,
+                          style: GoogleFonts.roboto(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: AdminSizes.paddingL),
-            _buildDetailRow('Email', user.email),
-            _buildDetailRow('NRP', user.nrp),
-            _buildDetailRow('Pangkat', user.rank),
-            _buildDetailRow('Umur', '${user.age} tahun'),
-            _buildDetailRow('Tanggal Lahir', user.formattedDateOfBirth),
-            _buildDetailRow(
-              'Tanggal Masuk Militer',
-              user.formattedMilitaryJoinDate,
+            
+            // Content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AdminSizes.paddingL),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Basic Information
+                    _buildSection('Data Dasar', [
+                      _buildDetailRow('Email', user.email),
+                      _buildDetailRow('NRP', user.nrp),
+                      if (user.statusPersonel != null)
+                        _buildDetailRow('Status Personel', user.statusPersonel!),
+                      _buildDetailRow('Status Akun', user.status.displayName),
+                      if (user.rejectionReason != null)
+                        _buildDetailRow('Alasan Penolakan', user.rejectionReason!),
+                    ]),
+
+                    const SizedBox(height: AdminSizes.paddingL),
+
+                    // Personal Information
+                    if (user.tempatLahir != null || user.dateOfBirth != null || user.agama != null)
+                      _buildSection('Data Personal', [
+                        if (user.tempatTanggalLahir.isNotEmpty)
+                          _buildDetailRow('Tempat, Tanggal Lahir', user.tempatTanggalLahir),
+                        if (user.dateOfBirth != null)
+                          _buildDetailRow('Umur', '${user.age} tahun'),
+                        if (user.agama != null)
+                          _buildDetailRow('Agama', user.agama!),
+                        if (user.suku != null)
+                          _buildDetailRow('Suku', user.suku!),
+                        if (user.bloodType != null)
+                          _buildDetailRow('Golongan Darah', user.bloodType!),
+                        if (user.maritalStatus != null)
+                          _buildDetailRow('Status Pernikahan', user.maritalStatus!),
+                      ]),
+
+                    const SizedBox(height: AdminSizes.paddingL),
+
+                    // Military Service Information
+                    if (user.militaryJoinDate != null || user.jabatanTmt != null)
+                      _buildSection('Data Dinas', [
+                        if (user.militaryJoinDate != null) ...[
+                          _buildDetailRow('Tanggal Masuk Militer', _formatDate(user.militaryJoinDate)),
+                          _buildDetailRow('Masa Dinas', '${user.yearsOfService} tahun'),
+                        ],
+                        if (user.jabatanTmt != null) ...[
+                          _buildDetailRow('TMT Jabatan', user.formattedJabatanTmt),
+                          _buildDetailRow('Lama Jabatan', user.lamaJabatan),
+                        ],
+                      ]),
+
+                    const SizedBox(height: AdminSizes.paddingL),
+
+                    // Contact Information
+                    if (user.phoneNumber != null || user.address != null || user.emergencyContact != null)
+                      _buildSection('Informasi Kontak', [
+                        if (user.phoneNumber != null)
+                          _buildDetailRow('Telepon', user.phoneNumber!),
+                        if (user.address != null)
+                          _buildDetailRow('Alamat', user.address!),
+                        if (user.emergencyContact != null)
+                          _buildDetailRow('Kontak Darurat', user.emergencyContact!),
+                      ]),
+
+                    const SizedBox(height: AdminSizes.paddingL),
+
+                    // Complex Data Sections
+                    if (user.pendidikanKepolisian.isNotEmpty)
+                      _buildComplexSection('Pendidikan Kepolisian', 
+                        user.pendidikanKepolisian.map((e) => '${e.tingkat} (${e.tahun})').toList()),
+
+                    if (user.pendidikanUmum.isNotEmpty)
+                      _buildComplexSection('Pendidikan Umum', 
+                        user.pendidikanUmum.map((e) => '${e.tingkat} - ${e.namaInstitusi} (${e.tahun})').toList()),
+
+                    if (user.riwayatPangkat.isNotEmpty)
+                      _buildComplexSection('Riwayat Pangkat', 
+                        user.riwayatPangkat.map((e) => '${e.pangkat} - ${_formatDate(e.tmt)}').toList()),
+
+                    if (user.riwayatJabatan.isNotEmpty)
+                      _buildComplexSection('Riwayat Jabatan', 
+                        user.riwayatJabatan.map((e) => '${e.jabatan} - ${_formatDate(e.tmt)}').toList()),
+
+                    if (user.pendidikanPelatihan.isNotEmpty)
+                      _buildComplexSection('Pendidikan & Pelatihan', 
+                        user.pendidikanPelatihan.map((e) => '${e.dikbang} - ${_formatDate(e.tmt)}').toList()),
+
+                    if (user.tandaKehormatan.isNotEmpty)
+                      _buildComplexSection('Tanda Kehormatan', 
+                        user.tandaKehormatan.map((e) => '${e.tandaKehormatan} - ${_formatDate(e.tmt)}').toList()),
+
+                    if (user.kemampuanBahasa.isNotEmpty)
+                      _buildComplexSection('Kemampuan Bahasa', 
+                        user.kemampuanBahasa.map((e) => '${e.bahasa} (${e.status})').toList()),
+
+                    if (user.penugasanLuarStruktur.isNotEmpty)
+                      _buildComplexSection('Penugasan Luar Struktur', 
+                        user.penugasanLuarStruktur.map((e) => '${e.penugasan} - ${e.lokasi}').toList()),
+
+                    const SizedBox(height: AdminSizes.paddingL),
+
+                    // System Information
+                    _buildSection('Informasi Sistem', [
+                      _buildDetailRow('Tanggal Daftar', _formatDate(user.createdAt)),
+                      if (user.updatedAt != null)
+                        _buildDetailRow('Terakhir Diupdate', _formatDate(user.updatedAt)),
+                      if (user.approvedBy != null)
+                        _buildDetailRow('Disetujui Oleh', user.approvedBy!),
+                      if (user.approvedAt != null)
+                        _buildDetailRow('Tanggal Persetujuan', _formatDate(user.approvedAt)),
+                    ]),
+                  ],
+                ),
+              ),
             ),
-            _buildDetailRow('Masa Dinas', '${user.yearsOfService} tahun'),
-            _buildDetailRow('Status', user.status.displayName),
-            _buildDetailRow('Tanggal Daftar', user.formattedMilitaryJoinDate ),
-            if (user.rejectionReason != null)
-              _buildDetailRow('Alasan Penolakan', user.rejectionReason!),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSection(String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AdminSizes.paddingM,
+            vertical: AdminSizes.paddingS,
+          ),
+          decoration: BoxDecoration(
+            color: AdminColors.primaryBlue.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(AdminSizes.radiusS),
+          ),
+          child: Text(
+            title,
+            style: GoogleFonts.roboto(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AdminColors.primaryBlue,
+            ),
+          ),
+        ),
+        const SizedBox(height: AdminSizes.paddingM),
+        ...children,
+      ],
+    );
+  }
+
+  Widget _buildComplexSection(String title, List<String> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AdminSizes.paddingM,
+            vertical: AdminSizes.paddingS,
+          ),
+          decoration: BoxDecoration(
+            color: AdminColors.primaryBlue.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(AdminSizes.radiusS),
+          ),
+          child: Text(
+            title,
+            style: GoogleFonts.roboto(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AdminColors.primaryBlue,
+            ),
+          ),
+        ),
+        const SizedBox(height: AdminSizes.paddingM),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AdminSizes.paddingM),
+          decoration: BoxDecoration(
+            color: AdminColors.background,
+            borderRadius: BorderRadius.circular(AdminSizes.radiusS),
+            border: Border.all(color: AdminColors.borderColor),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: items.map((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AdminColors.primaryBlue,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      item,
+                      style: GoogleFonts.roboto(
+                        fontSize: 13,
+                        color: AdminColors.darkGray,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )).toList(),
+          ),
+        ),
+        const SizedBox(height: AdminSizes.paddingL),
+      ],
     );
   }
 
@@ -1499,17 +1687,27 @@ class UserDetailDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120,
+            width: 140,
             child: Text(
               label,
               style: GoogleFonts.roboto(
                 fontWeight: FontWeight.w500,
                 color: AdminColors.darkGray,
+                fontSize: 13,
               ),
             ),
           ),
           Text(' : '),
-          Expanded(child: Text(value, style: GoogleFonts.roboto())),
+          Expanded(
+            child: Text(
+              value,
+              style: GoogleFonts.roboto(
+                fontSize: 13,
+                color: AdminColors.darkGray,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
         ],
       ),
     );

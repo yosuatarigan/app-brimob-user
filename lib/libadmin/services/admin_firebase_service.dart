@@ -266,110 +266,134 @@ class AdminFirebaseService {
 
   // NEW: Create user dengan separate Firebase app instance (tidak mengganggu admin session)
   static Future<Map<String, dynamic>> createUserWithSeparateAuth({
-    required String email,
-    required String password,
-    required String fullName,
-    required String nrp,
-    required String rank,
-    required UserRole role,
-    required DateTime dateOfBirth,
-    required DateTime militaryJoinDate,
-    String? photoUrl,
-  }) async {
-    FirebaseApp? tempApp;
+  required String email,
+  required String password,
+  required String fullName,
+  required String nrp,
+  required String rank,
+  required UserRole role,
+  required DateTime dateOfBirth,
+  required DateTime militaryJoinDate,
+  String? photoUrl,
+  // Parameter tambahan dari CreateUserPage
+  String? jabatan,
+  DateTime? jabatanTmt,
+  String? tempatLahir,
+  String? agama,
+  String? suku,
+  String? statusPersonel,
+  String? phoneNumber,
+  String? address,
+  String? emergencyContact,
+  String? bloodType,
+  String? maritalStatus,
+}) async {
+  FirebaseApp? tempApp;
 
-    try {
-      // Create temporary Firebase app instance
-      tempApp = await Firebase.initializeApp(
-        name: email, // Use email as unique name
-        options: Firebase.app().options,
+  try {
+    // Create temporary Firebase app instance
+    tempApp = await Firebase.initializeApp(
+      name: email, // Use email as unique name
+      options: Firebase.app().options,
+    );
+
+    // Create user with temporary app instance
+    final UserCredential userCredential = await FirebaseAuth.instanceFor(
+      app: tempApp,
+    ).createUserWithEmailAndPassword(email: email, password: password);
+
+    if (userCredential.user != null) {
+      // Create UserModel document dengan status approved (admin created)
+      final newUser = UserModel(
+        id: userCredential.user!.uid,
+        jabatan: jabatan ?? '',
+        email: email,
+        fullName: fullName,
+        nrp: nrp,
+        rank: rank,
+        role: role,
+        status: UserStatus.approved, // Auto-approved for admin created users
+        photoUrl: photoUrl,
+        dateOfBirth: dateOfBirth,
+        militaryJoinDate: militaryJoinDate,
+        createdAt: DateTime.now(),
+        approvedBy: currentUser?.uid,
+        approvedAt: DateTime.now(),
+        // Parameter tambahan
+        jabatanTmt: jabatanTmt,
+        tempatLahir: tempatLahir,
+        agama: agama,
+        suku: suku,
+        statusPersonel: statusPersonel,
+        phoneNumber: phoneNumber,
+        address: address,
+        emergencyContact: emergencyContact,
+        bloodType: bloodType,
+        maritalStatus: maritalStatus,
       );
 
-      // Create user with temporary app instance
-      final UserCredential userCredential = await FirebaseAuth.instanceFor(
-        app: tempApp,
-      ).createUserWithEmailAndPassword(email: email, password: password);
+      final userData = newUser.toFirestore();
+      userData['password_akun'] = password;
+      
+      // Save to Firestore using main app instance
+      await _firestore
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set(userData);
 
-      if (userCredential.user != null) {
-        // Create UserModel document dengan status approved (admin created)
-        final newUser = UserModel(
-          id: userCredential.user!.uid,
-          jabatan: '',
-          email: email,
-          fullName: fullName,
-          nrp: nrp,
-          rank: rank,
-          role: role,
-          status: UserStatus.approved, // Auto-approved for admin created users
-          photoUrl: photoUrl,
-          dateOfBirth: dateOfBirth,
-          militaryJoinDate: militaryJoinDate,
-          createdAt: DateTime.now(),
-          approvedBy: currentUser?.uid,
-          approvedAt: DateTime.now(),
-        );
+      // Log admin action
+      await _logAdminAction(
+        'CREATE_USER',
+        'Created user: $fullName ($email) with role: ${role.displayName}',
+        'user',
+        userCredential.user!.uid,
+      );
 
-        final userData = newUser.toFirestore();
-        userData['password_akun'] = password;
-        // Save to Firestore using main app instance
-
-        await _firestore
-            .collection('users')
-            .doc(userCredential.user!.uid)
-            .set(userData);
-
-        // Log admin action
-        await _logAdminAction(
-          'CREATE_USER',
-          'Created user: $fullName ($email) with role: ${role.displayName}',
-          'user',
-          userCredential.user!.uid,
-        );
-
-        return {
-          'success': true,
-          'message': 'User $fullName berhasil dibuat dan disetujui',
-          'user': newUser,
-        };
-      }
-
-      return {'success': false, 'message': 'Gagal membuat user'};
-    } on FirebaseAuthException catch (e) {
-      String errorMessage;
-      switch (e.code) {
-        case 'weak-password':
-          errorMessage = 'Password terlalu lemah (minimal 6 karakter)';
-          break;
-        case 'email-already-in-use':
-          errorMessage = 'Email sudah digunakan oleh akun lain';
-          break;
-        case 'invalid-email':
-          errorMessage = 'Format email tidak valid';
-          break;
-        case 'operation-not-allowed':
-          errorMessage = 'Pendaftaran email/password tidak diizinkan';
-          break;
-        default:
-          errorMessage = 'Error Firebase Auth: ${e.message}';
-      }
-
-      return {'success': false, 'message': errorMessage};
-    } catch (e) {
       return {
-        'success': false,
-        'message': 'Terjadi kesalahan: ${e.toString()}',
+        'success': true,
+        'message': 'User $fullName berhasil dibuat dan disetujui',
+        'user': newUser,
       };
-    } finally {
-      // Clean up: delete temporary app instance
-      if (tempApp != null) {
-        try {
-          await tempApp.delete();
-        } catch (e) {
-          print('Error deleting temp app: $e');
-        }
+    }
+
+    return {'success': false, 'message': 'Gagal membuat user'};
+  } on FirebaseAuthException catch (e) {
+    String errorMessage;
+    switch (e.code) {
+      case 'weak-password':
+        errorMessage = 'Password terlalu lemah (minimal 6 karakter)';
+        break;
+      case 'email-already-in-use':
+        errorMessage = 'Email sudah digunakan oleh akun lain';
+        break;
+      case 'invalid-email':
+        errorMessage = 'Format email tidak valid';
+        break;
+      case 'operation-not-allowed':
+        errorMessage = 'Pendaftaran email/password tidak diizinkan';
+        break;
+      default:
+        errorMessage = 'Error Firebase Auth: ${e.message}';
+    }
+
+    return {'success': false, 'message': errorMessage};
+  } catch (e) {
+    return {
+      'success': false,
+      'message': 'Terjadi kesalahan: ${e.toString()}',
+    };
+  } finally {
+    // Clean up: delete temporary app instance
+    if (tempApp != null) {
+      try {
+        await tempApp.delete();
+      } catch (e) {
+        print('Error deleting temp app: $e');
       }
     }
   }
+}
+
 
   // NEW: Create admin user dengan separate Firebase app instance
   static Future<Map<String, dynamic>> createAdminUser({

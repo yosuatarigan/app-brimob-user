@@ -17,21 +17,40 @@ class CreateUserPage extends StatefulWidget {
 
 class _CreateUserPageState extends State<CreateUserPage> {
   final _formKey = GlobalKey<FormState>();
+  final PageController _pageController = PageController();
+  
+  // Basic controllers
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
   final _nrpController = TextEditingController();
   final _rankController = TextEditingController();
+  final _jabatanController = TextEditingController();
+  final _tempatLahirController = TextEditingController();
+  final _sukuController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _emergencyContactController = TextEditingController();
 
   final ImagePicker _imagePicker = ImagePicker();
   
   bool _isLoading = false;
   bool _isPasswordVisible = false;
-  bool _isAdmin = false; // Toggle for admin/regular user
+  bool _isAdmin = false;
+  int _currentStep = 0;
   
+  // Dropdowns
   UserRole _selectedRole = UserRole.makoKor;
+  String? _selectedAgama;
+  String? _selectedBloodType;
+  String? _selectedMaritalStatus;
+  String? _selectedStatusPersonel;
+  
+  // Dates
   DateTime? _dateOfBirth;
   DateTime? _militaryJoinDate;
+  DateTime? _jabatanTmt;
+  
   File? _selectedImage;
 
   @override
@@ -41,6 +60,13 @@ class _CreateUserPageState extends State<CreateUserPage> {
     _nameController.dispose();
     _nrpController.dispose();
     _rankController.dispose();
+    _jabatanController.dispose();
+    _tempatLahirController.dispose();
+    _sukuController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _emergencyContactController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -66,7 +92,7 @@ class _CreateUserPageState extends State<CreateUserPage> {
       
       // Upload photo if selected
       if (_selectedImage != null) {
-        photoUrl = await AdminFirebaseService.uploadSlideshowImage(_selectedImage!);
+        photoUrl = await AdminFirebaseService.uploadUserPhoto(_selectedImage!);
       }
 
       Map<String, dynamic> result;
@@ -91,6 +117,18 @@ class _CreateUserPageState extends State<CreateUserPage> {
           dateOfBirth: _dateOfBirth!,
           militaryJoinDate: _militaryJoinDate!,
           photoUrl: photoUrl,
+          // Additional fields
+          jabatan: _jabatanController.text.trim().isEmpty ? null : _jabatanController.text.trim(),
+          jabatanTmt: _jabatanTmt,
+          tempatLahir: _tempatLahirController.text.trim().isEmpty ? null : _tempatLahirController.text.trim(),
+          agama: _selectedAgama,
+          suku: _sukuController.text.trim().isEmpty ? null : _sukuController.text.trim(),
+          statusPersonel: _selectedStatusPersonel,
+          phoneNumber: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+          address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
+          emergencyContact: _emergencyContactController.text.trim().isEmpty ? null : _emergencyContactController.text.trim(),
+          bloodType: _selectedBloodType,
+          maritalStatus: _selectedMaritalStatus,
         );
       }
 
@@ -196,11 +234,23 @@ class _CreateUserPageState extends State<CreateUserPage> {
       _nameController.clear();
       _nrpController.clear();
       _rankController.clear();
+      _jabatanController.clear();
+      _tempatLahirController.clear();
+      _sukuController.clear();
+      _phoneController.clear();
+      _addressController.clear();
+      _emergencyContactController.clear();
       _selectedRole = UserRole.makoKor;
+      _selectedAgama = null;
+      _selectedBloodType = null;
+      _selectedMaritalStatus = null;
+      _selectedStatusPersonel = null;
       _dateOfBirth = null;
       _militaryJoinDate = null;
+      _jabatanTmt = null;
       _selectedImage = null;
       _isAdmin = false;
+      _currentStep = 0;
     });
   }
 
@@ -342,18 +392,26 @@ class _CreateUserPageState extends State<CreateUserPage> {
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
-  Future<void> _selectDateOfBirth() async {
+  Future<void> _selectDate({required String type}) async {
     final DateTime firstDate = DateTime(1960);
-    final DateTime lastDate = DateTime.now().subtract(const Duration(days: 365 * 17));
+    final DateTime lastDate = DateTime.now();
     DateTime initialDate;
     
-    if (_dateOfBirth != null) {
-      initialDate = _dateOfBirth!;
-    } else {
-      initialDate = DateTime(1990, 1, 1);
-      if (initialDate.isAfter(lastDate)) {
-        initialDate = lastDate;
-      }
+    switch(type) {
+      case 'dateOfBirth':
+        initialDate = _dateOfBirth ?? DateTime(1990, 1, 1);
+        if (initialDate.isAfter(lastDate)) {
+          initialDate = lastDate.subtract(const Duration(days: 365 * 17));
+        }
+        break;
+      case 'militaryJoinDate':
+        initialDate = _militaryJoinDate ?? DateTime.now().subtract(const Duration(days: 365 * 5));
+        break;
+      case 'jabatanTmt':
+        initialDate = _jabatanTmt ?? DateTime.now();
+        break;
+      default:
+        initialDate = DateTime.now();
     }
 
     final DateTime? picked = await showDatePicker(
@@ -361,7 +419,7 @@ class _CreateUserPageState extends State<CreateUserPage> {
       initialDate: initialDate,
       firstDate: firstDate,
       lastDate: lastDate,
-      helpText: 'Pilih Tanggal Lahir',
+      helpText: _getDatePickerTitle(type),
       confirmText: 'PILIH',
       cancelText: 'BATAL',
       builder: (context, child) {
@@ -378,60 +436,43 @@ class _CreateUserPageState extends State<CreateUserPage> {
       },
     );
 
-    if (picked != null && picked != _dateOfBirth) {
+    if (picked != null) {
       setState(() {
-        _dateOfBirth = picked;
+        switch(type) {
+          case 'dateOfBirth':
+            _dateOfBirth = picked;
+            break;
+          case 'militaryJoinDate':
+            _militaryJoinDate = picked;
+            break;
+          case 'jabatanTmt':
+            _jabatanTmt = picked;
+            break;
+        }
       });
     }
   }
 
-  Future<void> _selectMilitaryJoinDate() async {
-    final DateTime firstDate = DateTime(1980);
-    final DateTime lastDate = DateTime.now();
-    DateTime initialDate;
-    
-    if (_militaryJoinDate != null) {
-      initialDate = _militaryJoinDate!;
-    } else {
-      initialDate = DateTime.now().subtract(const Duration(days: 365 * 5));
-    }
-
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: initialDate,
-      firstDate: firstDate,
-      lastDate: lastDate,
-      helpText: 'Pilih Tanggal Masuk Militer',
-      confirmText: 'PILIH',
-      cancelText: 'BATAL',
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AdminColors.primaryBlue,
-              onPrimary: Colors.white,
-              onSurface: AdminColors.adminDark,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null && picked != _militaryJoinDate) {
-      setState(() {
-        _militaryJoinDate = picked;
-      });
+  String _getDatePickerTitle(String type) {
+    switch(type) {
+      case 'dateOfBirth':
+        return 'Pilih Tanggal Lahir';
+      case 'militaryJoinDate':
+        return 'Pilih Tanggal Masuk Militer';
+      case 'jabatanTmt':
+        return 'Pilih TMT Jabatan';
+      default:
+        return 'Pilih Tanggal';
     }
   }
 
   Widget _buildDatePicker({
     required String labelText,
     required DateTime? selectedDate,
-    required VoidCallback onTap,
+    required String type,
   }) {
     return InkWell(
-      onTap: onTap,
+      onTap: () => _selectDate(type: type),
       borderRadius: BorderRadius.circular(AdminSizes.radiusM),
       child: Container(
         width: double.infinity,
@@ -485,8 +526,613 @@ class _CreateUserPageState extends State<CreateUserPage> {
     );
   }
 
+  Widget _buildStep1() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // User Type Toggle
+        Container(
+          padding: const EdgeInsets.all(AdminSizes.paddingM),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            border: Border.all(color: AdminColors.borderColor),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                _isAdmin ? Icons.admin_panel_settings : Icons.person,
+                color: _isAdmin ? AppColors.purple : AdminColors.primaryBlue,
+              ),
+              const SizedBox(width: AdminSizes.paddingM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tipe Akun',
+                      style: GoogleFonts.roboto(
+                        fontSize: 12,
+                        color: AdminColors.darkGray,
+                      ),
+                    ),
+                    Text(
+                      _isAdmin ? 'Administrator' : 'Personel Brimob',
+                      style: GoogleFonts.roboto(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AdminColors.adminDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _isAdmin,
+                onChanged: (value) {
+                  setState(() {
+                    _isAdmin = value;
+                    if (_isAdmin) {
+                      _selectedRole = UserRole.admin;
+                    } else {
+                      _selectedRole = UserRole.makoKor;
+                    }
+                  });
+                },
+                activeColor: AppColors.purple,
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: AdminSizes.paddingL),
+
+        // Profile Photo Section
+        Center(
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: _selectProfilePhoto,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _isAdmin ? AppColors.purple : AdminColors.primaryBlue,
+                          width: 3,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (_isAdmin ? AppColors.purple : AdminColors.primaryBlue).withOpacity(0.2),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: _selectedImage != null
+                            ? Image.file(
+                                _selectedImage!,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              )
+                            : Container(
+                                width: 100,
+                                height: 100,
+                                color: AdminColors.background,
+                                child: Icon(
+                                  _isAdmin ? Icons.admin_panel_settings : Icons.person,
+                                  size: 50,
+                                  color: _isAdmin ? AppColors.purple : AdminColors.primaryBlue,
+                                ),
+                              ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: _isAdmin ? AppColors.purple : AdminColors.primaryBlue,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AdminSizes.paddingS),
+              Text(
+                'Foto Profil (Opsional)',
+                style: GoogleFonts.roboto(
+                  fontSize: 12,
+                  color: AdminColors.darkGray,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: AdminSizes.paddingL),
+
+        // Basic Information
+        Text(
+          'Informasi Dasar',
+          style: GoogleFonts.roboto(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AdminColors.adminDark,
+          ),
+        ),
+        const SizedBox(height: AdminSizes.paddingM),
+
+        TextFormField(
+          controller: _nameController,
+          decoration: InputDecoration(
+            labelText: 'Nama Lengkap *',
+            prefixIcon: const Icon(Icons.person_outline),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          validator: (value) {
+            if (value?.isEmpty ?? true) return 'Nama tidak boleh kosong';
+            if (value!.length < 3) return 'Nama minimal 3 karakter';
+            return null;
+          },
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        TextFormField(
+          controller: _emailController,
+          decoration: InputDecoration(
+            labelText: 'Email *',
+            prefixIcon: const Icon(Icons.email_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          keyboardType: TextInputType.emailAddress,
+          validator: (value) {
+            if (value?.isEmpty ?? true) return 'Email tidak boleh kosong';
+            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+              return 'Format email tidak valid';
+            }
+            return null;
+          },
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        TextFormField(
+          controller: _passwordController,
+          decoration: InputDecoration(
+            labelText: 'Password *',
+            prefixIcon: const Icon(Icons.lock_outline),
+            suffixIcon: IconButton(
+              icon: Icon(_isPasswordVisible ? Icons.visibility_off : Icons.visibility),
+              onPressed: () {
+                setState(() => _isPasswordVisible = !_isPasswordVisible);
+              },
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          obscureText: !_isPasswordVisible,
+          validator: (value) {
+            if (value?.isEmpty ?? true) return 'Password tidak boleh kosong';
+            if (value!.length < 6) return 'Password minimal 6 karakter';
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStep2() {
+    if (_isAdmin) {
+      return Container(
+        padding: const EdgeInsets.all(AdminSizes.paddingL),
+        decoration: BoxDecoration(
+          color: AppColors.purple.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.admin_panel_settings,
+              size: 64,
+              color: AppColors.purple,
+            ),
+            const SizedBox(height: AdminSizes.paddingM),
+            Text(
+              'Akun Administrator',
+              style: GoogleFonts.roboto(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.purple,
+              ),
+            ),
+            const SizedBox(height: AdminSizes.paddingS),
+            Text(
+              'Admin akan langsung aktif dengan akses penuh ke sistem.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.roboto(
+                fontSize: 14,
+                color: AdminColors.darkGray,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Data Kepangkatan & Jabatan',
+          style: GoogleFonts.roboto(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AdminColors.adminDark,
+          ),
+        ),
+        const SizedBox(height: AdminSizes.paddingM),
+
+        TextFormField(
+          controller: _nrpController,
+          decoration: InputDecoration(
+            labelText: 'NRP (Nomor Registrasi Pokok) *',
+            prefixIcon: const Icon(Icons.badge_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            if (value?.isEmpty ?? true) return 'NRP tidak boleh kosong';
+            return null;
+          },
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        DropdownButtonFormField<String>(
+          value: _rankController.text.isEmpty ? null : _rankController.text,
+          decoration: InputDecoration(
+            labelText: 'Pangkat *',
+            prefixIcon: const Icon(Icons.military_tech_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          items: MilitaryRank.ranks.map((rank) => DropdownMenuItem(
+            value: rank,
+            child: Text(rank),
+          )).toList(),
+          onChanged: (value) => setState(() => _rankController.text = value ?? ''),
+          validator: (value) {
+            if (value?.isEmpty ?? true) return 'Pilih pangkat';
+            return null;
+          },
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        TextFormField(
+          controller: _jabatanController,
+          decoration: InputDecoration(
+            labelText: 'Jabatan',
+            prefixIcon: const Icon(Icons.work_outline),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        _buildDatePicker(
+          labelText: 'TMT Jabatan',
+          selectedDate: _jabatanTmt,
+          type: 'jabatanTmt',
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        DropdownButtonFormField<UserRole>(
+          value: _selectedRole,
+          decoration: InputDecoration(
+            labelText: 'Satuan *',
+            prefixIcon: const Icon(Icons.group_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          items: UserRole.values.where((role) => role != UserRole.admin).map((role) => DropdownMenuItem(
+            value: role,
+            child: Text(role.displayName),
+          )).toList(),
+          onChanged: (value) => setState(() => _selectedRole = value!),
+          validator: (value) {
+            if (value == null) return 'Pilih satuan';
+            return null;
+          },
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        DropdownButtonFormField<String>(
+          value: _selectedStatusPersonel,
+          decoration: InputDecoration(
+            labelText: 'Status Personel',
+            prefixIcon: const Icon(Icons.person_pin_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          items: MilitaryRank.statusPersonel.map((status) => DropdownMenuItem(
+            value: status,
+            child: Text(status),
+          )).toList(),
+          onChanged: (value) => setState(() => _selectedStatusPersonel = value),
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        _buildDatePicker(
+          labelText: 'Tanggal Masuk Militer *',
+          selectedDate: _militaryJoinDate,
+          type: 'militaryJoinDate',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStep3() {
+    if (_isAdmin) return Container();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Data Personal',
+          style: GoogleFonts.roboto(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AdminColors.adminDark,
+          ),
+        ),
+        const SizedBox(height: AdminSizes.paddingM),
+
+        TextFormField(
+          controller: _tempatLahirController,
+          decoration: InputDecoration(
+            labelText: 'Tempat Lahir',
+            prefixIcon: const Icon(Icons.location_on_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        _buildDatePicker(
+          labelText: 'Tanggal Lahir *',
+          selectedDate: _dateOfBirth,
+          type: 'dateOfBirth',
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        DropdownButtonFormField<String>(
+          value: _selectedAgama,
+          decoration: InputDecoration(
+            labelText: 'Agama',
+            prefixIcon: const Icon(Icons.mosque_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          items: MilitaryRank.religions.map((religion) => DropdownMenuItem(
+            value: religion,
+            child: Text(religion),
+          )).toList(),
+          onChanged: (value) => setState(() => _selectedAgama = value),
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        TextFormField(
+          controller: _sukuController,
+          decoration: InputDecoration(
+            labelText: 'Suku',
+            prefixIcon: const Icon(Icons.people_outline),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        DropdownButtonFormField<String>(
+          value: _selectedBloodType,
+          decoration: InputDecoration(
+            labelText: 'Golongan Darah',
+            prefixIcon: const Icon(Icons.bloodtype_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          items: MilitaryRank.bloodTypes.map((type) => DropdownMenuItem(
+            value: type,
+            child: Text(type),
+          )).toList(),
+          onChanged: (value) => setState(() => _selectedBloodType = value),
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        DropdownButtonFormField<String>(
+          value: _selectedMaritalStatus,
+          decoration: InputDecoration(
+            labelText: 'Status Pernikahan',
+            prefixIcon: const Icon(Icons.family_restroom_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          items: MilitaryRank.maritalStatuses.map((status) => DropdownMenuItem(
+            value: status,
+            child: Text(status),
+          )).toList(),
+          onChanged: (value) => setState(() => _selectedMaritalStatus = value),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStep4() {
+    if (_isAdmin) return Container();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Informasi Kontak',
+          style: GoogleFonts.roboto(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AdminColors.adminDark,
+          ),
+        ),
+        const SizedBox(height: AdminSizes.paddingM),
+
+        TextFormField(
+          controller: _phoneController,
+          decoration: InputDecoration(
+            labelText: 'Nomor Telepon',
+            prefixIcon: const Icon(Icons.phone_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          keyboardType: TextInputType.phone,
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        TextFormField(
+          controller: _addressController,
+          decoration: InputDecoration(
+            labelText: 'Alamat Lengkap',
+            prefixIcon: const Icon(Icons.home_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          maxLines: 3,
+        ),
+
+        const SizedBox(height: AdminSizes.paddingM),
+
+        TextFormField(
+          controller: _emergencyContactController,
+          decoration: InputDecoration(
+            labelText: 'Kontak Darurat',
+            prefixIcon: const Icon(Icons.contact_emergency_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          keyboardType: TextInputType.phone,
+        ),
+
+        const SizedBox(height: AdminSizes.paddingL),
+
+        Container(
+          padding: const EdgeInsets.all(AdminSizes.paddingM),
+          decoration: BoxDecoration(
+            color: AdminColors.primaryBlue.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: AdminColors.primaryBlue,
+                size: 20,
+              ),
+              const SizedBox(width: AdminSizes.paddingS),
+              Expanded(
+                child: Text(
+                  'Personel dapat melengkapi data riwayat pendidikan, jabatan, dan informasi lainnya setelah akun dibuat.',
+                  style: GoogleFonts.roboto(
+                    fontSize: 12,
+                    color: AdminColors.primaryBlue,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final totalSteps = _isAdmin ? 2 : 4;
+    
     return Scaffold(
       backgroundColor: AdminColors.background,
       body: SafeArea(
@@ -527,9 +1173,9 @@ class _CreateUserPageState extends State<CreateUserPage> {
                             const SizedBox(width: AdminSizes.paddingS),
                             Expanded(
                               child: Text(
-                                'Tambah User Baru',
+                                'Tambah ${_isAdmin ? 'Admin' : 'Personel'} Baru',
                                 style: GoogleFonts.roboto(
-                                  fontSize: 24,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
@@ -539,7 +1185,7 @@ class _CreateUserPageState extends State<CreateUserPage> {
                         ),
                         const Spacer(),
                         Text(
-                          'Buat akun ${_isAdmin ? 'admin' : 'pengguna'} baru untuk aplikasi',
+                          'Buat akun ${_isAdmin ? 'administrator' : 'personel'} baru untuk aplikasi',
                           style: GoogleFonts.roboto(
                             fontSize: 14,
                             color: Colors.white.withOpacity(0.9),
@@ -552,6 +1198,39 @@ class _CreateUserPageState extends State<CreateUserPage> {
               ),
             ),
 
+            // Step indicator
+            if (!_isAdmin || _currentStep > 0) ...[
+              Container(
+                margin: const EdgeInsets.all(AdminSizes.paddingM),
+                child: Row(
+                  children: List.generate(totalSteps, (index) {
+                    return Expanded(
+                      child: Container(
+                        height: 3,
+                        margin: EdgeInsets.only(
+                          right: index < totalSteps - 1 ? 4 : 0,
+                        ),
+                        decoration: BoxDecoration(
+                          color: index <= _currentStep 
+                              ? (_isAdmin ? AppColors.purple : AdminColors.primaryBlue)
+                              : AdminColors.borderColor,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              
+              Text(
+                'Langkah ${_currentStep + 1} dari $totalSteps',
+                style: GoogleFonts.roboto(
+                  fontSize: 12,
+                  color: AdminColors.darkGray,
+                ),
+              ),
+            ],
+
             // Content
             Expanded(
               child: SingleChildScrollView(
@@ -559,395 +1238,95 @@ class _CreateUserPageState extends State<CreateUserPage> {
                 child: Form(
                   key: _formKey,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // User Type Toggle
-                      Container(
-                        padding: const EdgeInsets.all(AdminSizes.paddingM),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(AdminSizes.radiusM),
-                          border: Border.all(color: AdminColors.borderColor),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              _isAdmin ? Icons.admin_panel_settings : Icons.person,
-                              color: _isAdmin ? AppColors.purple : AdminColors.primaryBlue,
-                            ),
-                            const SizedBox(width: AdminSizes.paddingM),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Tipe Akun',
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 12,
-                                      color: AdminColors.darkGray,
-                                    ),
-                                  ),
-                                  Text(
-                                    _isAdmin ? 'Administrator' : 'Pengguna Biasa',
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: AdminColors.adminDark,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Switch(
-                              value: _isAdmin,
-                              onChanged: (value) {
-                                setState(() {
-                                  _isAdmin = value;
-                                  if (_isAdmin) {
-                                    _selectedRole = UserRole.admin;
-                                  } else {
-                                    _selectedRole = UserRole.makoKor;
-                                  }
-                                });
-                              },
-                              activeColor: AppColors.purple,
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: AdminSizes.paddingL),
-
-                      // Profile Photo Section
-                      Center(
-                        child: Column(
-                          children: [
-                            GestureDetector(
-                              onTap: _selectProfilePhoto,
-                              child: Stack(
-                                children: [
-                                  Container(
-                                    width: 120,
-                                    height: 120,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: _isAdmin ? AppColors.purple : AdminColors.primaryBlue,
-                                        width: 3,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: (_isAdmin ? AppColors.purple : AdminColors.primaryBlue).withOpacity(0.2),
-                                          blurRadius: 15,
-                                          offset: const Offset(0, 5),
-                                        ),
-                                      ],
-                                    ),
-                                    child: ClipOval(
-                                      child: _selectedImage != null
-                                          ? Image.file(
-                                              _selectedImage!,
-                                              width: 120,
-                                              height: 120,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : Container(
-                                              width: 120,
-                                              height: 120,
-                                              color: AdminColors.background,
-                                              child: Icon(
-                                                _isAdmin ? Icons.admin_panel_settings : Icons.person,
-                                                size: 60,
-                                                color: _isAdmin ? AppColors.purple : AdminColors.primaryBlue,
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: 0,
-                                    right: 0,
-                                    child: Container(
-                                      width: 36,
-                                      height: 36,
-                                      decoration: BoxDecoration(
-                                        color: _isAdmin ? AppColors.purple : AdminColors.primaryBlue,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(color: Colors.white, width: 2),
-                                      ),
-                                      child: const Icon(
-                                        Icons.camera_alt,
-                                        color: Colors.white,
-                                        size: 18,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: AdminSizes.paddingS),
-                            Text(
-                              'Foto Profil',
-                              style: GoogleFonts.roboto(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: AdminColors.adminDark,
-                              ),
-                            ),
-                            Text(
-                              'Tap untuk ${_selectedImage != null ? 'mengubah' : 'menambah'} foto',
-                              style: GoogleFonts.roboto(
-                                fontSize: 12,
-                                color: AdminColors.darkGray,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: AdminSizes.paddingL),
-
-                      // Basic Information
-                      Text(
-                        'Informasi Dasar',
-                        style: GoogleFonts.roboto(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AdminColors.adminDark,
-                        ),
-                      ),
-                      const SizedBox(height: AdminSizes.paddingM),
-
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: InputDecoration(
-                          labelText: 'Nama Lengkap',
-                          prefixIcon: const Icon(Icons.person_outline),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AdminSizes.radiusM),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) return 'Nama tidak boleh kosong';
-                          if (value!.length < 3) return 'Nama minimal 3 karakter';
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: AdminSizes.paddingM),
-
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: const Icon(Icons.email_outlined),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AdminSizes.radiusM),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) return 'Email tidak boleh kosong';
-                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
-                            return 'Format email tidak valid';
-                          }
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: AdminSizes.paddingM),
-
-                      TextFormField(
-                        controller: _passwordController,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(_isPasswordVisible ? Icons.visibility_off : Icons.visibility),
-                            onPressed: () {
-                              setState(() => _isPasswordVisible = !_isPasswordVisible);
-                            },
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AdminSizes.radiusM),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        obscureText: !_isPasswordVisible,
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) return 'Password tidak boleh kosong';
-                          if (value!.length < 6) return 'Password minimal 6 karakter';
-                          return null;
-                        },
-                      ),
-
-                      // Additional fields for non-admin users
-                      if (!_isAdmin) ...[
-                        const SizedBox(height: AdminSizes.paddingL),
-
-                        Text(
-                          'Data Militer',
-                          style: GoogleFonts.roboto(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AdminColors.adminDark,
-                          ),
-                        ),
-                        const SizedBox(height: AdminSizes.paddingM),
-
-                        TextFormField(
-                          controller: _nrpController,
-                          decoration: InputDecoration(
-                            labelText: 'NRP (Nomor Registrasi Pokok)',
-                            prefixIcon: const Icon(Icons.badge_outlined),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value?.isEmpty ?? true) return 'NRP tidak boleh kosong';
-                            if (value!.length < 8) return 'NRP minimal 8 digit';
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: AdminSizes.paddingM),
-
-                        DropdownButtonFormField<String>(
-                          value: _rankController.text.isEmpty ? null : _rankController.text,
-                          decoration: InputDecoration(
-                            labelText: 'Pangkat',
-                            prefixIcon: const Icon(Icons.military_tech_outlined),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                          ),
-                          items: MenuData.militaryRanks.map((rank) => DropdownMenuItem(
-                            value: rank,
-                            child: Text(rank),
-                          )).toList(),
-                          onChanged: (value) => setState(() => _rankController.text = value ?? ''),
-                          validator: (value) {
-                            if (value?.isEmpty ?? true) return 'Pilih pangkat';
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: AdminSizes.paddingM),
-
-                        DropdownButtonFormField<UserRole>(
-                          value: _selectedRole,
-                          decoration: InputDecoration(
-                            labelText: 'Satuan',
-                            prefixIcon: const Icon(Icons.group_outlined),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                          ),
-                          items: UserRole.values.where((role) => role != UserRole.admin).map((role) => DropdownMenuItem(
-                            value: role,
-                            child: Text(role.displayName),
-                          )).toList(),
-                          onChanged: (value) => setState(() => _selectedRole = value!),
-                          validator: (value) {
-                            if (value == null) return 'Pilih satuan';
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: AdminSizes.paddingM),
-
-                        _buildDatePicker(
-                          labelText: 'Tanggal Lahir',
-                          selectedDate: _dateOfBirth,
-                          onTap: _selectDateOfBirth,
-                        ),
-
-                        const SizedBox(height: AdminSizes.paddingM),
-
-                        _buildDatePicker(
-                          labelText: 'Tanggal Masuk Militer',
-                          selectedDate: _militaryJoinDate,
-                          onTap: _selectMilitaryJoinDate,
-                        ),
-                      ],
+                      // Step content
+                      if (_currentStep == 0) _buildStep1(),
+                      if (_currentStep == 1) _buildStep2(),
+                      if (_currentStep == 2) _buildStep3(),
+                      if (_currentStep == 3) _buildStep4(),
 
                       const SizedBox(height: AdminSizes.paddingXL),
 
-                      // Create Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _createUser,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _isAdmin ? AppColors.purple : AdminColors.primaryBlue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AdminSizes.radiusM),
-                            ),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                  ),
-                                )
-                              : Text(
-                                  _isLoading ? 'Membuat...' : 'BUAT ${_isAdmin ? 'ADMIN' : 'USER'}',
-                                  style: GoogleFonts.roboto(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    letterSpacing: 1,
+                      // Navigation buttons
+                      Row(
+                        children: [
+                          if (_currentStep > 0)
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => setState(() => _currentStep--),
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(color: _isAdmin ? AppColors.purple : AdminColors.primaryBlue),
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(AdminSizes.radiusM),
                                   ),
                                 ),
-                        ),
-                      ),
-
-                      const SizedBox(height: AdminSizes.paddingM),
-
-                      // Info Container
-                      Container(
-                        padding: const EdgeInsets.all(AdminSizes.paddingM),
-                        decoration: BoxDecoration(
-                          color: (_isAdmin ? AppColors.purple : AdminColors.primaryBlue).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(AdminSizes.radiusM),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              color: _isAdmin ? AppColors.purple : AdminColors.primaryBlue,
-                              size: 20,
-                            ),
-                            const SizedBox(width: AdminSizes.paddingS),
-                            Expanded(
-                              child: Text(
-                                _isAdmin 
-                                    ? 'Admin akan langsung aktif dan memiliki akses penuh ke sistem.'
-                                    : 'User akan langsung disetujui dan dapat menggunakan aplikasi.',
-                                style: GoogleFonts.roboto(
-                                  fontSize: 12,
-                                  color: _isAdmin ? AppColors.purple : AdminColors.primaryBlue,
+                                child: Text(
+                                  'SEBELUMNYA',
+                                  style: GoogleFonts.roboto(
+                                    fontWeight: FontWeight.bold,
+                                    color: _isAdmin ? AppColors.purple : AdminColors.primaryBlue,
+                                  ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          
+                          if (_currentStep > 0) const SizedBox(width: AdminSizes.paddingM),
+                          
+                          Expanded(
+                            child: _currentStep < totalSteps - 1
+                                ? ElevatedButton(
+                                    onPressed: () {
+                                      if (_currentStep == 0) {
+                                        if (!_formKey.currentState!.validate()) return;
+                                      }
+                                      setState(() => _currentStep++);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: _isAdmin ? AppColors.purple : AdminColors.primaryBlue,
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'SELANJUTNYA',
+                                      style: GoogleFonts.roboto(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : ElevatedButton(
+                                    onPressed: _isLoading ? null : _createUser,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: _isAdmin ? AppColors.purple : AdminColors.primaryBlue,
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(AdminSizes.radiusM),
+                                      ),
+                                    ),
+                                    child: _isLoading
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                            ),
+                                          )
+                                        : Text(
+                                            'BUAT ${_isAdmin ? 'ADMIN' : 'PERSONEL'}',
+                                            style: GoogleFonts.roboto(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                              letterSpacing: 1,
+                                            ),
+                                          ),
+                                  ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
