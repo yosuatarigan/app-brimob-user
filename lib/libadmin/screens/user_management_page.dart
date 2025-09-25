@@ -1,4 +1,5 @@
 import 'package:app_brimob_user/create_user_page.dart';
+import 'package:app_brimob_user/edit_profile_page.dart';
 import 'package:app_brimob_user/libadmin/widget/admin_witget.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -26,7 +27,7 @@ class _UserManagementPageState extends State<UserManagementPage>
   String _selectedRole = 'all';
   String _selectedStatus = 'all';
   String _searchQuery = '';
-  
+
   // Track loading states for individual users
   Set<String> _loadingUsers = <String>{};
 
@@ -39,7 +40,7 @@ class _UserManagementPageState extends State<UserManagementPage>
 
   Future<void> _loadUsers() async {
     if (!mounted) return;
-    
+
     try {
       setState(() {
         _isLoading = true;
@@ -47,7 +48,7 @@ class _UserManagementPageState extends State<UserManagementPage>
       });
 
       final users = await AdminFirebaseService.getAllUsersWithApproval();
-      
+
       if (mounted) {
         setState(() {
           _allUsers = users;
@@ -68,17 +69,29 @@ class _UserManagementPageState extends State<UserManagementPage>
 
   void _filterUsers() {
     setState(() {
-      _filteredUsers = _allUsers.where((user) {
-        final matchesRole = _selectedRole == 'all' || user.role.name == _selectedRole;
-        final matchesStatus = _selectedStatus == 'all' || user.status.name == _selectedStatus;
-        final matchesSearch = user.fullName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            user.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            user.nrp.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            (user.jabatan.isNotEmpty && user.jabatan.toLowerCase().contains(_searchQuery.toLowerCase())) ||
-            (user.rank.isNotEmpty && user.rank.toLowerCase().contains(_searchQuery.toLowerCase()));
+      _filteredUsers =
+          _allUsers.where((user) {
+            final matchesRole =
+                _selectedRole == 'all' || user.role.name == _selectedRole;
+            final matchesStatus =
+                _selectedStatus == 'all' || user.status.name == _selectedStatus;
+            final matchesSearch =
+                user.fullName.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ) ||
+                user.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                user.nrp.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                (user.jabatan.isNotEmpty &&
+                    user.jabatan.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    )) ||
+                (user.rank.isNotEmpty &&
+                    user.rank.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ));
 
-        return matchesRole && matchesStatus && matchesSearch;
-      }).toList();
+            return matchesRole && matchesStatus && matchesSearch;
+          }).toList();
     });
   }
 
@@ -86,9 +99,7 @@ class _UserManagementPageState extends State<UserManagementPage>
   void _navigateToCreateUser() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const CreateUserPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const CreateUserPage()),
     ).then((_) {
       // Reload users after returning from create page
       _loadUsers();
@@ -126,7 +137,8 @@ class _UserManagementPageState extends State<UserManagementPage>
   }
 
   Widget _buildHeader() {
-    final pendingCount = _allUsers.where((u) => u.status == UserStatus.pending).length;
+    final pendingCount =
+        _allUsers.where((u) => u.status == UserStatus.pending).length;
 
     return Container(
       width: double.infinity,
@@ -142,16 +154,18 @@ class _UserManagementPageState extends State<UserManagementPage>
             width: double.infinity,
             height: double.infinity,
             fit: BoxFit.cover,
-            placeholder: (context, url) => Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: AdminColors.adminGradient),
-              ),
-            ),
-            errorWidget: (context, url, error) => Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: AdminColors.adminGradient),
-              ),
-            ),
+            placeholder:
+                (context, url) => Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: AdminColors.adminGradient),
+                  ),
+                ),
+            errorWidget:
+                (context, url, error) => Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: AdminColors.adminGradient),
+                  ),
+                ),
           ),
 
           // Gradient overlay
@@ -307,7 +321,8 @@ class _UserManagementPageState extends State<UserManagementPage>
                       ),
                       _buildStatusChip('all', 'Semua'),
                       ...UserStatus.values.map(
-                        (status) => _buildStatusChip(status.name, status.displayName),
+                        (status) =>
+                            _buildStatusChip(status.name, status.displayName),
                       ),
                     ],
                   ),
@@ -377,9 +392,12 @@ class _UserManagementPageState extends State<UserManagementPage>
   }
 
   Widget _buildTabBar() {
-    final pendingCount = _allUsers.where((u) => u.status == UserStatus.pending).length;
-    final approvedCount = _allUsers.where((u) => u.status == UserStatus.approved).length;
-    final rejectedCount = _allUsers.where((u) => u.status == UserStatus.rejected).length;
+    final pendingCount =
+        _allUsers.where((u) => u.status == UserStatus.pending).length;
+    final approvedCount =
+        _allUsers.where((u) => u.status == UserStatus.approved).length;
+    final rejectedCount =
+        _allUsers.where((u) => u.status == UserStatus.rejected).length;
 
     return Container(
       color: Colors.white,
@@ -457,9 +475,12 @@ class _UserManagementPageState extends State<UserManagementPage>
 
     // Siapkan data untuk setiap tab
     final allUsers = _allUsers;
-    final pendingUsers = _allUsers.where((u) => u.status == UserStatus.pending).toList();
-    final approvedUsers = _allUsers.where((u) => u.status == UserStatus.approved).toList();
-    final rejectedUsers = _allUsers.where((u) => u.status == UserStatus.rejected).toList();
+    final pendingUsers =
+        _allUsers.where((u) => u.status == UserStatus.pending).toList();
+    final approvedUsers =
+        _allUsers.where((u) => u.status == UserStatus.approved).toList();
+    final rejectedUsers =
+        _allUsers.where((u) => u.status == UserStatus.rejected).toList();
     final recentUsers = List.from(_allUsers)
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
@@ -518,13 +539,14 @@ class _UserManagementPageState extends State<UserManagementPage>
                       user.photoUrl != null && user.photoUrl!.isNotEmpty
                           ? CachedNetworkImageProvider(user.photoUrl!)
                           : null,
-                  child: user.photoUrl == null || user.photoUrl!.isEmpty
-                      ? Icon(
-                          Icons.person,
-                          size: 35,
-                          color: _getRoleColor(user.role),
-                        )
-                      : null,
+                  child:
+                      user.photoUrl == null || user.photoUrl!.isEmpty
+                          ? Icon(
+                            Icons.person,
+                            size: 35,
+                            color: _getRoleColor(user.role),
+                          )
+                          : null,
                 ),
 
                 const SizedBox(width: AdminSizes.paddingM),
@@ -543,20 +565,23 @@ class _UserManagementPageState extends State<UserManagementPage>
                         ),
                       ),
                       const SizedBox(height: AdminSizes.paddingXS),
-                      
+
                       // Pangkat & Jabatan
                       if (user.rank.isNotEmpty || user.jabatan.isNotEmpty)
                         Text(
-                          [user.rank, user.jabatan].where((s) => s.isNotEmpty).join(' • '),
+                          [
+                            user.rank,
+                            user.jabatan,
+                          ].where((s) => s.isNotEmpty).join(' • '),
                           style: GoogleFonts.roboto(
                             fontSize: 14,
                             color: AdminColors.darkGray,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                      
+
                       const SizedBox(height: AdminSizes.paddingXS),
-                      
+
                       Text(
                         user.email,
                         style: GoogleFonts.roboto(
@@ -564,9 +589,9 @@ class _UserManagementPageState extends State<UserManagementPage>
                           color: AdminColors.darkGray,
                         ),
                       ),
-                      
+
                       const SizedBox(height: AdminSizes.paddingXS),
-                      
+
                       Text(
                         'NRP: ${user.nrp}',
                         style: GoogleFonts.roboto(
@@ -575,9 +600,9 @@ class _UserManagementPageState extends State<UserManagementPage>
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      
+
                       const SizedBox(height: AdminSizes.paddingS),
-                      
+
                       Row(
                         children: [
                           _buildStatusChipWidget(
@@ -600,93 +625,94 @@ class _UserManagementPageState extends State<UserManagementPage>
                 // Actions menu
                 PopupMenuButton<String>(
                   onSelected: (value) => _handleUserAction(value, user),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'view',
-                      child: Row(
-                        children: [
-                          Icon(Icons.visibility, size: 18),
-                          SizedBox(width: 8),
-                          Text('Lihat Detail'),
-                        ],
-                      ),
-                    ),
-                    if (user.status == UserStatus.pending) ...[
-                      const PopupMenuItem(
-                        value: 'approve',
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.check_circle,
-                              size: 18,
-                              color: Colors.green,
+                  itemBuilder:
+                      (context) => [
+                        const PopupMenuItem(
+                          value: 'view',
+                          child: Row(
+                            children: [
+                              Icon(Icons.visibility, size: 18),
+                              SizedBox(width: 8),
+                              Text('Lihat Detail'),
+                            ],
+                          ),
+                        ),
+                        if (user.status == UserStatus.pending) ...[
+                          const PopupMenuItem(
+                            value: 'approve',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  size: 18,
+                                  color: Colors.green,
+                                ),
+                                SizedBox(width: 8),
+                                Text('Setujui'),
+                              ],
                             ),
-                            SizedBox(width: 8),
-                            Text('Setujui'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'reject',
-                        child: Row(
-                          children: [
-                            Icon(Icons.cancel, size: 18, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Tolak'),
-                          ],
-                        ),
-                      ),
-                    ],
-                    if (user.status == UserStatus.rejected) ...[
-                      const PopupMenuItem(
-                        value: 'approve',
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.check_circle,
-                              size: 18,
-                              color: Colors.green,
+                          ),
+                          const PopupMenuItem(
+                            value: 'reject',
+                            child: Row(
+                              children: [
+                                Icon(Icons.cancel, size: 18, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text('Tolak'),
+                              ],
                             ),
-                            SizedBox(width: 8),
-                            Text('Setujui'),
-                          ],
-                        ),
-                      ),
-                    ],
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit, size: 18),
-                          SizedBox(width: 8),
-                          Text('Edit'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'reset_password',
-                      child: Row(
-                        children: [
-                          Icon(Icons.lock_reset, size: 18),
-                          SizedBox(width: 8),
-                          Text('Reset Password'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, size: 18, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text(
-                            'Hapus',
-                            style: TextStyle(color: Colors.red),
                           ),
                         ],
-                      ),
-                    ),
-                  ],
+                        if (user.status == UserStatus.rejected) ...[
+                          const PopupMenuItem(
+                            value: 'approve',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  size: 18,
+                                  color: Colors.green,
+                                ),
+                                SizedBox(width: 8),
+                                Text('Setujui'),
+                              ],
+                            ),
+                          ),
+                        ],
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit, size: 18),
+                              SizedBox(width: 8),
+                              Text('Edit'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'reset_password',
+                          child: Row(
+                            children: [
+                              Icon(Icons.lock_reset, size: 18),
+                              SizedBox(width: 8),
+                              Text('Reset Password'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, size: 18, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text(
+                                'Hapus',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                 ),
               ],
             ),
@@ -706,13 +732,15 @@ class _UserManagementPageState extends State<UserManagementPage>
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildUserStat(
-                        'Umur', 
-                        user.dateOfBirth != null ? '${user.age} thn' : '-', 
-                        Icons.cake
+                        'Umur',
+                        user.dateOfBirth != null ? '${user.age} thn' : '-',
+                        Icons.cake,
                       ),
                       _buildUserStat(
                         'Masa Dinas',
-                        user.militaryJoinDate != null ? '${user.yearsOfService} thn' : '-',
+                        user.militaryJoinDate != null
+                            ? '${user.yearsOfService} thn'
+                            : '-',
                         Icons.military_tech,
                       ),
                       _buildUserStat(
@@ -722,30 +750,43 @@ class _UserManagementPageState extends State<UserManagementPage>
                       ),
                     ],
                   ),
-                  
+
                   // Additional info row
-                  if (user.tempatLahir != null || user.agama != null || user.statusPersonel != null)
-                    ...[
-                      const SizedBox(height: AdminSizes.paddingS),
-                      const Divider(height: 1),
-                      const SizedBox(height: AdminSizes.paddingS),
-                      Row(
-                        children: [
-                          if (user.tempatLahir != null)
-                            Expanded(
-                              child: _buildInfoItem('Tempat Lahir', user.tempatLahir!, Icons.location_on),
+                  if (user.tempatLahir != null ||
+                      user.agama != null ||
+                      user.statusPersonel != null) ...[
+                    const SizedBox(height: AdminSizes.paddingS),
+                    const Divider(height: 1),
+                    const SizedBox(height: AdminSizes.paddingS),
+                    Row(
+                      children: [
+                        if (user.tempatLahir != null)
+                          Expanded(
+                            child: _buildInfoItem(
+                              'Tempat Lahir',
+                              user.tempatLahir!,
+                              Icons.location_on,
                             ),
-                          if (user.agama != null)
-                            Expanded(
-                              child: _buildInfoItem('Agama', user.agama!, Icons.mosque),
+                          ),
+                        if (user.agama != null)
+                          Expanded(
+                            child: _buildInfoItem(
+                              'Agama',
+                              user.agama!,
+                              Icons.mosque,
                             ),
-                          if (user.statusPersonel != null)
-                            Expanded(
-                              child: _buildInfoItem('Status', user.statusPersonel!, Icons.person_pin),
+                          ),
+                        if (user.statusPersonel != null)
+                          Expanded(
+                            child: _buildInfoItem(
+                              'Status',
+                              user.statusPersonel!,
+                              Icons.person_pin,
                             ),
-                        ],
-                      ),
-                    ],
+                          ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -860,10 +901,7 @@ class _UserManagementPageState extends State<UserManagementPage>
         const SizedBox(height: 2),
         Text(
           label,
-          style: GoogleFonts.roboto(
-            fontSize: 9,
-            color: AdminColors.lightGray,
-          ),
+          style: GoogleFonts.roboto(fontSize: 9, color: AdminColors.lightGray),
         ),
         Text(
           value,
@@ -913,29 +951,27 @@ class _UserManagementPageState extends State<UserManagementPage>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext loadingContext) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: AdminSizes.paddingM),
-            Text(
-              'Menyetujui personel...',
-              style: GoogleFonts.roboto(),
+      builder:
+          (BuildContext loadingContext) => AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: AdminSizes.paddingM),
+                Text('Menyetujui personel...', style: GoogleFonts.roboto()),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
 
     try {
       await AdminFirebaseService.approveUser(user.id);
-      
+
       // Close loading dialog
       if (mounted) {
         Navigator.pop(context);
       }
-      
+
       // Refresh and show success
       if (mounted) {
         _loadUsers();
@@ -952,7 +988,7 @@ class _UserManagementPageState extends State<UserManagementPage>
       if (mounted) {
         Navigator.pop(context);
       }
-      
+
       // Show error
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -977,29 +1013,27 @@ class _UserManagementPageState extends State<UserManagementPage>
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (BuildContext loadingContext) => AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: AdminSizes.paddingM),
-              Text(
-                'Menolak personel...',
-                style: GoogleFonts.roboto(),
+        builder:
+            (BuildContext loadingContext) => AlertDialog(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: AdminSizes.paddingM),
+                  Text('Menolak personel...', style: GoogleFonts.roboto()),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
       );
 
       try {
         await AdminFirebaseService.rejectUser(user.id, result);
-        
+
         // Close loading dialog
         if (mounted) {
           Navigator.pop(context);
         }
-        
+
         // Refresh and show success
         if (mounted) {
           _loadUsers();
@@ -1016,7 +1050,7 @@ class _UserManagementPageState extends State<UserManagementPage>
         if (mounted) {
           Navigator.pop(context);
         }
-        
+
         // Show error
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1033,11 +1067,10 @@ class _UserManagementPageState extends State<UserManagementPage>
 
   void _showEditUserDialog(UserModel user) {
     // For now, navigate to create page with edit mode (could be enhanced later)
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Fitur edit akan ditambahkan di versi selanjutnya'),
-        backgroundColor: AppColors.info,
-        behavior: SnackBarBehavior.floating,
+    Navigator.push<UserModel>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfilePage(currentUser: user),
       ),
     );
   }
@@ -1045,128 +1078,131 @@ class _UserManagementPageState extends State<UserManagementPage>
   void _showResetPasswordDialog(UserModel user) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Reset Password',
-          style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          'Kirim email reset password ke ${user.email}?',
-          style: GoogleFonts.roboto(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Batal',
-              style: GoogleFonts.roboto(color: AdminColors.darkGray),
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              'Reset Password',
+              style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context); // Close confirmation dialog
-              
-              // Show loading dialog
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (BuildContext loadingContext) => AlertDialog(
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: AdminSizes.paddingM),
-                      Text(
-                        'Mengirim email reset...',
-                        style: GoogleFonts.roboto(),
-                      ),
-                    ],
-                  ),
+            content: Text(
+              'Kirim email reset password ke ${user.email}?',
+              style: GoogleFonts.roboto(),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Batal',
+                  style: GoogleFonts.roboto(color: AdminColors.darkGray),
                 ),
-              );
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(context); // Close confirmation dialog
 
-              try {
-                await AdminFirebaseService.resetUserPassword(user.email);
-                
-                // Close loading dialog
-                if (mounted) {
-                  Navigator.pop(context);
-                }
-                
-                // Show success
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Email reset password telah dikirim!'),
-                      backgroundColor: AppColors.green,
-                      behavior: SnackBarBehavior.floating,
-                    ),
+                  // Show loading dialog
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder:
+                        (BuildContext loadingContext) => AlertDialog(
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const CircularProgressIndicator(),
+                              const SizedBox(height: AdminSizes.paddingM),
+                              Text(
+                                'Mengirim email reset...',
+                                style: GoogleFonts.roboto(),
+                              ),
+                            ],
+                          ),
+                        ),
                   );
-                }
-              } catch (e) {
-                // Close loading dialog
-                if (mounted) {
-                  Navigator.pop(context);
-                }
-                
-                // Show error
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: ${e.toString()}'),
-                      backgroundColor: AppColors.red,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AdminColors.primaryBlue,
-            ),
-            child: Text(
-              'Kirim Email',
-              style: GoogleFonts.roboto(color: Colors.white),
-            ),
+
+                  try {
+                    await AdminFirebaseService.resetUserPassword(user.email);
+
+                    // Close loading dialog
+                    if (mounted) {
+                      Navigator.pop(context);
+                    }
+
+                    // Show success
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Email reset password telah dikirim!'),
+                          backgroundColor: AppColors.green,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    // Close loading dialog
+                    if (mounted) {
+                      Navigator.pop(context);
+                    }
+
+                    // Show error
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error: ${e.toString()}'),
+                          backgroundColor: AppColors.red,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AdminColors.primaryBlue,
+                ),
+                child: Text(
+                  'Kirim Email',
+                  style: GoogleFonts.roboto(color: Colors.white),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   void _showDeleteConfirmation(UserModel user) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Hapus Personel',
-          style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          'Yakin ingin menghapus ${user.fullName}? Tindakan ini tidak dapat dibatalkan.',
-          style: GoogleFonts.roboto(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Batal',
-              style: GoogleFonts.roboto(color: AdminColors.darkGray),
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              'Hapus Personel',
+              style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteUserSimple(user);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
-            child: Text(
-              'Hapus',
-              style: GoogleFonts.roboto(color: Colors.white),
+            content: Text(
+              'Yakin ingin menghapus ${user.fullName}? Tindakan ini tidak dapat dibatalkan.',
+              style: GoogleFonts.roboto(),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Batal',
+                  style: GoogleFonts.roboto(color: AdminColors.darkGray),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _deleteUserSimple(user);
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
+                child: Text(
+                  'Hapus',
+                  style: GoogleFonts.roboto(color: Colors.white),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -1178,17 +1214,17 @@ class _UserManagementPageState extends State<UserManagementPage>
 
     try {
       final result = await AdminFirebaseService.deleteUserCompletely(user.id);
-      
+
       if (mounted) {
         // Clear loading state
         setState(() {
           _loadingUsers.remove(user.id);
         });
-        
+
         if (result['success'] == true) {
           // Refresh user list
           await _loadUsers();
-          
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(result['message'] ?? 'Personel berhasil dihapus'),
@@ -1212,7 +1248,7 @@ class _UserManagementPageState extends State<UserManagementPage>
         setState(() {
           _loadingUsers.remove(user.id);
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
@@ -1335,9 +1371,10 @@ class _RejectUserDialogState extends State<RejectUserDialog> {
           RadioListTile<String>(
             title: Text('Lainnya', style: GoogleFonts.roboto(fontSize: 14)),
             value: 'custom',
-            groupValue: _reasonController.text.isEmpty
-                ? null
-                : _predefinedReasons.contains(_reasonController.text)
+            groupValue:
+                _reasonController.text.isEmpty
+                    ? null
+                    : _predefinedReasons.contains(_reasonController.text)
                     ? null
                     : 'custom',
             onChanged: (value) {
@@ -1370,9 +1407,10 @@ class _RejectUserDialogState extends State<RejectUserDialog> {
           ),
         ),
         ElevatedButton(
-          onPressed: _reasonController.text.isNotEmpty
-              ? () => Navigator.pop(context, _reasonController.text)
-              : null,
+          onPressed:
+              _reasonController.text.isNotEmpty
+                  ? () => Navigator.pop(context, _reasonController.text)
+                  : null,
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
           child: Text('Tolak', style: GoogleFonts.roboto(color: Colors.white)),
         ),
@@ -1390,8 +1428,18 @@ class UserDetailDialog extends StatelessWidget {
   String _formatDate(DateTime? date) {
     if (date == null) return '-';
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -1401,7 +1449,9 @@ class UserDetailDialog extends StatelessWidget {
     return Dialog(
       child: Container(
         width: 600,
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+        ),
         child: Column(
           children: [
             // Header
@@ -1409,7 +1459,9 @@ class UserDetailDialog extends StatelessWidget {
               padding: const EdgeInsets.all(AdminSizes.paddingL),
               decoration: BoxDecoration(
                 color: AdminColors.primaryBlue,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(AdminSizes.radiusM)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(AdminSizes.radiusM),
+                ),
               ),
               child: Row(
                 children: [
@@ -1420,9 +1472,14 @@ class UserDetailDialog extends StatelessWidget {
                         user.photoUrl != null && user.photoUrl!.isNotEmpty
                             ? CachedNetworkImageProvider(user.photoUrl!)
                             : null,
-                    child: user.photoUrl == null || user.photoUrl!.isEmpty
-                        ? const Icon(Icons.person, size: 30, color: AdminColors.primaryBlue)
-                        : null,
+                    child:
+                        user.photoUrl == null || user.photoUrl!.isEmpty
+                            ? const Icon(
+                              Icons.person,
+                              size: 30,
+                              color: AdminColors.primaryBlue,
+                            )
+                            : null,
                   ),
                   const SizedBox(width: AdminSizes.paddingM),
                   Expanded(
@@ -1439,7 +1496,10 @@ class UserDetailDialog extends StatelessWidget {
                         ),
                         if (user.rank.isNotEmpty || user.jabatan.isNotEmpty)
                           Text(
-                            [user.rank, user.jabatan].where((s) => s.isNotEmpty).join(' • '),
+                            [
+                              user.rank,
+                              user.jabatan,
+                            ].where((s) => s.isNotEmpty).join(' • '),
                             style: GoogleFonts.roboto(
                               fontSize: 14,
                               color: Colors.white.withOpacity(0.9),
@@ -1462,7 +1522,7 @@ class UserDetailDialog extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Content
             Expanded(
               child: SingleChildScrollView(
@@ -1475,19 +1535,30 @@ class UserDetailDialog extends StatelessWidget {
                       _buildDetailRow('Email', user.email),
                       _buildDetailRow('NRP', user.nrp),
                       if (user.statusPersonel != null)
-                        _buildDetailRow('Status Personel', user.statusPersonel!),
+                        _buildDetailRow(
+                          'Status Personel',
+                          user.statusPersonel!,
+                        ),
                       _buildDetailRow('Status Akun', user.status.displayName),
                       if (user.rejectionReason != null)
-                        _buildDetailRow('Alasan Penolakan', user.rejectionReason!),
+                        _buildDetailRow(
+                          'Alasan Penolakan',
+                          user.rejectionReason!,
+                        ),
                     ]),
 
                     const SizedBox(height: AdminSizes.paddingL),
 
                     // Personal Information
-                    if (user.tempatLahir != null || user.dateOfBirth != null || user.agama != null)
+                    if (user.tempatLahir != null ||
+                        user.dateOfBirth != null ||
+                        user.agama != null)
                       _buildSection('Data Personal', [
                         if (user.tempatTanggalLahir.isNotEmpty)
-                          _buildDetailRow('Tempat, Tanggal Lahir', user.tempatTanggalLahir),
+                          _buildDetailRow(
+                            'Tempat, Tanggal Lahir',
+                            user.tempatTanggalLahir,
+                          ),
                         if (user.dateOfBirth != null)
                           _buildDetailRow('Umur', '${user.age} tahun'),
                         if (user.agama != null)
@@ -1497,20 +1568,33 @@ class UserDetailDialog extends StatelessWidget {
                         if (user.bloodType != null)
                           _buildDetailRow('Golongan Darah', user.bloodType!),
                         if (user.maritalStatus != null)
-                          _buildDetailRow('Status Pernikahan', user.maritalStatus!),
+                          _buildDetailRow(
+                            'Status Pernikahan',
+                            user.maritalStatus!,
+                          ),
                       ]),
 
                     const SizedBox(height: AdminSizes.paddingL),
 
                     // Military Service Information
-                    if (user.militaryJoinDate != null || user.jabatanTmt != null)
+                    if (user.militaryJoinDate != null ||
+                        user.jabatanTmt != null)
                       _buildSection('Data Dinas', [
                         if (user.militaryJoinDate != null) ...[
-                          _buildDetailRow('Tanggal Masuk Militer', _formatDate(user.militaryJoinDate)),
-                          _buildDetailRow('Masa Dinas', '${user.yearsOfService} tahun'),
+                          _buildDetailRow(
+                            'Tanggal Masuk Militer',
+                            _formatDate(user.militaryJoinDate),
+                          ),
+                          _buildDetailRow(
+                            'Masa Dinas',
+                            '${user.yearsOfService} tahun',
+                          ),
                         ],
                         if (user.jabatanTmt != null) ...[
-                          _buildDetailRow('TMT Jabatan', user.formattedJabatanTmt),
+                          _buildDetailRow(
+                            'TMT Jabatan',
+                            user.formattedJabatanTmt,
+                          ),
                           _buildDetailRow('Lama Jabatan', user.lamaJabatan),
                         ],
                       ]),
@@ -1518,62 +1602,114 @@ class UserDetailDialog extends StatelessWidget {
                     const SizedBox(height: AdminSizes.paddingL),
 
                     // Contact Information
-                    if (user.phoneNumber != null || user.address != null || user.emergencyContact != null)
+                    if (user.phoneNumber != null ||
+                        user.address != null ||
+                        user.emergencyContact != null)
                       _buildSection('Informasi Kontak', [
                         if (user.phoneNumber != null)
                           _buildDetailRow('Telepon', user.phoneNumber!),
                         if (user.address != null)
                           _buildDetailRow('Alamat', user.address!),
                         if (user.emergencyContact != null)
-                          _buildDetailRow('Kontak Darurat', user.emergencyContact!),
+                          _buildDetailRow(
+                            'Kontak Darurat',
+                            user.emergencyContact!,
+                          ),
                       ]),
 
                     const SizedBox(height: AdminSizes.paddingL),
 
                     // Complex Data Sections
                     if (user.pendidikanKepolisian.isNotEmpty)
-                      _buildComplexSection('Pendidikan Kepolisian', 
-                        user.pendidikanKepolisian.map((e) => '${e.tingkat} (${e.tahun})').toList()),
+                      _buildComplexSection(
+                        'Pendidikan Kepolisian',
+                        user.pendidikanKepolisian
+                            .map((e) => '${e.tingkat} (${e.tahun})')
+                            .toList(),
+                      ),
 
                     if (user.pendidikanUmum.isNotEmpty)
-                      _buildComplexSection('Pendidikan Umum', 
-                        user.pendidikanUmum.map((e) => '${e.tingkat} - ${e.namaInstitusi} (${e.tahun})').toList()),
+                      _buildComplexSection(
+                        'Pendidikan Umum',
+                        user.pendidikanUmum
+                            .map(
+                              (e) =>
+                                  '${e.tingkat} - ${e.namaInstitusi} (${e.tahun})',
+                            )
+                            .toList(),
+                      ),
 
                     if (user.riwayatPangkat.isNotEmpty)
-                      _buildComplexSection('Riwayat Pangkat', 
-                        user.riwayatPangkat.map((e) => '${e.pangkat} - ${_formatDate(e.tmt)}').toList()),
+                      _buildComplexSection(
+                        'Riwayat Pangkat',
+                        user.riwayatPangkat
+                            .map((e) => '${e.pangkat} - ${_formatDate(e.tmt)}')
+                            .toList(),
+                      ),
 
                     if (user.riwayatJabatan.isNotEmpty)
-                      _buildComplexSection('Riwayat Jabatan', 
-                        user.riwayatJabatan.map((e) => '${e.jabatan} - ${_formatDate(e.tmt)}').toList()),
+                      _buildComplexSection(
+                        'Riwayat Jabatan',
+                        user.riwayatJabatan
+                            .map((e) => '${e.jabatan} - ${_formatDate(e.tmt)}')
+                            .toList(),
+                      ),
 
                     if (user.pendidikanPelatihan.isNotEmpty)
-                      _buildComplexSection('Pendidikan & Pelatihan', 
-                        user.pendidikanPelatihan.map((e) => '${e.dikbang} - ${_formatDate(e.tmt)}').toList()),
+                      _buildComplexSection(
+                        'Pendidikan & Pelatihan',
+                        user.pendidikanPelatihan
+                            .map((e) => '${e.dikbang} - ${_formatDate(e.tmt)}')
+                            .toList(),
+                      ),
 
                     if (user.tandaKehormatan.isNotEmpty)
-                      _buildComplexSection('Tanda Kehormatan', 
-                        user.tandaKehormatan.map((e) => '${e.tandaKehormatan} - ${_formatDate(e.tmt)}').toList()),
+                      _buildComplexSection(
+                        'Tanda Kehormatan',
+                        user.tandaKehormatan
+                            .map(
+                              (e) =>
+                                  '${e.tandaKehormatan} - ${_formatDate(e.tmt)}',
+                            )
+                            .toList(),
+                      ),
 
                     if (user.kemampuanBahasa.isNotEmpty)
-                      _buildComplexSection('Kemampuan Bahasa', 
-                        user.kemampuanBahasa.map((e) => '${e.bahasa} (${e.status})').toList()),
+                      _buildComplexSection(
+                        'Kemampuan Bahasa',
+                        user.kemampuanBahasa
+                            .map((e) => '${e.bahasa} (${e.status})')
+                            .toList(),
+                      ),
 
                     if (user.penugasanLuarStruktur.isNotEmpty)
-                      _buildComplexSection('Penugasan Luar Struktur', 
-                        user.penugasanLuarStruktur.map((e) => '${e.penugasan} - ${e.lokasi}').toList()),
+                      _buildComplexSection(
+                        'Penugasan Luar Struktur',
+                        user.penugasanLuarStruktur
+                            .map((e) => '${e.penugasan} - ${e.lokasi}')
+                            .toList(),
+                      ),
 
                     const SizedBox(height: AdminSizes.paddingL),
 
                     // System Information
                     _buildSection('Informasi Sistem', [
-                      _buildDetailRow('Tanggal Daftar', _formatDate(user.createdAt)),
+                      _buildDetailRow(
+                        'Tanggal Daftar',
+                        _formatDate(user.createdAt),
+                      ),
                       if (user.updatedAt != null)
-                        _buildDetailRow('Terakhir Diupdate', _formatDate(user.updatedAt)),
+                        _buildDetailRow(
+                          'Terakhir Diupdate',
+                          _formatDate(user.updatedAt),
+                        ),
                       if (user.approvedBy != null)
                         _buildDetailRow('Disetujui Oleh', user.approvedBy!),
                       if (user.approvedAt != null)
-                        _buildDetailRow('Tanggal Persetujuan', _formatDate(user.approvedAt)),
+                        _buildDetailRow(
+                          'Tanggal Persetujuan',
+                          _formatDate(user.approvedAt),
+                        ),
                     ]),
                   ],
                 ),
@@ -1648,31 +1784,36 @@ class UserDetailDialog extends StatelessWidget {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: items.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AdminColors.primaryBlue,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      item,
-                      style: GoogleFonts.roboto(
-                        fontSize: 13,
-                        color: AdminColors.darkGray,
+            children:
+                items
+                    .map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 4,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: AdminColors.primaryBlue,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                item,
+                                style: GoogleFonts.roboto(
+                                  fontSize: 13,
+                                  color: AdminColors.darkGray,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            )).toList(),
+                    )
+                    .toList(),
           ),
         ),
         const SizedBox(height: AdminSizes.paddingL),
