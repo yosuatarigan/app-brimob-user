@@ -23,6 +23,10 @@ class PendingApprovalPage extends StatelessWidget {
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
+  String _formatDateShort(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,20 +68,39 @@ class PendingApprovalPage extends StatelessWidget {
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(20),
-                        child: CachedNetworkImage(
-                          imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Emblem_of_the_Indonesian_National_Police.svg/200px-Emblem_of_the_Indonesian_National_Police.svg.png',
-                          fit: BoxFit.contain,
-                          placeholder: (context, url) => const Icon(
-                            Icons.security,
-                            size: 80,
-                            color: AppColors.primaryBlue,
-                          ),
-                          errorWidget: (context, url, error) => const Icon(
-                            Icons.security,
-                            size: 80,
-                            color: AppColors.primaryBlue,
-                          ),
-                        ),
+                        child: user.photoUrl != null
+                            ? ClipOval(
+                                child: CachedNetworkImage(
+                                  imageUrl: user.photoUrl!,
+                                  fit: BoxFit.cover,
+                                  width: 100,
+                                  height: 100,
+                                  placeholder: (context, url) => const Icon(
+                                    Icons.person,
+                                    size: 60,
+                                    color: AppColors.primaryBlue,
+                                  ),
+                                  errorWidget: (context, url, error) => const Icon(
+                                    Icons.person,
+                                    size: 60,
+                                    color: AppColors.primaryBlue,
+                                  ),
+                                ),
+                              )
+                            : CachedNetworkImage(
+                                imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Emblem_of_the_Indonesian_National_Police.svg/200px-Emblem_of_the_Indonesian_National_Police.svg.png',
+                                fit: BoxFit.contain,
+                                placeholder: (context, url) => const Icon(
+                                  Icons.security,
+                                  size: 80,
+                                  color: AppColors.primaryBlue,
+                                ),
+                                errorWidget: (context, url, error) => const Icon(
+                                  Icons.security,
+                                  size: 80,
+                                  color: AppColors.primaryBlue,
+                                ),
+                              ),
                       ),
                     ),
                     Positioned(
@@ -165,11 +188,30 @@ class PendingApprovalPage extends StatelessWidget {
                               color: AppColors.primaryBlue.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
-                              Icons.person,
-                              color: AppColors.primaryBlue,
-                              size: 30,
-                            ),
+                            child: user.photoUrl != null
+                                ? ClipOval(
+                                    child: CachedNetworkImage(
+                                      imageUrl: user.photoUrl!,
+                                      fit: BoxFit.cover,
+                                      width: 60,
+                                      height: 60,
+                                      placeholder: (context, url) => const Icon(
+                                        Icons.person,
+                                        color: AppColors.primaryBlue,
+                                        size: 30,
+                                      ),
+                                      errorWidget: (context, url, error) => const Icon(
+                                        Icons.person,
+                                        color: AppColors.primaryBlue,
+                                        size: 30,
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.person,
+                                    color: AppColors.primaryBlue,
+                                    size: 30,
+                                  ),
                           ),
                           const SizedBox(width: AppSizes.paddingM),
                           Expanded(
@@ -184,12 +226,21 @@ class PendingApprovalPage extends StatelessWidget {
                                     color: AppColors.darkNavy,
                                   ),
                                 ),
+                                if (user.rank.isNotEmpty)
+                                  Text(
+                                    '${user.rank}${user.jabatan.isNotEmpty ? ' • ${user.jabatan}' : ''}',
+                                    style: GoogleFonts.roboto(
+                                      fontSize: 14,
+                                      color: AppColors.darkGray,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                                 Text(
-                                  '${user.rank} • ${user.role.displayName}',
+                                  user.role.displayName,
                                   style: GoogleFonts.roboto(
-                                    fontSize: 14,
-                                    color: AppColors.darkGray,
-                                    fontWeight: FontWeight.w500,
+                                    fontSize: 13,
+                                    color: AppColors.primaryBlue,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
@@ -200,13 +251,71 @@ class PendingApprovalPage extends StatelessWidget {
                       
                       const SizedBox(height: AppSizes.paddingL),
                       
-                      // Information Grid
+                      // Basic Information Section
+                      _buildSectionTitle('Data Dasar'),
+                      const SizedBox(height: AppSizes.paddingM),
+                      
                       _buildInfoRow('Email', user.email),
                       _buildInfoRow('NRP', user.nrp),
-                      _buildInfoRow('Umur', '${user.age} tahun'),
-                      _buildInfoRow('Tanggal Lahir', _formatDate(user.dateOfBirth!)),
-                      _buildInfoRow('Tanggal Masuk Militer', _formatDate(user.militaryJoinDate!)),
-                      _buildInfoRow('Masa Dinas', '${user.yearsOfService} tahun'),
+                      if (user.statusPersonel != null)
+                        _buildInfoRow('Status Personel', user.statusPersonel!),
+                      
+                      // Personal Information Section
+                      if (user.tempatLahir != null || user.dateOfBirth != null || user.agama != null)
+                        ...[
+                          const SizedBox(height: AppSizes.paddingL),
+                          _buildSectionTitle('Data Personal'),
+                          const SizedBox(height: AppSizes.paddingM),
+                          
+                          if (user.tempatTanggalLahir.isNotEmpty)
+                            _buildInfoRow('Tempat, Tanggal Lahir', user.tempatTanggalLahir),
+                          if (user.dateOfBirth != null)
+                            _buildInfoRow('Umur', '${user.age} tahun'),
+                          if (user.agama != null)
+                            _buildInfoRow('Agama', user.agama!),
+                          if (user.suku != null)
+                            _buildInfoRow('Suku', user.suku!),
+                          if (user.bloodType != null)
+                            _buildInfoRow('Golongan Darah', user.bloodType!),
+                          if (user.maritalStatus != null)
+                            _buildInfoRow('Status Pernikahan', user.maritalStatus!),
+                        ],
+                      
+                      // Military Service Information
+                      if (user.militaryJoinDate != null)
+                        ...[
+                          const SizedBox(height: AppSizes.paddingL),
+                          _buildSectionTitle('Data Dinas'),
+                          const SizedBox(height: AppSizes.paddingM),
+                          
+                          _buildInfoRow('Tanggal Masuk Militer', _formatDate(user.militaryJoinDate!)),
+                          _buildInfoRow('Masa Dinas', '${user.yearsOfService} tahun'),
+                          if (user.jabatanTmt != null)
+                            _buildInfoRow('TMT Jabatan', user.formattedJabatanTmt),
+                          if (user.jabatanTmt != null)
+                            _buildInfoRow('Lama Jabatan', user.lamaJabatan),
+                        ],
+                      
+                      // Contact Information
+                      if (user.phoneNumber != null || user.address != null || user.emergencyContact != null)
+                        ...[
+                          const SizedBox(height: AppSizes.paddingL),
+                          _buildSectionTitle('Informasi Kontak'),
+                          const SizedBox(height: AppSizes.paddingM),
+                          
+                          if (user.phoneNumber != null)
+                            _buildInfoRow('Telepon', user.phoneNumber!),
+                          if (user.address != null)
+                            _buildInfoRow('Alamat', user.address!),
+                          if (user.emergencyContact != null)
+                            _buildInfoRow('Kontak Darurat', user.emergencyContact!),
+                        ],
+                      
+                      // System Information
+                      const SizedBox(height: AppSizes.paddingL),
+                      _buildSectionTitle('Status Pendaftaran'),
+                      const SizedBox(height: AppSizes.paddingM),
+                      
                       _buildInfoRow('Tanggal Daftar', _formatDate(user.createdAt)),
                       
                       const SizedBox(height: AppSizes.paddingL),
@@ -240,6 +349,39 @@ class PendingApprovalPage extends StatelessWidget {
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.darkNavy,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Data Completeness Info
+                      const SizedBox(height: AppSizes.paddingM),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSizes.paddingM),
+                        decoration: BoxDecoration(
+                          color: AppColors.lightBlue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                          border: Border.all(
+                            color: AppColors.primaryBlue.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: AppColors.primaryBlue,
+                              size: 18,
+                            ),
+                            const SizedBox(width: AppSizes.paddingS),
+                            Expanded(
+                              child: Text(
+                                'Data yang kosong dapat dilengkapi setelah akun disetujui melalui menu profil.',
+                                style: GoogleFonts.roboto(
+                                  fontSize: 12,
+                                  color: AppColors.primaryBlue,
                                 ),
                               ),
                             ),
@@ -320,6 +462,28 @@ class PendingApprovalPage extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.paddingM,
+        vertical: AppSizes.paddingS,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.primaryBlue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppSizes.radiusS),
+      ),
+      child: Text(
+        title,
+        style: GoogleFonts.roboto(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: AppColors.primaryBlue,
         ),
       ),
     );
