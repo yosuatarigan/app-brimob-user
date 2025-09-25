@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'dart:io';
 import '../../models/user_model.dart';
 import '../models/admin_model.dart';
@@ -295,6 +294,7 @@ class AdminFirebaseService {
         // Create UserModel document dengan status approved (admin created)
         final newUser = UserModel(
           id: userCredential.user!.uid,
+          jabatan: '',
           email: email,
           fullName: fullName,
           nrp: nrp,
@@ -395,6 +395,7 @@ class AdminFirebaseService {
       if (userCredential.user != null) {
         // Create admin UserModel
         final newAdmin = UserModel(
+          jabatan: '',
           id: userCredential.user!.uid,
           email: email,
           fullName: fullName,

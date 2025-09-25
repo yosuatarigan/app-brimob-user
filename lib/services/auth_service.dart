@@ -68,17 +68,44 @@ class AuthService {
     }
   }
 
-  // Register with email and password (updated with photo support)
+  // Register with email and password (updated with complete personnel data)
   Future<Map<String, dynamic>> registerWithEmailAndPassword({
     required String email,
     required String password,
     required String fullName,
     required String nrp,
-    required String rank,
-    required UserRole role,
-    required DateTime dateOfBirth,
-    required DateTime militaryJoinDate,
+    
+    // Basic info
+    String? rank,
+    String? jabatan,
+    DateTime? jabatanTmt,
+    UserRole? role,
     String? photoUrl,
+    
+    // Personal data
+    String? tempatLahir,
+    DateTime? dateOfBirth,
+    String? agama,
+    String? suku,
+    String? statusPersonel,
+    DateTime? militaryJoinDate,
+    
+    // Contact info
+    String? phoneNumber,
+    String? address,
+    String? emergencyContact,
+    String? bloodType,
+    String? maritalStatus,
+    
+    // Complex data arrays
+    List<PendidikanKepolisian>? pendidikanKepolisian,
+    List<PendidikanUmum>? pendidikanUmum,
+    List<RiwayatPangkat>? riwayatPangkat,
+    List<RiwayatJabatan>? riwayatJabatan,
+    List<PendidikanPelatihan>? pendidikanPelatihan,
+    List<TandaKehormatan>? tandaKehormatan,
+    List<KemampuanBahasa>? kemampuanBahasa,
+    List<PenugasanLuarStruktur>? penugasanLuarStruktur,
   }) async {
     try {
       // Create user with Firebase Auth
@@ -95,13 +122,40 @@ class AuthService {
           email: email,
           fullName: fullName,
           nrp: nrp,
-          rank: rank,
-          role: role,
+          rank: rank ?? '',
+          jabatan: jabatan ?? '',
+          jabatanTmt: jabatanTmt,
+          role: role ?? UserRole.other,
           status: UserStatus.pending, // Default status
-          photoUrl: photoUrl, // Include photo URL
+          photoUrl: photoUrl,
+          
+          // Personal data
+          tempatLahir: tempatLahir,
           dateOfBirth: dateOfBirth,
+          agama: agama,
+          suku: suku,
+          statusPersonel: statusPersonel,
           militaryJoinDate: militaryJoinDate,
+          
+          // Contact info
+          phoneNumber: phoneNumber,
+          address: address,
+          emergencyContact: emergencyContact,
+          bloodType: bloodType,
+          maritalStatus: maritalStatus,
+          
+          // System fields
           createdAt: DateTime.now(),
+          
+          // Complex arrays (default empty if not provided)
+          pendidikanKepolisian: pendidikanKepolisian ?? [],
+          pendidikanUmum: pendidikanUmum ?? [],
+          riwayatPangkat: riwayatPangkat ?? [],
+          riwayatJabatan: riwayatJabatan ?? [],
+          pendidikanPelatihan: pendidikanPelatihan ?? [],
+          tandaKehormatan: tandaKehormatan ?? [],
+          kemampuanBahasa: kemampuanBahasa ?? [],
+          penugasanLuarStruktur: penugasanLuarStruktur ?? [],
         );
 
         await _firestore
@@ -301,6 +355,182 @@ class AuthService {
       return {
         'success': false,
         'message': 'Gagal memperbarui foto profil: ${e.toString()}',
+      };
+    }
+  }
+
+  // Update user profile data
+  Future<Map<String, dynamic>> updateUserProfile({
+    required String userId,
+    UserModel? updatedUser,
+    Map<String, dynamic>? updates,
+  }) async {
+    try {
+      Map<String, dynamic> updateData = {};
+      
+      if (updatedUser != null) {
+        updateData = updatedUser.toFirestore();
+      } else if (updates != null) {
+        updateData = updates;
+      }
+
+      updateData['updatedAt'] = Timestamp.fromDate(DateTime.now());
+
+      await _firestore.collection('users').doc(userId).update(updateData);
+
+      return {
+        'success': true,
+        'message': 'Data berhasil diperbarui',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Gagal memperbarui data: ${e.toString()}',
+      };
+    }
+  }
+
+  // Get all users for admin
+  Stream<List<UserModel>> getAllUsers() {
+    return _firestore
+        .collection('users')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => UserModel.fromFirestore(doc))
+            .toList());
+  }
+
+  // Get users by status
+  Stream<List<UserModel>> getUsersByStatus(UserStatus status) {
+    return _firestore
+        .collection('users')
+        .where('status', isEqualTo: status.name)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => UserModel.fromFirestore(doc))
+            .toList());
+  }
+
+  // Get users by role
+  Stream<List<UserModel>> getUsersByRole(UserRole role) {
+    return _firestore
+        .collection('users')
+        .where('role', isEqualTo: role.name)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => UserModel.fromFirestore(doc))
+            .toList());
+  }
+
+  // Search users
+  Future<List<UserModel>> searchUsers(String query) async {
+    try {
+      // Search by name
+      final nameQuery = await _firestore
+          .collection('users')
+          .where('fullName', isGreaterThanOrEqualTo: query.toUpperCase())
+          .where('fullName', isLessThanOrEqualTo: query.toUpperCase() + '\uf8ff')
+          .get();
+
+      // Search by NRP
+      final nrpQuery = await _firestore
+          .collection('users')
+          .where('nrp', isGreaterThanOrEqualTo: query)
+          .where('nrp', isLessThanOrEqualTo: query + '\uf8ff')
+          .get();
+
+      // Combine results and remove duplicates
+      Set<String> seenIds = {};
+      List<UserModel> results = [];
+
+      for (var doc in nameQuery.docs) {
+        if (!seenIds.contains(doc.id)) {
+          seenIds.add(doc.id);
+          results.add(UserModel.fromFirestore(doc));
+        }
+      }
+
+      for (var doc in nrpQuery.docs) {
+        if (!seenIds.contains(doc.id)) {
+          seenIds.add(doc.id);
+          results.add(UserModel.fromFirestore(doc));
+        }
+      }
+
+      return results;
+    } catch (e) {
+      print('Error searching users: $e');
+      return [];
+    }
+  }
+
+  // Approve user
+  Future<Map<String, dynamic>> approveUser(String userId, String adminId) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'status': UserStatus.approved.name,
+        'approvedBy': adminId,
+        'approvedAt': Timestamp.fromDate(DateTime.now()),
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+      });
+
+      return {
+        'success': true,
+        'message': 'User berhasil disetujui',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Gagal menyetujui user: ${e.toString()}',
+      };
+    }
+  }
+
+  // Reject user
+  Future<Map<String, dynamic>> rejectUser(String userId, String adminId, String reason) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'status': UserStatus.rejected.name,
+        'approvedBy': adminId,
+        'rejectionReason': reason,
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+      });
+
+      return {
+        'success': true,
+        'message': 'User berhasil ditolak',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Gagal menolak user: ${e.toString()}',
+      };
+    }
+  }
+
+  // Delete user
+  Future<Map<String, dynamic>> deleteUser(String userId) async {
+    try {
+      // Get user data first to delete photo
+      final userData = await getUserData(userId);
+      if (userData?.photoUrl != null) {
+        await deleteProfilePhoto(userData!.photoUrl!);
+      }
+
+      // Delete user document
+      await _firestore.collection('users').doc(userId).delete();
+
+      return {
+        'success': true,
+        'message': 'User berhasil dihapus',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Gagal menghapus user: ${e.toString()}',
       };
     }
   }

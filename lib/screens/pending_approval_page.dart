@@ -204,8 +204,8 @@ class PendingApprovalPage extends StatelessWidget {
                       _buildInfoRow('Email', user.email),
                       _buildInfoRow('NRP', user.nrp),
                       _buildInfoRow('Umur', '${user.age} tahun'),
-                      _buildInfoRow('Tanggal Lahir', _formatDate(user.dateOfBirth)),
-                      _buildInfoRow('Tanggal Masuk Militer', _formatDate(user.militaryJoinDate)),
+                      _buildInfoRow('Tanggal Lahir', _formatDate(user.dateOfBirth!)),
+                      _buildInfoRow('Tanggal Masuk Militer', _formatDate(user.militaryJoinDate!)),
                       _buildInfoRow('Masa Dinas', '${user.yearsOfService} tahun'),
                       _buildInfoRow('Tanggal Daftar', _formatDate(user.createdAt)),
                       
