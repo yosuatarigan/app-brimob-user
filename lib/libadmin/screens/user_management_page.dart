@@ -1,9 +1,14 @@
+import 'dart:io';
+
 import 'package:app_brimob_user/create_user_page.dart';
 import 'package:app_brimob_user/edit_profile_page.dart';
 import 'package:app_brimob_user/libadmin/widget/admin_witget.dart';
+import 'package:app_brimob_user/pdf_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../admin_constant.dart';
 import '../services/admin_firebase_service.dart';
 import '../../models/user_model.dart';
@@ -21,6 +26,7 @@ class _UserManagementPageState extends State<UserManagementPage>
   late TabController _tabController;
 
   List<UserModel> _allUsers = [];
+  bool _isExporting = false;
   List<UserModel> _filteredUsers = [];
   bool _isLoading = true;
   String? _error;
@@ -36,6 +42,78 @@ class _UserManagementPageState extends State<UserManagementPage>
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
     _loadUsers();
+  }
+
+  void _exportToPdf(UserModel user) async {
+    setState(() {
+      _isExporting = true;
+    });
+
+    try {
+      // Generate PDF
+      final pdfData = await PdfService.generateCvPdf(user);
+
+      // Buat nama file
+      final fileName =
+          'CV_${user.fullName.replaceAll(' ', '_')}_${user.nrp}.pdf';
+
+      // Save ke temporary directory
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/$fileName');
+      await file.writeAsBytes(pdfData);
+
+      // Langsung share file
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'CV ${user.fullName} - ${user.nrp}',
+        subject: 'Curriculum Vitae',
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                const Text('CV siap dibagikan!'),
+              ],
+            ),
+            backgroundColor: Colors.green[600],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Text('Gagal membuat CV: ${e.toString()}'),
+              ],
+            ),
+            backgroundColor: Colors.red[600],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isExporting = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadUsers() async {
@@ -700,6 +778,23 @@ class _UserManagementPageState extends State<UserManagementPage>
                           ),
                         ),
                         const PopupMenuItem(
+                          value: 'export',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.import_export,
+                                size: 18,
+                                color: Colors.black,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Export',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
                           value: 'delete',
                           child: Row(
                             children: [
@@ -935,6 +1030,10 @@ class _UserManagementPageState extends State<UserManagementPage>
         break;
       case 'delete':
         _showDeleteConfirmation(user);
+        break;
+      case 'export':
+        _exportToPdf(user);
+        // Implement export functionality here
         break;
     }
   }
