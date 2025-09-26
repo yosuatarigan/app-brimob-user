@@ -38,45 +38,121 @@ class PdfService {
               _buildHeader(font, fontBold),
               pw.SizedBox(height: 15),
               
-              // Main content area
+              // Top section - Photo + Basic Info (sejajar horizontal)
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  // Left side - Photo + Basic Info
+                  // Photo - di kiri
                   pw.Container(
-                    width: 180,
+                    width: 100,
+                    height: 120,
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(color: PdfColors.black, width: 1),
+                    ),
+                    child: profileImage != null
+                        ? pw.Image(profileImage, fit: pw.BoxFit.cover)
+                        : pw.Container(color: PdfColors.red100),
+                  ),
+                  
+                  pw.SizedBox(width: 50),
+                  
+                  // Basic info - di kanan foto
+                  pw.Container(
+                    width: 350,
+                    child: _buildBasicInfoTable(user, font, fontBold),
+                  ),
+                ],
+              ),
+              
+              pw.SizedBox(height: 15),
+              
+              // Main sections - 2 kolom
+              pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  // Left column sections
+                  pw.Container(
+                    width: 240,
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        // Photo
-                        pw.Container(
-                          width: 120,
-                          height: 140,
-                          decoration: pw.BoxDecoration(
-                            border: pw.Border.all(color: PdfColors.black, width: 2),
-                            color: PdfColors.red,
-                          ),
-                          child: profileImage != null
-                              ? pw.Image(profileImage, fit: pw.BoxFit.cover)
-                              : pw.Container(color: PdfColors.red),
+                        // I. Pendidikan Kepolisian
+                        _buildSectionTable(
+                          'I. Pendidikan Kepolisian',
+                          ['Tingkat', 'Tahun'],
+                          user.pendidikanKepolisian.map((item) => [item.tingkat, item.tahun.toString()]).toList(),
+                          font,
+                          fontBold,
+                          columnWidth: 240,
                         ),
-                        pw.SizedBox(height: 15),
+                        pw.SizedBox(height: 10),
                         
-                        // Basic info table
-                        _buildBasicInfoTable(user, font, fontBold),
-                        pw.SizedBox(height: 15),
+                        // II. Pendidikan Umum
+                        _buildSectionTable(
+                          'II. Pendidikan Umum',
+                          ['Tingkat', 'Nama Institusi', 'Tahun'],
+                          user.pendidikanUmum.map((item) => [item.tingkat, item.namaInstitusi, item.tahun.toString()]).toList(),
+                          font,
+                          fontBold,
+                          columnWidth: 240,
+                          isThreeColumn: true,
+                        ),
+                        pw.SizedBox(height: 10),
                         
-                        // Left column sections
-                        _buildLeftColumnSections(user, font, fontBold),
+                        // III. Riwayat Pangkat
+                        _buildSectionTable(
+                          'III. Riwayat Pangkat',
+                          ['Pangkat', 'TMT'],
+                          user.riwayatPangkat.map((item) => [item.pangkat, _formatDateTMT(item.tmt)]).toList(),
+                          font,
+                          fontBold,
+                          columnWidth: 240,
+                        ),
                       ],
                     ),
                   ),
                   
-                  pw.SizedBox(width: 20),
+                  pw.SizedBox(width: 15),
                   
-                  // Right side - Right column sections
-                  pw.Expanded(
-                    child: _buildRightColumnSections(user, font, fontBold),
+                  // Right column sections
+                  pw.Container(
+                    width: 280,
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        // IV. Riwayat Jabatan
+                        _buildSectionTable(
+                          'IV. Riwayat Jabatan',
+                          ['Jabatan', 'TMT'],
+                          user.riwayatJabatan.map((item) => [item.jabatan, _formatDateTMT(item.tmt)]).toList(),
+                          font,
+                          fontBold,
+                          columnWidth: 280,
+                        ),
+                        pw.SizedBox(height: 10),
+                        
+                        // V. Pendidikan Pengembangan & Pelatihan
+                        _buildSectionTable(
+                          'V. Pendidikan Pengembangan & Pelatihan',
+                          ['Dikbang', 'TMT'],
+                          user.pendidikanPelatihan.map((item) => [item.dikbang, _formatDateTMT(item.tmt)]).toList(),
+                          font,
+                          fontBold,
+                          columnWidth: 280,
+                        ),
+                        pw.SizedBox(height: 10),
+                        
+                        // VI. Tanda Kehormatan
+                        _buildSectionTable(
+                          'VI. Tanda Kehormatan',
+                          ['Tanda Kehormatan', 'TMT'],
+                          user.tandaKehormatan.map((item) => [item.tandaKehormatan, _formatDateTMT(item.tmt)]).toList(),
+                          font,
+                          fontBold,
+                          columnWidth: 280,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -100,38 +176,35 @@ class PdfService {
   }
 
   static pw.Widget _buildHeader(pw.Font font, pw.Font fontBold) {
-    return pw.Center(
-      child: pw.Column(
-        children: [
-          pw.Text(
-            'MARKAS BESAR',
-            style: pw.TextStyle(font: fontBold, fontSize: 12),
-            textAlign: pw.TextAlign.center,
-          ),
-          pw.Text(
-            'KEPOLISIAN NEGARA REPUBLIK INDONESIA',
-            style: pw.TextStyle(font: fontBold, fontSize: 12),
-            textAlign: pw.TextAlign.center,
-          ),
-          pw.Text(
-            'STAF SUMBER DAYA MANUSIA',
-            style: pw.TextStyle(font: fontBold, fontSize: 12),
-            textAlign: pw.TextAlign.center,
-          ),
-          pw.SizedBox(height: 8),
-          pw.Container(
-            width: double.infinity,
-            height: 1,
-            color: PdfColors.black,
-          ),
-          pw.SizedBox(height: 8),
-          pw.Text(
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          'MARKAS BESAR',
+          style: pw.TextStyle(font: fontBold, fontSize: 12),
+        ),
+        pw.Text(
+          'KEPOLISIAN NEGARA REPUBLIK INDONESIA',
+          style: pw.TextStyle(font: fontBold, fontSize: 12),
+        ),
+        pw.Text(
+          'STAF SUMBER DAYA MANUSIA',
+          style: pw.TextStyle(font: fontBold, fontSize: 12),
+        ),
+        pw.SizedBox(height: 8),
+        pw.Container(
+          width: double.infinity,
+          height: 1,
+          color: PdfColors.black,
+        ),
+        pw.SizedBox(height: 8),
+        pw.Center(
+          child: pw.Text(
             'DAFTAR RIWAYAT HIDUP',
             style: pw.TextStyle(font: fontBold, fontSize: 14),
-            textAlign: pw.TextAlign.center,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -158,121 +231,25 @@ class PdfService {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Container(
-            width: 80,
+            width: 120,
             child: pw.Text(
               label,
-              style: pw.TextStyle(font: font, fontSize: 8),
+              style: pw.TextStyle(font: font, fontSize: 9),
             ),
           ),
           pw.Text(
             ': ',
-            style: pw.TextStyle(font: font, fontSize: 8),
+            style: pw.TextStyle(font: font, fontSize: 9),
           ),
-          pw.Expanded(
+          pw.Container(
+            width: 220,
             child: pw.Text(
               value,
-              style: pw.TextStyle(font: font, fontSize: 8),
+              style: pw.TextStyle(font: font, fontSize: 9),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  static pw.Widget _buildLeftColumnSections(UserModel user, pw.Font font, pw.Font fontBold) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        // I. Pendidikan Kepolisian
-        _buildSectionTable(
-          'I. Pendidikan Kepolisian',
-          ['Tingkat', 'Tahun'],
-          user.pendidikanKepolisian.map((item) => [item.tingkat, item.tahun.toString()]).toList(),
-          font,
-          fontBold,
-        ),
-        pw.SizedBox(height: 10),
-        
-        // II. Pendidikan Umum
-        _buildSectionTable(
-          'II. Pendidikan Umum',
-          ['Tingkat', 'Nama Institusi', 'Tahun'],
-          user.pendidikanUmum.map((item) => [item.tingkat, item.namaInstitusi, item.tahun.toString()]).toList(),
-          font,
-          fontBold,
-          isWideTable: true,
-        ),
-        pw.SizedBox(height: 10),
-        
-        // III. Riwayat Pangkat
-        _buildSectionTable(
-          'III. Riwayat Pangkat',
-          ['Pangkat', 'TMT'],
-          user.riwayatPangkat.map((item) => [item.pangkat, _formatDateTMT(item.tmt)]).toList(),
-          font,
-          fontBold,
-        ),
-      ],
-    );
-  }
-
-  static pw.Widget _buildRightColumnSections(UserModel user, pw.Font font, pw.Font fontBold) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        // IV. Riwayat Jabatan
-        _buildSectionTable(
-          'IV. Riwayat Jabatan',
-          ['Jabatan', 'TMT'],
-          user.riwayatJabatan.map((item) => [item.jabatan, _formatDateTMT(item.tmt)]).toList(),
-          font,
-          fontBold,
-          isWideTable: true,
-        ),
-        pw.SizedBox(height: 10),
-        
-        // V. Pendidikan Pengembangan & Pelatihan
-        _buildSectionTable(
-          'V. Pendidikan Pengembangan & Pelatihan',
-          ['Dikbang', 'TMT'],
-          user.pendidikanPelatihan.map((item) => [item.dikbang, _formatDateTMT(item.tmt)]).toList(),
-          font,
-          fontBold,
-          isWideTable: true,
-        ),
-        pw.SizedBox(height: 10),
-        
-        // VI. Tanda Kehormatan
-        _buildSectionTable(
-          'VI. Tanda Kehormatan',
-          ['Tanda Kehormatan', 'TMT'],
-          user.tandaKehormatan.map((item) => [item.tandaKehormatan, _formatDateTMT(item.tmt)]).toList(),
-          font,
-          fontBold,
-          isWideTable: true,
-        ),
-      ],
-    );
-  }
-
-  static pw.Widget _buildBottomSections(UserModel user, pw.Font font, pw.Font fontBold) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        // VII. Kemampuan Bahasa
-        _buildSectionTable(
-          'VII. Kemampuan Bahasa',
-          ['Bahasa', 'Status'],
-          user.kemampuanBahasa.map((item) => [item.bahasa, item.status]).toList(),
-          font,
-          fontBold,
-          isFullWidth: true,
-        ),
-        pw.SizedBox(height: 10),
-        
-        // VIII. Penugasan Luar Struktur
-        _buildPenugasanLuarStrukturSection(user, font, fontBold),
-      ],
     );
   }
 
@@ -282,14 +259,14 @@ class PdfService {
     List<List<String>> data, 
     pw.Font font, 
     pw.Font fontBold, 
-    {bool isWideTable = false, bool isFullWidth = false}
+    {double? columnWidth, bool isThreeColumn = false}
   ) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         // Blue header
         pw.Container(
-          width: double.infinity,
+          width: columnWidth ?? double.infinity,
           padding: const pw.EdgeInsets.all(4),
           color: const PdfColor(0.2, 0.4, 0.7),
           child: pw.Text(
@@ -298,46 +275,67 @@ class PdfService {
           ),
         ),
         // Table
-        pw.Table(
-          border: pw.TableBorder.all(color: PdfColors.black, width: 0.5),
-          columnWidths: isFullWidth ? null : (
-            headers.length == 3 ? {
-              0: const pw.FlexColumnWidth(2),
-              1: const pw.FlexColumnWidth(3),
+        pw.Container(
+          width: columnWidth ?? double.infinity,
+          child: pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.black, width: 0.5),
+            columnWidths: isThreeColumn ? {
+              0: const pw.FlexColumnWidth(1.5),
+              1: const pw.FlexColumnWidth(2),
               2: const pw.FlexColumnWidth(1),
             } : {
               0: const pw.FlexColumnWidth(2),
               1: const pw.FlexColumnWidth(1),
-            }
+            },
+            children: [
+              // Header row
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColor(0.8, 0.8, 0.8)),
+                children: headers.map((header) => 
+                  pw.Container(
+                    padding: const pw.EdgeInsets.all(3),
+                    child: pw.Text(
+                      header,
+                      style: pw.TextStyle(font: fontBold, fontSize: 8),
+                    ),
+                  ),
+                ).toList(),
+              ),
+              // Data rows
+              ...data.map((row) => pw.TableRow(
+                children: row.map((cell) => 
+                  pw.Container(
+                    padding: const pw.EdgeInsets.all(3),
+                    child: pw.Text(
+                      cell,
+                      style: pw.TextStyle(font: font, fontSize: 8),
+                    ),
+                  ),
+                ).toList(),
+              )),
+            ],
           ),
-          children: [
-            // Header row
-            pw.TableRow(
-              decoration: const pw.BoxDecoration(color: PdfColor(0.8, 0.8, 0.8)),
-              children: headers.map((header) => 
-                pw.Container(
-                  padding: const pw.EdgeInsets.all(3),
-                  child: pw.Text(
-                    header,
-                    style: pw.TextStyle(font: fontBold, fontSize: 8),
-                  ),
-                ),
-              ).toList(),
-            ),
-            // Data rows
-            ...data.map((row) => pw.TableRow(
-              children: row.map((cell) => 
-                pw.Container(
-                  padding: const pw.EdgeInsets.all(3),
-                  child: pw.Text(
-                    cell,
-                    style: pw.TextStyle(font: font, fontSize: 8),
-                  ),
-                ),
-              ).toList(),
-            )),
-          ],
         ),
+      ],
+    );
+  }
+
+  static pw.Widget _buildBottomSections(UserModel user, pw.Font font, pw.Font fontBold) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        // VII. Kemampuan Bahasa - full width
+        _buildSectionTable(
+          'VII. Kemampuan Bahasa',
+          ['Bahasa', 'Status'],
+          user.kemampuanBahasa.map((item) => [item.bahasa, item.status]).toList(),
+          font,
+          fontBold,
+        ),
+        pw.SizedBox(height: 10),
+        
+        // VIII. Penugasan Luar Struktur - full width
+        _buildPenugasanLuarStrukturSection(user, font, fontBold),
       ],
     );
   }
@@ -407,7 +405,7 @@ class PdfService {
 
   static pw.Widget _buildFooterSignature(UserModel user, pw.Font font, pw.Font fontBold) {
     final now = DateTime.now();
-    final dateString = 'Jakarta, ${now.day} - ${now.month.toString().padLeft(2, '0')} - ${now.year}';
+    final dateString = 'Jakarta, ${now.day.toString().padLeft(2, '0')} - ${now.month.toString().padLeft(2, '0')} - ${now.year}';
 
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.end,
