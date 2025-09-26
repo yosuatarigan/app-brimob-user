@@ -57,6 +57,10 @@ dependencies:
   cloud_functions: ^5.6.2
   firebase_app_check: ^0.3.2+10
   audioplayers: ^6.5.1
+  printing: ^5.14.2
+  pdf: ^3.11.3
+  path_provider: ^2.1.5
+  share_plus: ^10.1.4
 
 dev_dependencies:
   flutter_test:

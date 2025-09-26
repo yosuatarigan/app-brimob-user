@@ -1,6 +1,10 @@
+import 'package:app_brimob_user/pdf_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../constants/app_constants.dart';
@@ -22,6 +26,7 @@ class ProfileSectionWidget extends StatefulWidget {
 
 class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
   late UserModel _currentUser;
+  bool _isExporting = false;
 
   @override
   void initState() {
@@ -73,6 +78,77 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
       setState(() {
         _currentUser = result;
       });
+    }
+  }
+
+  void _exportToPdf() async {
+    setState(() {
+      _isExporting = true;
+    });
+
+    try {
+      // Generate PDF
+      final pdfData = await PdfService.generateCvPdf(_currentUser);
+      
+      // Buat nama file
+      final fileName = 'CV_${_currentUser.fullName.replaceAll(' ', '_')}_${_currentUser.nrp}.pdf';
+      
+      // Save ke temporary directory
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/$fileName');
+      await file.writeAsBytes(pdfData);
+      
+      // Langsung share file
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'CV ${_currentUser.fullName} - ${_currentUser.nrp}',
+        subject: 'Curriculum Vitae',
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                const Text('CV siap dibagikan!'),
+              ],
+            ),
+            backgroundColor: Colors.green[600],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Text('Gagal membuat CV: ${e.toString()}'),
+              ],
+            ),
+            backgroundColor: Colors.red[600],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isExporting = false;
+        });
+      }
     }
   }
 
@@ -446,6 +522,42 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
                 // Action Buttons
                 Column(
                   children: [
+                    // Export CV Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _isExporting ? null : _exportToPdf,
+                        icon: _isExporting
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Icon(Icons.share, size: 20),
+                        label: Text(
+                          _isExporting ? 'Menyiapkan...' : 'Share CV',
+                          style: GoogleFonts.roboto(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green[600],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 12),
+                    
                     // Edit Profile Button
                     SizedBox(
                       width: double.infinity,
