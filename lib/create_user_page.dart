@@ -80,7 +80,7 @@ class _CreateUserPageState extends State<CreateUserPage> {
         return;
       }
       if (_militaryJoinDate == null) {
-        _showError('Pilih tanggal masuk militer terlebih dahulu');
+        _showError('Pilih TMT Masuk Polri terlebih dahulu');
         return;
       }
     }
@@ -458,7 +458,7 @@ class _CreateUserPageState extends State<CreateUserPage> {
       case 'dateOfBirth':
         return 'Pilih Tanggal Lahir';
       case 'militaryJoinDate':
-        return 'Pilih Tanggal Masuk Militer';
+        return 'Pilih TMT Masuk Polri';
       case 'jabatanTmt':
         return 'Pilih TMT Jabatan';
       default:
@@ -912,7 +912,7 @@ class _CreateUserPageState extends State<CreateUserPage> {
         const SizedBox(height: AdminSizes.paddingM),
 
         _buildDatePicker(
-          labelText: 'Tanggal Masuk Militer *',
+          labelText: 'TMT Masuk Polri *',
           selectedDate: _militaryJoinDate,
           type: 'militaryJoinDate',
         ),

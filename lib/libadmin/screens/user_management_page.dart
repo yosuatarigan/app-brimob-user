@@ -551,15 +551,15 @@ class _UserManagementPageState extends State<UserManagementPage>
       );
     }
 
-    // Siapkan data untuk setiap tab
-    final allUsers = _allUsers;
+    // Gunakan _filteredUsers sebagai basis, lalu filter lagi berdasarkan tab
+    final allUsers = _filteredUsers;
     final pendingUsers =
-        _allUsers.where((u) => u.status == UserStatus.pending).toList();
+        _filteredUsers.where((u) => u.status == UserStatus.pending).toList();
     final approvedUsers =
-        _allUsers.where((u) => u.status == UserStatus.approved).toList();
+        _filteredUsers.where((u) => u.status == UserStatus.approved).toList();
     final rejectedUsers =
-        _allUsers.where((u) => u.status == UserStatus.rejected).toList();
-    final recentUsers = List.from(_allUsers)
+        _filteredUsers.where((u) => u.status == UserStatus.rejected).toList();
+    final recentUsers = List<UserModel>.from(_filteredUsers)
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return TabBarView(
@@ -569,7 +569,7 @@ class _UserManagementPageState extends State<UserManagementPage>
         _buildUserList(pendingUsers),
         _buildUserList(approvedUsers),
         _buildUserList(rejectedUsers),
-        _buildUserList(recentUsers.cast<UserModel>()),
+        _buildUserList(recentUsers),
       ],
     );
   }
@@ -1681,7 +1681,7 @@ class UserDetailDialog extends StatelessWidget {
                       _buildSection('Data Dinas', [
                         if (user.militaryJoinDate != null) ...[
                           _buildDetailRow(
-                            'Tanggal Masuk Militer',
+                            'TMT Masuk Polri ',
                             _formatDate(user.militaryJoinDate),
                           ),
                           _buildDetailRow(

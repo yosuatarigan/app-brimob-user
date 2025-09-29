@@ -288,7 +288,7 @@ class PendingApprovalPage extends StatelessWidget {
                           _buildSectionTitle('Data Dinas'),
                           const SizedBox(height: AppSizes.paddingM),
                           
-                          _buildInfoRow('Tanggal Masuk Militer', _formatDate(user.militaryJoinDate!)),
+                          _buildInfoRow('TMT Masuk Polri ', _formatDate(user.militaryJoinDate!)),
                           _buildInfoRow('Masa Dinas', '${user.yearsOfService} tahun'),
                           if (user.jabatanTmt != null)
                             _buildInfoRow('TMT Jabatan', user.formattedJabatanTmt),

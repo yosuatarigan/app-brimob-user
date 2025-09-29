@@ -406,7 +406,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       case 'dateOfBirth':
         return 'Pilih Tanggal Lahir';
       case 'militaryJoinDate':
-        return 'Pilih Tanggal Masuk Militer';
+        return 'Pilih TMT Masuk Polri ';
       case 'jabatanTmt':
         return 'Pilih TMT Jabatan';
       default:
@@ -784,7 +784,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         const SizedBox(height: AppSizes.paddingM),
         
         _buildDatePicker(
-          labelText: 'Tanggal Masuk Militer',
+          labelText: 'TMT Masuk Polri ',
           selectedDate: _militaryJoinDate,
           type: 'militaryJoinDate',
         ),

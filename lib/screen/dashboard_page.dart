@@ -930,8 +930,8 @@ class _DashboardPageState extends State<DashboardPage> {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
-              childAspectRatio: 1,
-              crossAxisSpacing: 60,
+              childAspectRatio: 0.9,
+              crossAxisSpacing: 30,
               mainAxisSpacing: 0,
             ),
             itemCount: galeriItems.length,
@@ -981,7 +981,7 @@ class _DashboardPageState extends State<DashboardPage> {
             Text(
               item['name'],
               style: GoogleFonts.roboto(
-                fontSize: 9,
+                fontSize: 8,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
                 letterSpacing: 0.3,
@@ -1085,7 +1085,7 @@ class _DashboardPageState extends State<DashboardPage> {
               title,
               textAlign: TextAlign.center,
               style: GoogleFonts.roboto(
-                fontSize: 10,
+                fontSize: 8,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
               ),

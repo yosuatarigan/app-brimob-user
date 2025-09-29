@@ -121,7 +121,7 @@ class AppStrings {
   static const String rank = 'Pangkat';
   static const String unit = 'Satuan';
   static const String dateOfBirth = 'Tanggal Lahir';
-  static const String militaryJoinDate = 'Tanggal Masuk Militer';
+  static const String militaryJoinDate = 'TMT Masuk Polri ';
   
   // Status
   static const String pending = 'Menunggu Persetujuan';
