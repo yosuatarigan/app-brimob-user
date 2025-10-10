@@ -4,31 +4,33 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 enum UserRole {
   admin,
   makoKor,
+  other,
+    pasGegana,
   pasPelopor,
-  pasGegana,
+ 
   pasbrimobI,
   pasbrimobII,
   pasbrimobIII,
-  other;
+  ;
 
   String get displayName {
     switch (this) {
       case UserRole.admin:
         return 'admin';
       case UserRole.makoKor:
-        return 'MAKO KOR';
-      case UserRole.pasPelopor:
-        return 'PAS PELOPOR';
+        return 'MAKO KORBRIMOB';
+      case UserRole.other:
+        return 'SAT INTEL';
       case UserRole.pasGegana:
         return 'PAS GEGANA';
+      case UserRole.pasPelopor:
+        return 'PAS PELOPOR';
       case UserRole.pasbrimobI:
         return 'PASBRIMOB I';
       case UserRole.pasbrimobII:
         return 'PASBRIMOB II';
       case UserRole.pasbrimobIII:
         return 'PASBRIMOB III';
-      case UserRole.other:
-        return 'OTHER';
     }
   }
 
@@ -84,16 +86,10 @@ class PendidikanKepolisian {
   final String tingkat;
   final int tahun;
 
-  PendidikanKepolisian({
-    required this.tingkat,
-    required this.tahun,
-  });
+  PendidikanKepolisian({required this.tingkat, required this.tahun});
 
   Map<String, dynamic> toMap() {
-    return {
-      'tingkat': tingkat,
-      'tahun': tahun,
-    };
+    return {'tingkat': tingkat, 'tahun': tahun};
   }
 
   factory PendidikanKepolisian.fromMap(Map<String, dynamic> map) {
@@ -117,11 +113,7 @@ class PendidikanUmum {
   });
 
   Map<String, dynamic> toMap() {
-    return {
-      'tingkat': tingkat,
-      'namaInstitusi': namaInstitusi,
-      'tahun': tahun,
-    };
+    return {'tingkat': tingkat, 'namaInstitusi': namaInstitusi, 'tahun': tahun};
   }
 
   factory PendidikanUmum.fromMap(Map<String, dynamic> map) {
@@ -138,22 +130,19 @@ class RiwayatPangkat {
   final String pangkat;
   final DateTime tmt;
 
-  RiwayatPangkat({
-    required this.pangkat,
-    required this.tmt,
-  });
+  RiwayatPangkat({required this.pangkat, required this.tmt});
 
   Map<String, dynamic> toMap() {
-    return {
-      'pangkat': pangkat,
-      'tmt': Timestamp.fromDate(tmt),
-    };
+    return {'pangkat': pangkat, 'tmt': Timestamp.fromDate(tmt)};
   }
 
   factory RiwayatPangkat.fromMap(Map<String, dynamic> map) {
     return RiwayatPangkat(
       pangkat: map['pangkat'] ?? '',
-      tmt: map['tmt'] != null ? (map['tmt'] as Timestamp).toDate() : DateTime.now(),
+      tmt:
+          map['tmt'] != null
+              ? (map['tmt'] as Timestamp).toDate()
+              : DateTime.now(),
     );
   }
 }
@@ -163,22 +152,19 @@ class RiwayatJabatan {
   final String jabatan;
   final DateTime tmt;
 
-  RiwayatJabatan({
-    required this.jabatan,
-    required this.tmt,
-  });
+  RiwayatJabatan({required this.jabatan, required this.tmt});
 
   Map<String, dynamic> toMap() {
-    return {
-      'jabatan': jabatan,
-      'tmt': Timestamp.fromDate(tmt),
-    };
+    return {'jabatan': jabatan, 'tmt': Timestamp.fromDate(tmt)};
   }
 
   factory RiwayatJabatan.fromMap(Map<String, dynamic> map) {
     return RiwayatJabatan(
       jabatan: map['jabatan'] ?? '',
-      tmt: map['tmt'] != null ? (map['tmt'] as Timestamp).toDate() : DateTime.now(),
+      tmt:
+          map['tmt'] != null
+              ? (map['tmt'] as Timestamp).toDate()
+              : DateTime.now(),
     );
   }
 }
@@ -188,22 +174,19 @@ class PendidikanPelatihan {
   final String dikbang;
   final DateTime tmt;
 
-  PendidikanPelatihan({
-    required this.dikbang,
-    required this.tmt,
-  });
+  PendidikanPelatihan({required this.dikbang, required this.tmt});
 
   Map<String, dynamic> toMap() {
-    return {
-      'dikbang': dikbang,
-      'tmt': Timestamp.fromDate(tmt),
-    };
+    return {'dikbang': dikbang, 'tmt': Timestamp.fromDate(tmt)};
   }
 
   factory PendidikanPelatihan.fromMap(Map<String, dynamic> map) {
     return PendidikanPelatihan(
       dikbang: map['dikbang'] ?? '',
-      tmt: map['tmt'] != null ? (map['tmt'] as Timestamp).toDate() : DateTime.now(),
+      tmt:
+          map['tmt'] != null
+              ? (map['tmt'] as Timestamp).toDate()
+              : DateTime.now(),
     );
   }
 }
@@ -213,22 +196,19 @@ class TandaKehormatan {
   final String tandaKehormatan;
   final DateTime tmt;
 
-  TandaKehormatan({
-    required this.tandaKehormatan,
-    required this.tmt,
-  });
+  TandaKehormatan({required this.tandaKehormatan, required this.tmt});
 
   Map<String, dynamic> toMap() {
-    return {
-      'tandaKehormatan': tandaKehormatan,
-      'tmt': Timestamp.fromDate(tmt),
-    };
+    return {'tandaKehormatan': tandaKehormatan, 'tmt': Timestamp.fromDate(tmt)};
   }
 
   factory TandaKehormatan.fromMap(Map<String, dynamic> map) {
     return TandaKehormatan(
       tandaKehormatan: map['tandaKehormatan'] ?? '',
-      tmt: map['tmt'] != null ? (map['tmt'] as Timestamp).toDate() : DateTime.now(),
+      tmt:
+          map['tmt'] != null
+              ? (map['tmt'] as Timestamp).toDate()
+              : DateTime.now(),
     );
   }
 }
@@ -238,16 +218,10 @@ class KemampuanBahasa {
   final String bahasa;
   final String status; // AKTIF / TIDAK AKTIF
 
-  KemampuanBahasa({
-    required this.bahasa,
-    required this.status,
-  });
+  KemampuanBahasa({required this.bahasa, required this.status});
 
   Map<String, dynamic> toMap() {
-    return {
-      'bahasa': bahasa,
-      'status': status,
-    };
+    return {'bahasa': bahasa, 'status': status};
   }
 
   factory KemampuanBahasa.fromMap(Map<String, dynamic> map) {
@@ -263,16 +237,10 @@ class PenugasanLuarStruktur {
   final String penugasan;
   final String lokasi;
 
-  PenugasanLuarStruktur({
-    required this.penugasan,
-    required this.lokasi,
-  });
+  PenugasanLuarStruktur({required this.penugasan, required this.lokasi});
 
   Map<String, dynamic> toMap() {
-    return {
-      'penugasan': penugasan,
-      'lokasi': lokasi,
-    };
+    return {'penugasan': penugasan, 'lokasi': lokasi};
   }
 
   factory PenugasanLuarStruktur.fromMap(Map<String, dynamic> map) {
@@ -294,7 +262,7 @@ class UserModel {
   final UserRole role; // Satuan
   final UserStatus status; // Status approval
   final String? photoUrl; // URL foto profil
-  
+
   // Data Personal
   final String? tempatLahir;
   final DateTime? dateOfBirth; // Tanggal lahir
@@ -302,20 +270,20 @@ class UserModel {
   final String? suku;
   final String? statusPersonel; // AKTIF/NON-AKTIF/PENSIUN
   final DateTime? militaryJoinDate; // Tanggal masuk militer
-  
+
   // Kontak & Personal Info
-  final String? phoneNumber; 
-  final String? address; 
-  final String? emergencyContact; 
-  final String? bloodType; 
-  final String? maritalStatus; 
-  
+  final String? phoneNumber;
+  final String? address;
+  final String? emergencyContact;
+  final String? bloodType;
+  final String? maritalStatus;
+
   // System fields
-  final DateTime createdAt; 
-  final DateTime? updatedAt; 
-  final String? approvedBy; 
-  final DateTime? approvedAt; 
-  final String? rejectionReason; 
+  final DateTime createdAt;
+  final DateTime? updatedAt;
+  final String? approvedBy;
+  final DateTime? approvedAt;
+  final String? rejectionReason;
 
   // Complex data arrays
   final List<PendidikanKepolisian> pendidikanKepolisian;
@@ -392,15 +360,15 @@ class UserModel {
   // Calculate lama jabatan current
   String get lamaJabatan {
     if (jabatanTmt == null) return '0 Tahun 0 Bulan 0 Hari';
-    
+
     final now = DateTime.now();
     final diff = now.difference(jabatanTmt!);
-    
+
     int years = (diff.inDays / 365).floor();
     int remainingDays = diff.inDays - (years * 365);
     int months = (remainingDays / 30).floor();
     int days = remainingDays - (months * 30);
-    
+
     return '$years Tahun $months Bulan $days Hari';
   }
 
@@ -423,8 +391,18 @@ class UserModel {
   String get formattedDateOfBirth {
     if (dateOfBirth == null) return '';
     const months = [
-      'Januari','Februari','Maret','April','Mei','Juni',
-      'Juli','Agustus','September','Oktober','November','Desember',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return '${dateOfBirth!.day} ${months[dateOfBirth!.month - 1]} ${dateOfBirth!.year}';
   }
@@ -433,8 +411,18 @@ class UserModel {
   String get formattedMilitaryJoinDate {
     if (militaryJoinDate == null) return '';
     const months = [
-      'Januari','Februari','Maret','April','Mei','Juni',
-      'Juli','Agustus','September','Oktober','November','Desember',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return '${militaryJoinDate!.day} ${months[militaryJoinDate!.month - 1]} ${militaryJoinDate!.year}';
   }
@@ -449,7 +437,10 @@ class UserModel {
   String get tempatTanggalLahir {
     if (tempatLahir == null && dateOfBirth == null) return '';
     final tempat = tempatLahir ?? '';
-    final tanggal = dateOfBirth != null ? '${dateOfBirth!.day.toString().padLeft(2, '0')}-${dateOfBirth!.month.toString().padLeft(2, '0')}-${dateOfBirth!.year}' : '';
+    final tanggal =
+        dateOfBirth != null
+            ? '${dateOfBirth!.day.toString().padLeft(2, '0')}-${dateOfBirth!.month.toString().padLeft(2, '0')}-${dateOfBirth!.year}'
+            : '';
     return '$tempat, $tanggal'.replaceFirst(RegExp(r'^, |, $'), '');
   }
 
@@ -464,58 +455,100 @@ class UserModel {
       nrp: data['nrp'] ?? '',
       rank: data['rank'] ?? '',
       jabatan: data['jabatan'] ?? '',
-      jabatanTmt: data['jabatanTmt'] != null ? (data['jabatanTmt'] as Timestamp).toDate() : null,
+      jabatanTmt:
+          data['jabatanTmt'] != null
+              ? (data['jabatanTmt'] as Timestamp).toDate()
+              : null,
       role: UserRole.fromString(data['role'] ?? 'other'),
       status: UserStatus.fromString(data['status'] ?? 'pending'),
       photoUrl: data['photoUrl'],
-      
+
       // Personal data
       tempatLahir: data['tempatLahir'],
-      dateOfBirth: data['dateOfBirth'] != null ? (data['dateOfBirth'] as Timestamp).toDate() : null,
+      dateOfBirth:
+          data['dateOfBirth'] != null
+              ? (data['dateOfBirth'] as Timestamp).toDate()
+              : null,
       agama: data['agama'],
       suku: data['suku'],
       statusPersonel: data['statusPersonel'],
-      militaryJoinDate: data['militaryJoinDate'] != null ? (data['militaryJoinDate'] as Timestamp).toDate() : null,
-      
+      militaryJoinDate:
+          data['militaryJoinDate'] != null
+              ? (data['militaryJoinDate'] as Timestamp).toDate()
+              : null,
+
       // Contact info
       phoneNumber: data['phoneNumber'],
       address: data['address'],
       emergencyContact: data['emergencyContact'],
       bloodType: data['bloodType'],
       maritalStatus: data['maritalStatus'],
-      
+
       // System fields
-      createdAt: data['createdAt'] != null ? (data['createdAt'] as Timestamp).toDate() : DateTime.now(),
-      updatedAt: data['updatedAt'] != null ? (data['updatedAt'] as Timestamp).toDate() : null,
+      createdAt:
+          data['createdAt'] != null
+              ? (data['createdAt'] as Timestamp).toDate()
+              : DateTime.now(),
+      updatedAt:
+          data['updatedAt'] != null
+              ? (data['updatedAt'] as Timestamp).toDate()
+              : null,
       approvedBy: data['approvedBy'],
-      approvedAt: data['approvedAt'] != null ? (data['approvedAt'] as Timestamp).toDate() : null,
+      approvedAt:
+          data['approvedAt'] != null
+              ? (data['approvedAt'] as Timestamp).toDate()
+              : null,
       rejectionReason: data['rejectionReason'],
 
       // Complex arrays
-      pendidikanKepolisian: data['pendidikanKepolisian'] != null
-          ? (data['pendidikanKepolisian'] as List).map((e) => PendidikanKepolisian.fromMap(e)).toList()
-          : [],
-      pendidikanUmum: data['pendidikanUmum'] != null
-          ? (data['pendidikanUmum'] as List).map((e) => PendidikanUmum.fromMap(e)).toList()
-          : [],
-      riwayatPangkat: data['riwayatPangkat'] != null
-          ? (data['riwayatPangkat'] as List).map((e) => RiwayatPangkat.fromMap(e)).toList()
-          : [],
-      riwayatJabatan: data['riwayatJabatan'] != null
-          ? (data['riwayatJabatan'] as List).map((e) => RiwayatJabatan.fromMap(e)).toList()
-          : [],
-      pendidikanPelatihan: data['pendidikanPelatihan'] != null
-          ? (data['pendidikanPelatihan'] as List).map((e) => PendidikanPelatihan.fromMap(e)).toList()
-          : [],
-      tandaKehormatan: data['tandaKehormatan'] != null
-          ? (data['tandaKehormatan'] as List).map((e) => TandaKehormatan.fromMap(e)).toList()
-          : [],
-      kemampuanBahasa: data['kemampuanBahasa'] != null
-          ? (data['kemampuanBahasa'] as List).map((e) => KemampuanBahasa.fromMap(e)).toList()
-          : [],
-      penugasanLuarStruktur: data['penugasanLuarStruktur'] != null
-          ? (data['penugasanLuarStruktur'] as List).map((e) => PenugasanLuarStruktur.fromMap(e)).toList()
-          : [],
+      pendidikanKepolisian:
+          data['pendidikanKepolisian'] != null
+              ? (data['pendidikanKepolisian'] as List)
+                  .map((e) => PendidikanKepolisian.fromMap(e))
+                  .toList()
+              : [],
+      pendidikanUmum:
+          data['pendidikanUmum'] != null
+              ? (data['pendidikanUmum'] as List)
+                  .map((e) => PendidikanUmum.fromMap(e))
+                  .toList()
+              : [],
+      riwayatPangkat:
+          data['riwayatPangkat'] != null
+              ? (data['riwayatPangkat'] as List)
+                  .map((e) => RiwayatPangkat.fromMap(e))
+                  .toList()
+              : [],
+      riwayatJabatan:
+          data['riwayatJabatan'] != null
+              ? (data['riwayatJabatan'] as List)
+                  .map((e) => RiwayatJabatan.fromMap(e))
+                  .toList()
+              : [],
+      pendidikanPelatihan:
+          data['pendidikanPelatihan'] != null
+              ? (data['pendidikanPelatihan'] as List)
+                  .map((e) => PendidikanPelatihan.fromMap(e))
+                  .toList()
+              : [],
+      tandaKehormatan:
+          data['tandaKehormatan'] != null
+              ? (data['tandaKehormatan'] as List)
+                  .map((e) => TandaKehormatan.fromMap(e))
+                  .toList()
+              : [],
+      kemampuanBahasa:
+          data['kemampuanBahasa'] != null
+              ? (data['kemampuanBahasa'] as List)
+                  .map((e) => KemampuanBahasa.fromMap(e))
+                  .toList()
+              : [],
+      penugasanLuarStruktur:
+          data['penugasanLuarStruktur'] != null
+              ? (data['penugasanLuarStruktur'] as List)
+                  .map((e) => PenugasanLuarStruktur.fromMap(e))
+                  .toList()
+              : [],
     );
   }
 
@@ -531,22 +564,26 @@ class UserModel {
       'role': role.name,
       'status': status.name,
       'photoUrl': photoUrl,
-      
+
       // Personal data
       'tempatLahir': tempatLahir,
-      'dateOfBirth': dateOfBirth != null ? Timestamp.fromDate(dateOfBirth!) : null,
+      'dateOfBirth':
+          dateOfBirth != null ? Timestamp.fromDate(dateOfBirth!) : null,
       'agama': agama,
       'suku': suku,
       'statusPersonel': statusPersonel,
-      'militaryJoinDate': militaryJoinDate != null ? Timestamp.fromDate(militaryJoinDate!) : null,
-      
+      'militaryJoinDate':
+          militaryJoinDate != null
+              ? Timestamp.fromDate(militaryJoinDate!)
+              : null,
+
       // Contact info
       'phoneNumber': phoneNumber,
       'address': address,
       'emergencyContact': emergencyContact,
       'bloodType': bloodType,
       'maritalStatus': maritalStatus,
-      
+
       // System fields
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
@@ -555,14 +592,16 @@ class UserModel {
       'rejectionReason': rejectionReason,
 
       // Complex arrays
-      'pendidikanKepolisian': pendidikanKepolisian.map((e) => e.toMap()).toList(),
+      'pendidikanKepolisian':
+          pendidikanKepolisian.map((e) => e.toMap()).toList(),
       'pendidikanUmum': pendidikanUmum.map((e) => e.toMap()).toList(),
       'riwayatPangkat': riwayatPangkat.map((e) => e.toMap()).toList(),
       'riwayatJabatan': riwayatJabatan.map((e) => e.toMap()).toList(),
       'pendidikanPelatihan': pendidikanPelatihan.map((e) => e.toMap()).toList(),
       'tandaKehormatan': tandaKehormatan.map((e) => e.toMap()).toList(),
       'kemampuanBahasa': kemampuanBahasa.map((e) => e.toMap()).toList(),
-      'penugasanLuarStruktur': penugasanLuarStruktur.map((e) => e.toMap()).toList(),
+      'penugasanLuarStruktur':
+          penugasanLuarStruktur.map((e) => e.toMap()).toList(),
     };
   }
 
@@ -637,7 +676,8 @@ class UserModel {
       pendidikanPelatihan: pendidikanPelatihan ?? this.pendidikanPelatihan,
       tandaKehormatan: tandaKehormatan ?? this.tandaKehormatan,
       kemampuanBahasa: kemampuanBahasa ?? this.kemampuanBahasa,
-      penugasanLuarStruktur: penugasanLuarStruktur ?? this.penugasanLuarStruktur,
+      penugasanLuarStruktur:
+          penugasanLuarStruktur ?? this.penugasanLuarStruktur,
     );
   }
 
@@ -661,7 +701,7 @@ class MilitaryRank {
   static const List<String> ranks = [
     'BHAYANGKARA',
     'BHARADA',
-    'BHARATU', 
+    'BHARATU',
     'BRIPKA',
     'BRIPDA',
     'BRIPTU',
@@ -684,7 +724,7 @@ class MilitaryRank {
   static const List<String> religions = [
     'ISLAM',
     'KRISTEN PROTESTAN',
-    'KRISTEN KATOLIK', 
+    'KRISTEN KATOLIK',
     'HINDU',
     'BUDDHA',
     'KONGHUCU',
@@ -699,7 +739,7 @@ class MilitaryRank {
 
   static const List<String> educationLevels = [
     'SD',
-    'SMP', 
+    'SMP',
     'SMA/SMK',
     'D3',
     'S1',
@@ -709,7 +749,7 @@ class MilitaryRank {
 
   static const List<String> pendidikanKepolisian = [
     'SESPIMMEN',
-    'SESPIMMA', 
+    'SESPIMMA',
     'SESPIMPTI',
     'PTIK',
     'AKPOL',
@@ -718,11 +758,7 @@ class MilitaryRank {
     'SECABA',
   ];
 
-  static const List<String> statusPersonel = [
-    'AKTIF',
-    'NON-AKTIF',
-    'PENSIUN',
-  ];
+  static const List<String> statusPersonel = ['AKTIF', 'NON-AKTIF', 'PENSIUN'];
 
   static const List<String> bahasaList = [
     'INGGRIS',
@@ -735,9 +771,5 @@ class MilitaryRank {
     'JEPANG',
   ];
 
-  static const List<String> statusBahasa = [
-    'AKTIF',
-    'TIDAK AKTIF',
-  ];
+  static const List<String> statusBahasa = ['AKTIF', 'TIDAK AKTIF'];
 }
-

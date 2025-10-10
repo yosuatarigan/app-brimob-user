@@ -190,27 +190,7 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  Color _getRoleColor(UserRole role) {
-    switch (role) {
-      case UserRole.admin:
-        return Colors.purple[600]!;
-      case UserRole.makoKor:
-        return Colors.blue[600]!;
-      case UserRole.pasPelopor:
-        return Colors.red[600]!;
-      case UserRole.pasGegana:
-        return Colors.green[600]!;
-      case UserRole.pasbrimobI:
-        return Colors.orange[600]!;
-      case UserRole.pasbrimobII:
-        return Colors.indigo[600]!;
-      case UserRole.pasbrimobIII:
-        return Colors.teal[600]!;
-      case UserRole.other:
-        return Colors.grey[600]!;
-    }
-  }
-
+ 
   Future<void> _loadCurrentUserAndInitializeFCM() async {
     try {
       final user = _authService.currentUser;

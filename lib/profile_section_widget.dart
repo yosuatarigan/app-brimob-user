@@ -13,7 +13,7 @@ import 'edit_profile_page.dart';
 class ProfileSectionWidget extends StatefulWidget {
   final UserModel currentUser;
   final VoidCallback onLogout;
-  
+
   const ProfileSectionWidget({
     super.key,
     required this.currentUser,
@@ -68,8 +68,10 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
 
   Map<String, int> _calculateRetirement() {
     final retirementAge = 58;
-    final retirementDate = _currentUser.dateOfBirth?.add(Duration(days: retirementAge * 365));
-    
+    final retirementDate = _currentUser.dateOfBirth?.add(
+      Duration(days: retirementAge * 365),
+    );
+
     if (retirementDate == null) {
       return {'years': 0, 'months': 0, 'days': 0};
     }
@@ -118,17 +120,18 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
 
     try {
       final pdfData = await PdfService.generateCvPdf(_currentUser);
-      final fileName = 'CV_${_currentUser.fullName.replaceAll(' ', '_')}_${_currentUser.nrp}.pdf';
+      final fileName =
+          'CV_${_currentUser.fullName.replaceAll(' ', '_')}_${_currentUser.nrp}.pdf';
       final directory = await getTemporaryDirectory();
       final file = File('${directory.path}/$fileName');
       await file.writeAsBytes(pdfData);
-      
+
       await Share.shareXFiles(
         [XFile(file.path)],
         text: 'CV ${_currentUser.fullName} - ${_currentUser.nrp}',
         subject: 'Curriculum Vitae',
       );
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -179,49 +182,54 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
   void _showLogoutConfirmation() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.logout, color: Colors.red[600]),
-            const SizedBox(width: 8),
-            const Text('Konfirmasi Keluar'),
-          ],
-        ),
-        content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              widget.onLogout();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[600],
-              foregroundColor: Colors.white,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: const Text('Keluar'),
+            title: Row(
+              children: [
+                Icon(Icons.logout, color: Colors.red[600]),
+                const SizedBox(width: 8),
+                const Text('Konfirmasi Keluar'),
+              ],
+            ),
+            content: const Text(
+              'Apakah Anda yakin ingin keluar dari aplikasi?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  widget.onLogout();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red[600],
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Keluar'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
-  Widget _buildInfoCard(String title, String value, IconData icon, Color color) {
+  Widget _buildInfoCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
-        ),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
       ),
       child: Column(
         children: [
@@ -251,16 +259,12 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
 
   Widget _buildDetailRow(String label, String? value, IconData icon) {
     if (value == null || value.isEmpty) return const SizedBox.shrink();
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 16,
-            color: Colors.white.withOpacity(0.7),
-          ),
+          Icon(icon, size: 16, color: Colors.white.withOpacity(0.7)),
           const SizedBox(width: 8),
           Text(
             '$label: ',
@@ -287,7 +291,7 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
   @override
   Widget build(BuildContext context) {
     final retirement = _calculateRetirement();
-    
+
     return Container(
       margin: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -383,40 +387,45 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
                           ),
                         ],
                       ),
-                      child: _currentUser.photoUrl != null
-                          ? ClipOval(
-                              child: CachedNetworkImage(
-                                imageUrl: _currentUser.photoUrl!,
-                                fit: BoxFit.cover,
-                                width: 90,
-                                height: 90,
-                                placeholder: (context, url) => Container(
-                                  color: Colors.grey[300],
-                                  child: const Center(
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  ),
+                      child:
+                          _currentUser.photoUrl != null
+                              ? ClipOval(
+                                child: CachedNetworkImage(
+                                  imageUrl: _currentUser.photoUrl!,
+                                  fit: BoxFit.cover,
+                                  width: 90,
+                                  height: 90,
+                                  placeholder:
+                                      (context, url) => Container(
+                                        color: Colors.grey[300],
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      ),
+                                  errorWidget:
+                                      (context, url, error) => Container(
+                                        color: Colors.grey[400],
+                                        child: Icon(
+                                          Icons.person,
+                                          size: 45,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
                                 ),
-                                errorWidget: (context, url, error) => Container(
-                                  color: Colors.grey[400],
-                                  child: Icon(
-                                    Icons.person,
-                                    size: 45,
-                                    color: Colors.grey[600],
-                                  ),
+                              )
+                              : Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withOpacity(0.1),
+                                ),
+                                child: Icon(
+                                  Icons.person,
+                                  size: 45,
+                                  color: Colors.white.withOpacity(0.8),
                                 ),
                               ),
-                            )
-                          : Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.1),
-                              ),
-                              child: Icon(
-                                Icons.person,
-                                size: 45,
-                                color: Colors.white.withOpacity(0.8),
-                              ),
-                            ),
                     ),
 
                     const SizedBox(width: 16),
@@ -437,7 +446,7 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 6),
-                          
+
                           // Satuan Badge
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -457,9 +466,9 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
                               ),
                             ),
                           ),
-                          
+
                           const SizedBox(height: 8),
-                          
+
                           Text(
                             'NRP: ${_currentUser.nrp}',
                             style: GoogleFonts.roboto(
@@ -468,7 +477,7 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          
+
                           if (_currentUser.jabatan.isNotEmpty) ...[
                             const SizedBox(height: 4),
                             Text(
@@ -522,6 +531,61 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
 
                 const SizedBox(height: 16),
 
+                // Masa Pensiun Card
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.red[400]!, Colors.red[600]!],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.red.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.event_available,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'MASA PENSIUN',
+                            style: GoogleFonts.roboto(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${retirement['years']} TAHUN, ${retirement['months']} BULAN, ${retirement['days']} HARI',
+                        style: GoogleFonts.roboto(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
                 // Detail Information
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -532,17 +596,53 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
                   child: Column(
                     children: [
                       _buildDetailRow('Email', _currentUser.email, Icons.email),
-                      _buildDetailRow('Tempat, Tgl Lahir', _currentUser.tempatTanggalLahir, Icons.place),
-                      _buildDetailRow('Agama', _currentUser.agama, Icons.mosque),
-                      _buildDetailRow('Golongan Darah', _currentUser.bloodType, Icons.bloodtype),
-                      _buildDetailRow('Status Pernikahan', _currentUser.maritalStatus, Icons.family_restroom),
-                      _buildDetailRow('Telepon', _currentUser.phoneNumber, Icons.phone),
-                      _buildDetailRow('Alamat', _currentUser.address, Icons.home),
-                      _buildDetailRow('Kontak Darurat', _currentUser.emergencyContact, Icons.contact_emergency),
+                      _buildDetailRow(
+                        'Tempat, Tgl Lahir',
+                        _currentUser.tempatTanggalLahir,
+                        Icons.place,
+                      ),
+                      _buildDetailRow(
+                        'Agama',
+                        _currentUser.agama,
+                        Icons.mosque,
+                      ),
+                      _buildDetailRow(
+                        'Golongan Darah',
+                        _currentUser.bloodType,
+                        Icons.bloodtype,
+                      ),
+                      _buildDetailRow(
+                        'Status Pernikahan',
+                        _currentUser.maritalStatus,
+                        Icons.family_restroom,
+                      ),
+                      _buildDetailRow(
+                        'Telepon',
+                        _currentUser.phoneNumber,
+                        Icons.phone,
+                      ),
+                      _buildDetailRow(
+                        'Alamat',
+                        _currentUser.address,
+                        Icons.home,
+                      ),
+                      _buildDetailRow(
+                        'Kontak Darurat',
+                        _currentUser.emergencyContact,
+                        Icons.contact_emergency,
+                      ),
                       if (_currentUser.militaryJoinDate != null)
-                        _buildDetailRow('Bergabung', _currentUser.formattedMilitaryJoinDate, Icons.date_range),
+                        _buildDetailRow(
+                          'Bergabung',
+                          _currentUser.formattedMilitaryJoinDate,
+                          Icons.date_range,
+                        ),
                       if (_currentUser.dateOfBirth != null)
-                        _buildDetailRow('Masa Pensiun', '${retirement['years']} Tahun, ${retirement['months']} Bulan, ${retirement['days']} Hari', Icons.event_available),
+                        _buildDetailRow(
+                          'Masa Pensiun',
+                          '${retirement['years']} Tahun, ${retirement['months']} Bulan, ${retirement['days']} Hari',
+                          Icons.event_available,
+                        ),
                     ],
                   ),
                 ),
@@ -557,16 +657,19 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: _isExporting ? null : _exportToPdf,
-                        icon: _isExporting
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            : const Icon(Icons.share, size: 20),
+                        icon:
+                            _isExporting
+                                ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                                : const Icon(Icons.share, size: 20),
                         label: Text(
                           _isExporting ? 'Menyiapkan...' : 'Share CV',
                           style: GoogleFonts.roboto(
@@ -585,9 +688,9 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     // Edit Profile Button
                     SizedBox(
                       width: double.infinity,
@@ -612,9 +715,9 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     // Logout Button
                     SizedBox(
                       width: double.infinity,
