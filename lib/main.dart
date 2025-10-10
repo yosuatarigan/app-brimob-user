@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SDM Korbrimob',
+      title: 'PLB KORBRIMOB',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

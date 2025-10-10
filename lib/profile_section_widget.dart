@@ -698,7 +698,7 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
                         onPressed: _navigateToEditProfile,
                         icon: const Icon(Icons.edit, size: 20),
                         label: Text(
-                          'Edit Profil',
+                          'Edit Data Diri',
                           style: GoogleFonts.roboto(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
