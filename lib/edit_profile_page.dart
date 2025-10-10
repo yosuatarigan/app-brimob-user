@@ -2454,7 +2454,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                     Expanded(
                       child: Text(
-                        'EDIT PROFIL PERSONEL',
+                        'EDIT DATA DIRI PERSONEL',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.roboto(
                           fontSize: 16,
