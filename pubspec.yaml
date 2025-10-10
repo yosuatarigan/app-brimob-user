@@ -89,6 +89,7 @@ flutter:
     - assets/
     - assets/dc/
     - assets/audionotif.mp3
+    - assets/newgalerisatuan/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

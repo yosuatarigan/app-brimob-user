@@ -856,37 +856,37 @@ class _DashboardPageState extends State<DashboardPage> {
         'id': 'mako_kor',
         'name': 'MAKO KOR',
         'color': const Color(0xFF1565C0),
-        'logo': 'assets/brimob.png',
+        'logo': 'assets/newgalerisatuan/MAKO KORBRIMOB.png',
       },
       {
         'id': 'pas_pelopor',
         'name': 'PAS PELOPOR',
         'color': const Color(0xFFD32F2F),
-        'logo': 'assets/paspelopor.jpg',
+        'logo': 'assets/newgalerisatuan/pelopor terbaru.png',
       },
       {
         'id': 'pas_gegana',
         'name': 'PAS GEGANA',
         'color': const Color(0xFF388E3C),
-        'logo': 'assets/gegana.jpg',
+        'logo': 'assets/newgalerisatuan/gegana.png',
       },
       {
         'id': 'pasbrimob_i',
         'name': 'PASBRIMOB I',
         'color': const Color(0xFFF57C00),
-        'logo': 'assets/brimob.png',
+        'logo': 'assets/newgalerisatuan/PASBRIMOB 1.png',
       },
       {
         'id': 'pasbrimob_ii',
         'name': 'PASBRIMOB II',
         'color': const Color(0xFF7B1FA2),
-        'logo': 'assets/brimob.png',
+        'logo': 'assets/newgalerisatuan/PASBRIMOB 2.png',
       },
       {
         'id': 'pasbrimob_iii',
         'name': 'PASBRIMOB III',
         'color': const Color(0xFF00796B),
-        'logo': 'assets/brimob.png',
+        'logo': 'assets/newgalerisatuan/PASBRIMOB 3.png',
       },
     ];
 

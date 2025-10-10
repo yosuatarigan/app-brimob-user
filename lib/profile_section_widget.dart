@@ -671,7 +671,7 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
                                 )
                                 : const Icon(Icons.share, size: 20),
                         label: Text(
-                          _isExporting ? 'Menyiapkan...' : 'Share CV',
+                          _isExporting ? 'Menyiapkan...' : 'CETAK DRH',
                           style: GoogleFonts.roboto(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
