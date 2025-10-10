@@ -66,6 +66,36 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
     }
   }
 
+  Map<String, int> _calculateRetirement() {
+    final retirementAge = 58;
+    final retirementDate = _currentUser.dateOfBirth?.add(Duration(days: retirementAge * 365));
+    
+    if (retirementDate == null) {
+      return {'years': 0, 'months': 0, 'days': 0};
+    }
+
+    final now = DateTime.now();
+    if (now.isAfter(retirementDate)) {
+      return {'years': 0, 'months': 0, 'days': 0};
+    }
+
+    int years = retirementDate.year - now.year;
+    int months = retirementDate.month - now.month;
+    int days = retirementDate.day - now.day;
+
+    if (days < 0) {
+      months--;
+      days += DateTime(retirementDate.year, retirementDate.month, 0).day;
+    }
+
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    return {'years': years, 'months': months, 'days': days};
+  }
+
   void _navigateToEditProfile() async {
     final result = await Navigator.push<UserModel>(
       context,
@@ -87,18 +117,12 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
     });
 
     try {
-      // Generate PDF
       final pdfData = await PdfService.generateCvPdf(_currentUser);
-      
-      // Buat nama file
       final fileName = 'CV_${_currentUser.fullName.replaceAll(' ', '_')}_${_currentUser.nrp}.pdf';
-      
-      // Save ke temporary directory
       final directory = await getTemporaryDirectory();
       final file = File('${directory.path}/$fileName');
       await file.writeAsBytes(pdfData);
       
-      // Langsung share file
       await Share.shareXFiles(
         [XFile(file.path)],
         text: 'CV ${_currentUser.fullName} - ${_currentUser.nrp}',
@@ -210,6 +234,7 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
+            textAlign: TextAlign.center,
           ),
           Text(
             title,
@@ -217,6 +242,7 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
               fontSize: 11,
               color: Colors.white.withOpacity(0.8),
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -260,6 +286,8 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final retirement = _calculateRetirement();
+    
     return Container(
       margin: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -513,6 +541,8 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
                       _buildDetailRow('Kontak Darurat', _currentUser.emergencyContact, Icons.contact_emergency),
                       if (_currentUser.militaryJoinDate != null)
                         _buildDetailRow('Bergabung', _currentUser.formattedMilitaryJoinDate, Icons.date_range),
+                      if (_currentUser.dateOfBirth != null)
+                        _buildDetailRow('Masa Pensiun', '${retirement['years']} Tahun, ${retirement['months']} Bulan, ${retirement['days']} Hari', Icons.event_available),
                     ],
                   ),
                 ),

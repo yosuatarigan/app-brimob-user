@@ -298,7 +298,6 @@ class _DashboardPageState extends State<DashboardPage> {
                 _buildGaleriSatuan(),
                 _buildMenuGrid(),
                 _buildPedomanSection(),
-                _buildNotificationSection(), // Dipindah ke bawah
                 ProfileSectionWidget(
                   currentUser: _currentUser!,
                   onLogout: () {
