@@ -278,6 +278,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 _buildGaleriSatuan(),
                 _buildMenuGrid(),
                 _buildPedomanSection(),
+                _buildNotificationSection(),
                 ProfileSectionWidget(
                   currentUser: _currentUser!,
                   onLogout: () {
@@ -406,24 +407,24 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.campaign,
-                            color: Colors.blue[600],
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Kirim Notifikasi',
-                            style: GoogleFonts.roboto(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey[800],
-                            ),
-                          ),
-                        ],
-                      ),
+                      // Row(
+                      //   children: [
+                      //     Icon(
+                      //       Icons.campaign,
+                      //       color: Colors.blue[600],
+                      //       size: 20,
+                      //     ),
+                      //     const SizedBox(width: 8),
+                      //     Text(
+                      //       'Kirim Notifikasi',
+                      //       style: GoogleFonts.roboto(
+                      //         fontSize: 16,
+                      //         fontWeight: FontWeight.w600,
+                      //         color: Colors.grey[800],
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ),
                       const SizedBox(height: 16),
                       NotificationWidget(),
                     ],
@@ -431,56 +432,56 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
 
                 // Divider
-                Divider(height: 1, color: Colors.grey[200]),
+                // Divider(height: 1, color: Colors.grey[200]),
 
-                // Recent Notifications Section
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.history,
-                            color: Colors.green[600],
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Riwayat Notifikasi',
-                            style: GoogleFonts.roboto(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey[800],
-                            ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.blue[50],
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              '5 Terbaru',
-                              style: GoogleFonts.roboto(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.blue[600],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      RecentNotificationsWidget(limit: 5),
-                    ],
-                  ),
-                ),
+                // // Recent Notifications Section
+                // Container(
+                //   padding: const EdgeInsets.all(20),
+                //   child: Column(
+                //     crossAxisAlignment: CrossAxisAlignment.start,
+                //     children: [
+                //       Row(
+                //         children: [
+                //           Icon(
+                //             Icons.history,
+                //             color: Colors.green[600],
+                //             size: 20,
+                //           ),
+                //           const SizedBox(width: 8),
+                //           Text(
+                //             'Riwayat Notifikasi',
+                //             style: GoogleFonts.roboto(
+                //               fontSize: 16,
+                //               fontWeight: FontWeight.w600,
+                //               color: Colors.grey[800],
+                //             ),
+                //           ),
+                //           const Spacer(),
+                //           Container(
+                //             padding: const EdgeInsets.symmetric(
+                //               horizontal: 8,
+                //               vertical: 4,
+                //             ),
+                //             decoration: BoxDecoration(
+                //               color: Colors.blue[50],
+                //               borderRadius: BorderRadius.circular(12),
+                //             ),
+                //             child: Text(
+                //               '5 Terbaru',
+                //               style: GoogleFonts.roboto(
+                //                 fontSize: 11,
+                //                 fontWeight: FontWeight.w500,
+                //                 color: Colors.blue[600],
+                //               ),
+                //             ),
+                //           ),
+                //         ],
+                //       ),
+                //       const SizedBox(height: 16),
+                //       RecentNotificationsWidget(limit: 5),
+                //     ],
+                //   ),
+                // ),
               ],
             ),
           ),

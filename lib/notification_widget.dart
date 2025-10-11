@@ -43,7 +43,7 @@ class NotificationWidget extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Notifikasi BRIMOB',
+                  'PLB BRIMOB',
                   style: GoogleFonts.roboto(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
