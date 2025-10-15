@@ -949,7 +949,7 @@ class _RegisterPageState extends State<RegisterPage> {
             onPressed: _addPendidikanKepolisian,
             icon: Icon(Icons.add, color: AppColors.primaryBlue),
             label: Text(
-              'Tambah Pendidikan Kepolisian',
+              'Tambah Pendidikan Pertama Kepolisian',
               style: GoogleFonts.roboto(
                 fontWeight: FontWeight.w500,
                 color: AppColors.primaryBlue,
@@ -1727,8 +1727,8 @@ class _RegisterPageState extends State<RegisterPage> {
           (context) => AlertDialog(
             title: Text(
               index == null
-                  ? 'Tambah Pendidikan Kepolisian'
-                  : 'Edit Pendidikan Kepolisian',
+                  ? 'Tambah Pendidikan Pertama Kepolisian'
+                  : 'Edit Pendidikan Pertama Kepolisian',
               style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
             ),
             content: Column(

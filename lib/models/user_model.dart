@@ -750,14 +750,10 @@ static const List<String> ranks = [
   ];
 
   static const List<String> pendidikanKepolisian = [
-    'SESPIMMEN',
-    'SESPIMMA',
-    'SESPIMPTI',
-    'PTIK',
-    'AKPOL',
-    'SPAMEN',
-    'SPAMA',
-    'SECABA',
+   'AKPOL',
+   'SIPSS',
+   'DIKTUKBA',
+   'DIKTUKTA'
   ];
 
   static const List<String> statusPersonel = ['AKTIF', 'NON-AKTIF', 'PENSIUN'];

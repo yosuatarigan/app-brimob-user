@@ -962,7 +962,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             onPressed: _addPendidikanKepolisian,
             icon: Icon(Icons.add, color: AppColors.primaryBlue),
             label: Text(
-              'Tambah Pendidikan Kepolisian',
+              'Tambah Pendidikan Pertama Kepolisian',
               style: GoogleFonts.roboto(
                 fontWeight: FontWeight.w500,
                 color: AppColors.primaryBlue,
@@ -1728,7 +1728,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          index == null ? 'Tambah Pendidikan Kepolisian' : 'Edit Pendidikan Kepolisian',
+          index == null ? 'Tambah Pendidikan Pertama Kepolisian' : 'Edit Pendidikan Pertama Kepolisian',
           style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
         ),
         content: Column(
