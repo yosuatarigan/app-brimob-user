@@ -5,13 +5,12 @@ enum UserRole {
   admin,
   makoKor,
   other,
-    pasGegana,
+  pasGegana,
   pasPelopor,
- 
+
   pasbrimobI,
   pasbrimobII,
-  pasbrimobIII,
-  ;
+  pasbrimobIII;
 
   String get displayName {
     switch (this) {
@@ -698,26 +697,29 @@ class UserModel {
 
 // Helper class for rank data
 class MilitaryRank {
-  static const List<String> ranks = [
-    'BHAYANGKARA',
-    'BHARADA',
-    'BHARATU',
-    'BRIPKA',
-    'BRIPDA',
-    'BRIPTU',
-    'BRIGADIR',
-    'AIPDA',
-    'AIPTU',
-    'IPDA',
-    'IPTU',
-    'AKP',
-    'KOMPOL',
-    'AKBP',
-    'KOMBES',
-    'BRIGJEN',
-    'IRJEN',
-    'KOMJEN',
-  ];
+static const List<String> ranks = [
+  'BHARADA',
+  'BHARATU',
+  'BHARAKA',
+  'ABRIPDA',
+  'ABRIPTU',
+  'ABRIP',
+  'BRIPDA',
+  'BRIPTU',
+  'BRIGADIR',
+  'BRIPKA',
+  'AIPDA',
+  'AIPTU',
+  'IPDA',
+  'IPTU',
+  'AKP',
+  'KOMPOL',
+  'AKBP',
+  'KOMBES',
+  'BRIGJEN',
+  'IRJEN',
+  'KOMJEN',
+];
 
   static const List<String> bloodTypes = ['A', 'B', 'AB', 'O'];
 

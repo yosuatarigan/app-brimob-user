@@ -6,18 +6,18 @@ class AppColors {
   static const Color policeBlue = Color(0xFF0F172A);
   static const Color darkNavy = Color(0xFF0F172A);
   static const Color lightBlue = Color(0xFF3E7BC7);
-  
+
   // Secondary Colors
   static const Color goldYellow = Color(0xFFFCD34D);
   static const Color lightGold = Color(0xFFFEF3C7);
-  
+
   // Neutral Colors
   static const Color white = Colors.white;
   static const Color black = Color(0xFF000000);
   static const Color lightGray = Color(0xFFF8FAFC);
   static const Color darkGray = Color(0xFF64748B);
   static const Color mediumGray = Color(0xFF9E9E9E);
-  
+
   // Status Colors
   static const Color red = Color(0xFFDC2626);
   static const Color green = Color(0xFF059669);
@@ -26,19 +26,19 @@ class AppColors {
   static const Color indigo = Color(0xFF4F46E5);
   static const Color teal = Color(0xFF0D9488);
   static const Color info = Color(0xFF0EA5E9);
-  
+
   // Status Aliases
   static const Color success = green;
   static const Color warning = orange;
   static const Color error = red;
-  
+
   // Gradient Colors
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [primaryBlue, darkNavy],
   );
-  
+
   static const LinearGradient goldGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -54,7 +54,7 @@ class AppSizes {
   static const double paddingL = 24.0;
   static const double paddingXL = 32.0;
   static const double paddingXXL = 40.0;
-  
+
   // Margin
   static const double marginXS = 4.0;
   static const double marginS = 8.0;
@@ -62,21 +62,21 @@ class AppSizes {
   static const double marginL = 24.0;
   static const double marginXL = 32.0;
   static const double marginXXL = 40.0;
-  
+
   // Border Radius
   static const double radiusS = 8.0;
   static const double radiusM = 12.0;
   static const double radiusL = 16.0;
   static const double radiusXL = 24.0;
   static const double radiusXXL = 32.0;
-  
+
   // Icon Sizes
   static const double iconS = 20.0;
   static const double iconM = 24.0;
   static const double iconL = 32.0;
   static const double iconXL = 48.0;
   static const double iconXXL = 64.0;
-  
+
   // Font Sizes
   static const double fontXS = 10.0;
   static const double fontS = 12.0;
@@ -87,12 +87,12 @@ class AppSizes {
   static const double fontTitle = 24.0;
   static const double fontHeading = 28.0;
   static const double fontDisplay = 32.0;
-  
+
   // Button Heights
   static const double buttonS = 36.0;
   static const double buttonM = 44.0;
   static const double buttonL = 52.0;
-  
+
   // Elevation
   static const double elevationS = 2.0;
   static const double elevationM = 4.0;
@@ -104,8 +104,9 @@ class AppStrings {
   // App Info
   static const String appName = 'SDM KORBRIMOB';
   static const String appSubtitle = 'RORENMINOPS POLRI';
-  static const String appAddress = 'Jalan M. Yasin, Kel. Pasir Gn. Sel., Kec. Cimanggis\nKota Depok, Jawa Barat 16451';
-  
+  static const String appAddress =
+      'Jalan M. Yasin, Kel. Pasir Gn. Sel., Kec. Cimanggis\nKota Depok, Jawa Barat 16451';
+
   // Auth
   static const String login = 'MASUK';
   static const String register = 'DAFTAR';
@@ -114,7 +115,7 @@ class AppStrings {
   static const String password = 'Password';
   static const String confirmPassword = 'Konfirmasi Password';
   static const String forgotPassword = 'Lupa Password?';
-  
+
   // User Data
   static const String fullName = 'Nama Lengkap';
   static const String nrp = 'NRP (Nomor Registrasi Pokok)';
@@ -122,17 +123,18 @@ class AppStrings {
   static const String unit = 'Satuan';
   static const String dateOfBirth = 'Tanggal Lahir';
   static const String militaryJoinDate = 'TMT Masuk Polri ';
-  
+
   // Status
   static const String pending = 'Menunggu Persetujuan';
   static const String approved = 'Disetujui';
   static const String rejected = 'Ditolak';
-  
+
   // Messages
   static const String loadingApp = 'Memuat Aplikasi...';
   static const String waitingApproval = 'MENUNGGU PERSETUJUAN';
-  static const String accountBeingVerified = 'Akun Anda sedang diverifikasi oleh admin';
-  
+  static const String accountBeingVerified =
+      'Akun Anda sedang diverifikasi oleh admin';
+
   // Validation Messages
   static const String fieldRequired = 'Field ini tidak boleh kosong';
   static const String invalidEmail = 'Format email tidak valid';
@@ -156,7 +158,8 @@ class MenuData {
       'id': 'korbrimob',
       'title': 'KORBRIMOB',
       'icon': '🛡️',
-      'imageUrl': 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=300&h=200&fit=crop',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=300&h=200&fit=crop',
       'color': AppColors.red,
       'isProtected': false,
       'description': 'Korps Brigade Mobil',
@@ -165,7 +168,8 @@ class MenuData {
       'id': 'binkar',
       'title': 'BINKAR',
       'icon': '👨‍💼',
-      'imageUrl': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=200&fit=crop',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=200&fit=crop',
       'color': AppColors.purple,
       'isProtected': true,
       'description': 'Pembinaan Karir',
@@ -174,7 +178,8 @@ class MenuData {
       'id': 'dalpers',
       'title': 'DALPERS',
       'icon': '🔍',
-      'imageUrl': 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=300&h=200&fit=crop',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=300&h=200&fit=crop',
       'color': AppColors.red,
       'isProtected': false,
       'description': 'Dalam Personel',
@@ -183,7 +188,8 @@ class MenuData {
       'id': 'watpers',
       'title': 'WATPERS',
       'icon': '👥',
-      'imageUrl': 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=300&h=200&fit=crop',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=300&h=200&fit=crop',
       'color': AppColors.green,
       'isProtected': false,
       'description': 'Pengawasan Personel',
@@ -192,7 +198,8 @@ class MenuData {
       'id': 'psikologi',
       'title': 'PSIKOLOGI',
       'icon': '🧠',
-      'imageUrl': 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=300&h=200&fit=crop',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=300&h=200&fit=crop',
       'color': AppColors.info,
       'isProtected': false,
       'description': 'Layanan Psikologi',
@@ -201,7 +208,8 @@ class MenuData {
       'id': 'perdankor',
       'title': 'PERDANKOR',
       'icon': '⚖️',
-      'imageUrl': 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=300&h=200&fit=crop',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=300&h=200&fit=crop',
       'color': AppColors.red,
       'isProtected': false,
       'description': 'Perdampingan Korps',
@@ -210,7 +218,8 @@ class MenuData {
       'id': 'perkap',
       'title': 'PERKAP',
       'icon': '📋',
-      'imageUrl': 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=300&h=200&fit=crop',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=300&h=200&fit=crop',
       'color': AppColors.green,
       'isProtected': false,
       'description': 'Peraturan Kapolri',
@@ -219,7 +228,8 @@ class MenuData {
       'id': 'other',
       'title': 'OTHER',
       'icon': '📂',
-      'imageUrl': 'https://images.unsplash.com/photo-1553484771-cc0d9b8c2b33?w=300&h=200&fit=crop',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1553484771-cc0d9b8c2b33?w=300&h=200&fit=crop',
       'color': AppColors.info,
       'isProtected': false,
       'description': 'Informasi Lainnya',
@@ -231,43 +241,55 @@ class MenuData {
       'id': 'mako_kor',
       'title': 'MAKO KOR',
       'subtitle': 'Markas Komando',
-      'imageUrl': 'https://images.unsplash.com/photo-1582719371699-d0d1b0c93e7a?w=400&h=300&fit=crop',
-      'logoUrl': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Emblem_of_the_Indonesian_National_Police.svg/200px-Emblem_of_the_Indonesian_National_Police.svg.png',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1582719371699-d0d1b0c93e7a?w=400&h=300&fit=crop',
+      'logoUrl':
+          'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Emblem_of_the_Indonesian_National_Police.svg/200px-Emblem_of_the_Indonesian_National_Police.svg.png',
     },
     {
       'id': 'pas_pelopor',
       'title': 'PAS PELOPOR',
       'subtitle': 'Pelopor',
-      'imageUrl': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
-      'logoUrl': 'https://images.unsplash.com/photo-1582719371699-d0d1b0c93e7a?w=100&h=100&fit=crop',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
+      'logoUrl':
+          'https://images.unsplash.com/photo-1582719371699-d0d1b0c93e7a?w=100&h=100&fit=crop',
     },
     {
       'id': 'pas_gegana',
       'title': 'PAS GEGANA',
       'subtitle': 'Gegana',
-      'imageUrl': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop',
-      'logoUrl': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=100&h=100&fit=crop',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop',
+      'logoUrl':
+          'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=100&h=100&fit=crop',
     },
     {
       'id': 'pasbrimob_1',
       'title': 'PASBRIMOB I',
       'subtitle': 'Pasbrimob I',
-      'imageUrl': 'https://images.unsplash.com/photo-1586892479147-8d35e7edc3e8?w=400&h=300&fit=crop',
-      'logoUrl': 'https://images.unsplash.com/photo-1586892479147-8d35e7edc3e8?w=100&h=100&fit=crop',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1586892479147-8d35e7edc3e8?w=400&h=300&fit=crop',
+      'logoUrl':
+          'https://images.unsplash.com/photo-1586892479147-8d35e7edc3e8?w=100&h=100&fit=crop',
     },
     {
       'id': 'pasbrimob_2',
       'title': 'PASBRIMOB II',
       'subtitle': 'Pasbrimob II',
-      'imageUrl': 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=300&fit=crop',
-      'logoUrl': 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=100&h=100&fit=crop',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=300&fit=crop',
+      'logoUrl':
+          'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=100&h=100&fit=crop',
     },
     {
       'id': 'pasbrimob_3',
       'title': 'PASBRIMOB III',
       'subtitle': 'Pasbrimob III',
-      'imageUrl': 'https://images.unsplash.com/photo-1560472355-536de3962603?w=400&h=300&fit=crop',
-      'logoUrl': 'https://images.unsplash.com/photo-1560472355-536de3962603?w=100&h=100&fit=crop',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1560472355-536de3962603?w=400&h=300&fit=crop',
+      'logoUrl':
+          'https://images.unsplash.com/photo-1560472355-536de3962603?w=100&h=100&fit=crop',
     },
   ];
 
@@ -319,13 +341,16 @@ class MenuData {
 
   // Rank data for dropdowns
   static const List<String> militaryRanks = [
-    'BHAYANGKARA',
     'BHARADA',
     'BHARATU',
-    'BRIPKA',
+    'BHARAKA',
+    'ABRIPDA',
+    'ABRIPTU',
+    'ABRIP',
     'BRIPDA',
     'BRIPTU',
     'BRIGADIR',
+    'BRIPKA',
     'AIPDA',
     'AIPTU',
     'IPDA',
@@ -338,10 +363,9 @@ class MenuData {
     'IRJEN',
     'KOMJEN',
   ];
-
   // Additional data for forms
   static const List<String> bloodTypes = ['A', 'B', 'AB', 'O'];
-  
+
   static const List<String> religions = [
     'Islam',
     'Kristen Protestan',
@@ -350,14 +374,14 @@ class MenuData {
     'Buddha',
     'Konghucu',
   ];
-  
+
   static const List<String> maritalStatuses = [
     'Belum Menikah',
     'Menikah',
     'Cerai Hidup',
     'Cerai Mati',
   ];
-  
+
   static const List<String> educationLevels = [
     'SD',
     'SMP',
@@ -371,8 +395,9 @@ class MenuData {
 
 // Quick access aliases
 class AppAssets {
-  static const String logoPolri = 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Emblem_of_the_Indonesian_National_Police.svg/200px-Emblem_of_the_Indonesian_National_Police.svg.png';
-  
+  static const String logoPolri =
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Emblem_of_the_Indonesian_National_Police.svg/200px-Emblem_of_the_Indonesian_National_Police.svg.png';
+
   // Local assets paths
   static const String tribrata = 'assets/images/tribrata.png';
   static const String brimob = 'assets/images/brimob.png';
@@ -392,7 +417,7 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.lightGray,
     );
   }
-  
+
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
