@@ -99,6 +99,28 @@ class PendidikanKepolisian {
   }
 }
 
+// Tambahkan class baru setelah class PendidikanKepolisian
+class DikbangKepolisian {
+  final String dikbang;
+  final DateTime tmt;
+
+  DikbangKepolisian({required this.dikbang, required this.tmt});
+
+  Map<String, dynamic> toMap() {
+    return {'dikbang': dikbang, 'tmt': Timestamp.fromDate(tmt)};
+  }
+
+  factory DikbangKepolisian.fromMap(Map<String, dynamic> map) {
+    return DikbangKepolisian(
+      dikbang: map['dikbang'] ?? '',
+      tmt:
+          map['tmt'] != null
+              ? (map['tmt'] as Timestamp).toDate()
+              : DateTime.now(),
+    );
+  }
+}
+
 // Model untuk Pendidikan Umum
 class PendidikanUmum {
   final String tingkat;
@@ -286,6 +308,7 @@ class UserModel {
 
   // Complex data arrays
   final List<PendidikanKepolisian> pendidikanKepolisian;
+  final List<DikbangKepolisian> dikbangKepolisian; //
   final List<PendidikanUmum> pendidikanUmum;
   final List<RiwayatPangkat> riwayatPangkat;
   final List<RiwayatJabatan> riwayatJabatan;
@@ -322,6 +345,7 @@ class UserModel {
     this.approvedAt,
     this.rejectionReason,
     this.pendidikanKepolisian = const [],
+    this.dikbangKepolisian = const [],
     this.pendidikanUmum = const [],
     this.riwayatPangkat = const [],
     this.riwayatJabatan = const [],
@@ -506,6 +530,12 @@ class UserModel {
                   .map((e) => PendidikanKepolisian.fromMap(e))
                   .toList()
               : [],
+      dikbangKepolisian: // TAMBAHKAN INI
+          data['dikbangKepolisian'] != null
+              ? (data['dikbangKepolisian'] as List)
+                  .map((e) => DikbangKepolisian.fromMap(e))
+                  .toList()
+              : [],
       pendidikanUmum:
           data['pendidikanUmum'] != null
               ? (data['pendidikanUmum'] as List)
@@ -593,6 +623,7 @@ class UserModel {
       // Complex arrays
       'pendidikanKepolisian':
           pendidikanKepolisian.map((e) => e.toMap()).toList(),
+      'dikbangKepolisian': dikbangKepolisian.map((e) => e.toMap()).toList(),
       'pendidikanUmum': pendidikanUmum.map((e) => e.toMap()).toList(),
       'riwayatPangkat': riwayatPangkat.map((e) => e.toMap()).toList(),
       'riwayatJabatan': riwayatJabatan.map((e) => e.toMap()).toList(),
@@ -633,6 +664,7 @@ class UserModel {
     DateTime? approvedAt,
     String? rejectionReason,
     List<PendidikanKepolisian>? pendidikanKepolisian,
+    List<DikbangKepolisian>? dikbangKepolisian,
     List<PendidikanUmum>? pendidikanUmum,
     List<RiwayatPangkat>? riwayatPangkat,
     List<RiwayatJabatan>? riwayatJabatan,
@@ -669,6 +701,7 @@ class UserModel {
       approvedAt: approvedAt ?? this.approvedAt,
       rejectionReason: rejectionReason ?? this.rejectionReason,
       pendidikanKepolisian: pendidikanKepolisian ?? this.pendidikanKepolisian,
+      dikbangKepolisian: dikbangKepolisian ?? this.dikbangKepolisian, //
       pendidikanUmum: pendidikanUmum ?? this.pendidikanUmum,
       riwayatPangkat: riwayatPangkat ?? this.riwayatPangkat,
       riwayatJabatan: riwayatJabatan ?? this.riwayatJabatan,
@@ -697,29 +730,38 @@ class UserModel {
 
 // Helper class for rank data
 class MilitaryRank {
-static const List<String> ranks = [
-  'BHARADA',
-  'BHARATU',
-  'BHARAKA',
-  'ABRIPDA',
-  'ABRIPTU',
-  'ABRIP',
-  'BRIPDA',
-  'BRIPTU',
-  'BRIGADIR',
-  'BRIPKA',
-  'AIPDA',
-  'AIPTU',
-  'IPDA',
-  'IPTU',
-  'AKP',
-  'KOMPOL',
-  'AKBP',
-  'KOMBES',
-  'BRIGJEN',
-  'IRJEN',
-  'KOMJEN',
-];
+  static const List<String> ranks = [
+    'BHARADA',
+    'BHARATU',
+    'BHARAKA',
+    'ABRIPDA',
+    'ABRIPTU',
+    'ABRIP',
+    'BRIPDA',
+    'BRIPTU',
+    'BRIGADIR',
+    'BRIPKA',
+    'AIPDA',
+    'AIPTU',
+    'IPDA',
+    'IPTU',
+    'AKP',
+    'KOMPOL',
+    'AKBP',
+    'KOMBES',
+    'BRIGJEN',
+    'IRJEN',
+    'KOMJEN',
+  ];
+  static const List<String> dikbangKepolisianList = [
+    'SESPIMMEN',
+    'SESPIMMA',
+    'SESPIMPTI',
+    'LEMHANAS',
+    'SETTAF',
+    'SEKOLAH STAF PIMPINAN',
+    'PELATIHAN KHUSUS',
+  ];
 
   static const List<String> bloodTypes = ['A', 'B', 'AB', 'O'];
 
@@ -750,10 +792,10 @@ static const List<String> ranks = [
   ];
 
   static const List<String> pendidikanKepolisian = [
-   'AKPOL',
-   'SIPSS',
-   'DIKTUKBA',
-   'DIKTUKTA'
+    'AKPOL',
+    'SIPSS',
+    'DIKTUKBA',
+    'DIKTUKTA',
   ];
 
   static const List<String> statusPersonel = ['AKTIF', 'NON-AKTIF', 'PENSIUN'];

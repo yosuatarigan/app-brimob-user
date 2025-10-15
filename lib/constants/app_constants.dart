@@ -363,6 +363,17 @@ class MenuData {
     'IRJEN',
     'KOMJEN',
   ];
+
+  static const List<String> dikbangKepolisianList = [
+    'SESPIMMEN',
+    'SESPIMMA',
+    'SESPIMPTI',
+    'LEMHANAS',
+    'SETTAF',
+    'SEKOLAH STAF PIMPINAN',
+    'PELATIHAN KHUSUS',
+  ];
+
   // Additional data for forms
   static const List<String> bloodTypes = ['A', 'B', 'AB', 'O'];
 

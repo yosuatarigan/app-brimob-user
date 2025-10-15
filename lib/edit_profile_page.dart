@@ -11,11 +11,8 @@ import '../widgets/custom_dropdown.dart';
 
 class EditProfilePage extends StatefulWidget {
   final UserModel currentUser;
-  
-  const EditProfilePage({
-    super.key,
-    required this.currentUser,
-  });
+
+  const EditProfilePage({super.key, required this.currentUser});
 
   @override
   State<EditProfilePage> createState() => _EditProfilePageState();
@@ -24,7 +21,7 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   final AuthService _authService = AuthService();
   final ImagePicker _imagePicker = ImagePicker();
-  
+
   // Controllers
   final _fullNameController = TextEditingController();
   final _nrpController = TextEditingController();
@@ -35,7 +32,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   final _emergencyContactController = TextEditingController();
-  
+
   // Data variables
   UserRole? _selectedRole;
   String? _selectedAgama;
@@ -47,9 +44,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   DateTime? _jabatanTmt;
   File? _selectedImage;
   String? _currentPhotoUrl;
-  
+
   // Complex data arrays
   List<PendidikanKepolisian> _pendidikanKepolisian = [];
+  List<DikbangKepolisian> _dikbangKepolisian = []; // TAMBAHKAN INI
   List<PendidikanUmum> _pendidikanUmum = [];
   List<RiwayatPangkat> _riwayatPangkat = [];
   List<RiwayatJabatan> _riwayatJabatan = [];
@@ -57,7 +55,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   List<TandaKehormatan> _tandaKehormatan = [];
   List<KemampuanBahasa> _kemampuanBahasa = [];
   List<PenugasanLuarStruktur> _penugasanLuarStruktur = [];
-  
+
   bool _isLoading = false;
   bool _hasChanges = false;
   int _currentStep = 0;
@@ -71,7 +69,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   void _initializeData() {
     final user = widget.currentUser;
-    
+
     // Initialize basic fields
     _fullNameController.text = user.fullName;
     _nrpController.text = user.nrp;
@@ -82,7 +80,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _phoneController.text = user.phoneNumber ?? '';
     _addressController.text = user.address ?? '';
     _emergencyContactController.text = user.emergencyContact ?? '';
-    
+
     _selectedRole = user.role;
     _selectedAgama = user.agama;
     _selectedBloodType = user.bloodType;
@@ -92,9 +90,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _militaryJoinDate = user.militaryJoinDate;
     _jabatanTmt = user.jabatanTmt;
     _currentPhotoUrl = user.photoUrl;
-    
+
     // Initialize complex arrays with proper null checks
     _pendidikanKepolisian = List.from(user.pendidikanKepolisian ?? []);
+    _dikbangKepolisian = List.from(
+      user.dikbangKepolisian ?? [],
+    ); // TAMBAHKAN INI
     _pendidikanUmum = List.from(user.pendidikanUmum ?? []);
     _riwayatPangkat = List.from(user.riwayatPangkat ?? []);
     _riwayatJabatan = List.from(user.riwayatJabatan ?? []);
@@ -102,7 +103,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _tandaKehormatan = List.from(user.tandaKehormatan ?? []);
     _kemampuanBahasa = List.from(user.kemampuanBahasa ?? []);
     _penugasanLuarStruktur = List.from(user.penugasanLuarStruktur ?? []);
-    
+
     _addChangeListeners();
   }
 
@@ -147,7 +148,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           userId: widget.currentUser.id,
           imageFile: _selectedImage!,
         );
-        
+
         if (result['success']) {
           _currentPhotoUrl = result['photoUrl'];
         } else {
@@ -161,11 +162,26 @@ class _EditProfilePageState extends State<EditProfilePage> {
         rank: _rankController.text.trim(),
         jabatan: _jabatanController.text.trim(),
         role: _selectedRole,
-        tempatLahir: _tempatLahirController.text.trim().isEmpty ? null : _tempatLahirController.text.trim(),
-        suku: _sukuController.text.trim().isEmpty ? null : _sukuController.text.trim(),
-        phoneNumber: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
-        address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
-        emergencyContact: _emergencyContactController.text.trim().isEmpty ? null : _emergencyContactController.text.trim(),
+        tempatLahir:
+            _tempatLahirController.text.trim().isEmpty
+                ? null
+                : _tempatLahirController.text.trim(),
+        suku:
+            _sukuController.text.trim().isEmpty
+                ? null
+                : _sukuController.text.trim(),
+        phoneNumber:
+            _phoneController.text.trim().isEmpty
+                ? null
+                : _phoneController.text.trim(),
+        address:
+            _addressController.text.trim().isEmpty
+                ? null
+                : _addressController.text.trim(),
+        emergencyContact:
+            _emergencyContactController.text.trim().isEmpty
+                ? null
+                : _emergencyContactController.text.trim(),
         agama: _selectedAgama,
         bloodType: _selectedBloodType,
         maritalStatus: _selectedMaritalStatus,
@@ -175,6 +191,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         jabatanTmt: _jabatanTmt,
         photoUrl: _currentPhotoUrl,
         pendidikanKepolisian: _pendidikanKepolisian,
+        dikbangKepolisian: _dikbangKepolisian, //
         pendidikanUmum: _pendidikanUmum,
         riwayatPangkat: _riwayatPangkat,
         riwayatJabatan: _riwayatJabatan,
@@ -222,6 +239,129 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
+  // CRUD Dikbang Kepolisian
+  void _addDikbangKepolisian() => _showDikbangKepolisianModal();
+  void _editDikbangKepolisian(int index) =>
+      _showDikbangKepolisianModal(index: index);
+  void _deleteDikbangKepolisian(int index) {
+    setState(() {
+      _dikbangKepolisian.removeAt(index);
+      _hasChanges = true;
+    });
+  }
+
+  void _showDikbangKepolisianModal({int? index}) {
+    final TextEditingController dikbangController = TextEditingController();
+    DateTime? selectedTmt;
+
+    if (index != null) {
+      final item = _dikbangKepolisian[index];
+      dikbangController.text = item.dikbang;
+      selectedTmt = item.tmt;
+    }
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setState) => AlertDialog(
+                  title: Text(
+                    index == null
+                        ? 'Tambah Dikbang Kepolisian'
+                        : 'Edit Dikbang Kepolisian',
+                    style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CustomDropdown<String>(
+                        value:
+                            dikbangController.text.isEmpty
+                                ? null
+                                : dikbangController.text,
+                        labelText: 'Jenis Dikbang',
+                        prefixIcon: Icons.school_outlined,
+                        items:
+                            MilitaryRank.dikbangKepolisianList
+                                .map(
+                                  (dikbang) => DropdownMenuItem(
+                                    value: dikbang,
+                                    child: Text(dikbang),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged:
+                            (value) => dikbangController.text = value ?? '',
+                      ),
+                      const SizedBox(height: AppSizes.paddingM),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedTmt ?? DateTime.now(),
+                            firstDate: DateTime(1980),
+                            lastDate: DateTime.now(),
+                          );
+                          if (picked != null) {
+                            setState(() => selectedTmt = picked);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_today),
+                              const SizedBox(width: 12),
+                              Text(
+                                selectedTmt != null
+                                    ? _formatDate(selectedTmt!)
+                                    : 'Pilih TMT',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Batal'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (dikbangController.text.isNotEmpty &&
+                            selectedTmt != null) {
+                          final item = DikbangKepolisian(
+                            dikbang: dikbangController.text,
+                            tmt: selectedTmt!,
+                          );
+
+                          this.setState(() {
+                            if (index == null) {
+                              _dikbangKepolisian.add(item);
+                            } else {
+                              _dikbangKepolisian[index] = item;
+                            }
+                            _hasChanges = true;
+                          });
+
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Text(index == null ? 'Tambah' : 'Simpan'),
+                    ),
+                  ],
+                ),
+          ),
+    );
+  }
+
   // Photo selection methods
   Future<void> _selectProfilePhoto() async {
     showModalBottomSheet(
@@ -229,52 +369,53 @@ class _EditProfilePageState extends State<EditProfilePage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(AppSizes.paddingL),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.darkGray.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: AppSizes.paddingM),
-            Text(
-              'Pilih Foto Profil',
-              style: GoogleFonts.roboto(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.darkNavy,
-              ),
-            ),
-            const SizedBox(height: AppSizes.paddingL),
-            Row(
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.all(AppSizes.paddingL),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: _buildPhotoOption(
-                    icon: Icons.camera_alt,
-                    label: 'Kamera',
-                    onTap: () => _pickImage(ImageSource.camera),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.darkGray.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(width: AppSizes.paddingM),
-                Expanded(
-                  child: _buildPhotoOption(
-                    icon: Icons.photo_library,
-                    label: 'Galeri',
-                    onTap: () => _pickImage(ImageSource.gallery),
+                const SizedBox(height: AppSizes.paddingM),
+                Text(
+                  'Pilih Foto Profil',
+                  style: GoogleFonts.roboto(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.darkNavy,
                   ),
                 ),
+                const SizedBox(height: AppSizes.paddingL),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildPhotoOption(
+                        icon: Icons.camera_alt,
+                        label: 'Kamera',
+                        onTap: () => _pickImage(ImageSource.camera),
+                      ),
+                    ),
+                    const SizedBox(width: AppSizes.paddingM),
+                    Expanded(
+                      child: _buildPhotoOption(
+                        icon: Icons.photo_library,
+                        label: 'Galeri',
+                        onTap: () => _pickImage(ImageSource.gallery),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSizes.paddingL),
               ],
             ),
-            const SizedBox(height: AppSizes.paddingL),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -340,13 +481,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final DateTime firstDate = DateTime(1960);
     final DateTime lastDate = DateTime.now();
     DateTime initialDate;
-    
-    switch(type) {
+
+    switch (type) {
       case 'dateOfBirth':
         initialDate = _dateOfBirth ?? DateTime(1990, 1, 1);
         break;
       case 'militaryJoinDate':
-        initialDate = _militaryJoinDate ?? DateTime.now().subtract(const Duration(days: 365 * 5));
+        initialDate =
+            _militaryJoinDate ??
+            DateTime.now().subtract(const Duration(days: 365 * 5));
         break;
       case 'jabatanTmt':
         initialDate = _jabatanTmt ?? DateTime.now();
@@ -385,7 +528,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     if (picked != null) {
       setState(() {
-        switch(type) {
+        switch (type) {
           case 'dateOfBirth':
             _dateOfBirth = picked;
             break;
@@ -402,7 +545,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   String _getDatePickerTitle(String type) {
-    switch(type) {
+    switch (type) {
       case 'dateOfBirth':
         return 'Pilih Tanggal Lahir';
       case 'militaryJoinDate':
@@ -416,8 +559,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   String _formatDate(DateTime date) {
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -463,11 +616,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    selectedDate != null ? _formatDate(selectedDate) : 'Pilih tanggal',
+                    selectedDate != null
+                        ? _formatDate(selectedDate)
+                        : 'Pilih tanggal',
                     style: GoogleFonts.roboto(
                       fontSize: 14,
-                      color: selectedDate != null ? AppColors.darkNavy : AppColors.darkGray.withOpacity(0.6),
-                      fontWeight: selectedDate != null ? FontWeight.w500 : FontWeight.normal,
+                      color:
+                          selectedDate != null
+                              ? AppColors.darkNavy
+                              : AppColors.darkGray.withOpacity(0.6),
+                      fontWeight:
+                          selectedDate != null
+                              ? FontWeight.w500
+                              : FontWeight.normal,
                     ),
                   ),
                 ],
@@ -494,7 +655,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
         const SizedBox(height: AppSizes.paddingL),
-        
+
         // Profile Photo Section
         Center(
           child: Column(
@@ -521,44 +682,49 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ],
                       ),
                       child: ClipOval(
-                        child: _selectedImage != null
-                            ? Image.file(
-                                _selectedImage!,
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                              )
-                            : _currentPhotoUrl != null
+                        child:
+                            _selectedImage != null
+                                ? Image.file(
+                                  _selectedImage!,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                )
+                                : _currentPhotoUrl != null
                                 ? CachedNetworkImage(
-                                    imageUrl: _currentPhotoUrl!,
-                                    width: 100,
-                                    height: 100,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => Container(
-                                      color: AppColors.lightGray,
-                                      child: const Center(
-                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                  imageUrl: _currentPhotoUrl!,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                  placeholder:
+                                      (context, url) => Container(
+                                        color: AppColors.lightGray,
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    errorWidget: (context, url, error) => Container(
-                                      color: AppColors.lightGray,
-                                      child: Icon(
-                                        Icons.person,
-                                        size: 50,
-                                        color: AppColors.darkGray,
+                                  errorWidget:
+                                      (context, url, error) => Container(
+                                        color: AppColors.lightGray,
+                                        child: Icon(
+                                          Icons.person,
+                                          size: 50,
+                                          color: AppColors.darkGray,
+                                        ),
                                       ),
-                                    ),
-                                  )
+                                )
                                 : Container(
-                                    width: 100,
-                                    height: 100,
-                                    color: AppColors.lightGray,
-                                    child: Icon(
-                                      Icons.person,
-                                      size: 50,
-                                      color: AppColors.darkGray,
-                                    ),
+                                  width: 100,
+                                  height: 100,
+                                  color: AppColors.lightGray,
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 50,
+                                    color: AppColors.darkGray,
                                   ),
+                                ),
                       ),
                     ),
                     Positioned(
@@ -593,9 +759,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ],
           ),
         ),
-        
+
         const SizedBox(height: AppSizes.paddingL),
-        
+
         // Email info
         Container(
           padding: const EdgeInsets.all(AppSizes.paddingM),
@@ -619,18 +785,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ],
           ),
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         CustomTextField(
           controller: TextEditingController(text: widget.currentUser.email),
           labelText: 'Email',
           prefixIcon: Icons.email_outlined,
           enabled: false,
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         CustomTextField(
           controller: _fullNameController,
           labelText: 'Nama Lengkap *',
@@ -641,9 +807,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
             return null;
           },
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         CustomTextField(
           controller: _nrpController,
           labelText: 'NRP (Nomor Registrasi Pokok) *',
@@ -671,27 +837,30 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
         const SizedBox(height: AppSizes.paddingL),
-        
+
         CustomDropdown<String>(
           value: _rankController.text.isEmpty ? null : _rankController.text,
           labelText: 'Pangkat *',
           prefixIcon: Icons.military_tech_outlined,
-          items: MilitaryRank.ranks.map((rank) => DropdownMenuItem(
-            value: rank,
-            child: Text(rank),
-          )).toList(),
-          onChanged: (value) => setState(() {
-            _rankController.text = value ?? '';
-            _hasChanges = true;
-          }),
+          items:
+              MilitaryRank.ranks
+                  .map(
+                    (rank) => DropdownMenuItem(value: rank, child: Text(rank)),
+                  )
+                  .toList(),
+          onChanged:
+              (value) => setState(() {
+                _rankController.text = value ?? '';
+                _hasChanges = true;
+              }),
           validator: (value) {
             if (value?.isEmpty ?? true) return 'Pilih pangkat';
             return null;
           },
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         CustomTextField(
           controller: _jabatanController,
           labelText: 'Jabatan *',
@@ -701,37 +870,44 @@ class _EditProfilePageState extends State<EditProfilePage> {
             return null;
           },
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         _buildDatePicker(
           labelText: 'TMT Jabatan',
           selectedDate: _jabatanTmt,
           type: 'jabatanTmt',
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         CustomDropdown<UserRole>(
           value: _selectedRole,
           labelText: 'Satuan *',
           prefixIcon: Icons.group_outlined,
-          items: UserRole.values.where((role) => role != UserRole.admin).map((role) => DropdownMenuItem(
-            value: role,
-            child: Text(role.displayName),
-          )).toList(),
-          onChanged: (value) => setState(() {
-            _selectedRole = value;
-            _hasChanges = true;
-          }),
+          items:
+              UserRole.values
+                  .where((role) => role != UserRole.admin)
+                  .map(
+                    (role) => DropdownMenuItem(
+                      value: role,
+                      child: Text(role.displayName),
+                    ),
+                  )
+                  .toList(),
+          onChanged:
+              (value) => setState(() {
+                _selectedRole = value;
+                _hasChanges = true;
+              }),
           validator: (value) {
             if (value == null) return 'Pilih satuan';
             return null;
           },
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         // Status personel (read-only for user)
         Container(
           padding: const EdgeInsets.all(AppSizes.paddingM),
@@ -780,9 +956,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
             fontStyle: FontStyle.italic,
           ),
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         _buildDatePicker(
           labelText: 'TMT Masuk Polri ',
           selectedDate: _militaryJoinDate,
@@ -805,75 +981,88 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
         const SizedBox(height: AppSizes.paddingL),
-        
+
         CustomTextField(
           controller: _tempatLahirController,
           labelText: 'Tempat Lahir',
           prefixIcon: Icons.location_on_outlined,
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         _buildDatePicker(
           labelText: 'Tanggal Lahir',
           selectedDate: _dateOfBirth,
           type: 'dateOfBirth',
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         CustomDropdown<String>(
           value: _selectedAgama,
           labelText: 'Agama',
           prefixIcon: Icons.mosque_outlined,
-          items: MilitaryRank.religions.map((religion) => DropdownMenuItem(
-            value: religion,
-            child: Text(religion),
-          )).toList(),
-          onChanged: (value) => setState(() {
-            _selectedAgama = value;
-            _hasChanges = true;
-          }),
+          items:
+              MilitaryRank.religions
+                  .map(
+                    (religion) => DropdownMenuItem(
+                      value: religion,
+                      child: Text(religion),
+                    ),
+                  )
+                  .toList(),
+          onChanged:
+              (value) => setState(() {
+                _selectedAgama = value;
+                _hasChanges = true;
+              }),
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         CustomTextField(
           controller: _sukuController,
           labelText: 'Suku',
           prefixIcon: Icons.people_outline,
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         CustomDropdown<String>(
           value: _selectedBloodType,
           labelText: 'Golongan Darah',
           prefixIcon: Icons.bloodtype_outlined,
-          items: MilitaryRank.bloodTypes.map((type) => DropdownMenuItem(
-            value: type,
-            child: Text(type),
-          )).toList(),
-          onChanged: (value) => setState(() {
-            _selectedBloodType = value;
-            _hasChanges = true;
-          }),
+          items:
+              MilitaryRank.bloodTypes
+                  .map(
+                    (type) => DropdownMenuItem(value: type, child: Text(type)),
+                  )
+                  .toList(),
+          onChanged:
+              (value) => setState(() {
+                _selectedBloodType = value;
+                _hasChanges = true;
+              }),
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         CustomDropdown<String>(
           value: _selectedMaritalStatus,
           labelText: 'Status Pernikahan',
           prefixIcon: Icons.family_restroom_outlined,
-          items: MilitaryRank.maritalStatuses.map((status) => DropdownMenuItem(
-            value: status,
-            child: Text(status),
-          )).toList(),
-          onChanged: (value) => setState(() {
-            _selectedMaritalStatus = value;
-            _hasChanges = true;
-          }),
+          items:
+              MilitaryRank.maritalStatuses
+                  .map(
+                    (status) =>
+                        DropdownMenuItem(value: status, child: Text(status)),
+                  )
+                  .toList(),
+          onChanged:
+              (value) => setState(() {
+                _selectedMaritalStatus = value;
+                _hasChanges = true;
+              }),
         ),
       ],
     );
@@ -891,26 +1080,33 @@ class _EditProfilePageState extends State<EditProfilePage> {
             color: AppColors.darkNavy,
           ),
         ),
-        const SizedBox(height: AppSizes.paddingM),
+        const SizedBox(height: AppSizes.paddingL),
+
+        // PENDIDIKAN PERTAMA KEPOLISIAN
         Text(
-          'Data pendidikan kepolisian yang pernah diikuti (opsional)',
+          'Pendidikan Pertama Kepolisian',
           style: GoogleFonts.roboto(
-            fontSize: 12,
-            color: AppColors.darkGray,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.darkNavy,
           ),
         ),
-        const SizedBox(height: AppSizes.paddingL),
-        
-        // List of Pendidikan Kepolisian
+        const SizedBox(height: AppSizes.paddingS),
+        Text(
+          'AKPOL, SIPSS, DIKTUKBA, DIKTUKTA',
+          style: GoogleFonts.roboto(fontSize: 12, color: AppColors.darkGray),
+        ),
+        const SizedBox(height: AppSizes.paddingM),
+
         ..._pendidikanKepolisian.asMap().entries.map((entry) {
           int index = entry.key;
           PendidikanKepolisian item = entry.value;
           return Container(
-            margin: const EdgeInsets.only(bottom: AppSizes.paddingM),
+            margin: const EdgeInsets.only(bottom: AppSizes.paddingS),
             padding: const EdgeInsets.all(AppSizes.paddingM),
             decoration: BoxDecoration(
-              color: AppColors.lightGray.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(AppSizes.radiusM),
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(AppSizes.radiusS),
               border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2)),
             ),
             child: Row(
@@ -922,7 +1118,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       Text(
                         item.tingkat,
                         style: GoogleFonts.roboto(
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: AppColors.darkNavy,
                         ),
@@ -930,7 +1126,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       Text(
                         'Tahun: ${item.tahun}',
                         style: GoogleFonts.roboto(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: AppColors.darkGray,
                         ),
                       ),
@@ -940,11 +1136,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.edit, color: AppColors.primaryBlue, size: 20),
+                      icon: Icon(
+                        Icons.edit,
+                        color: AppColors.primaryBlue,
+                        size: 18,
+                      ),
                       onPressed: () => _editPendidikanKepolisian(index),
                     ),
                     IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red, size: 20),
+                      icon: Icon(Icons.delete, color: Colors.red, size: 18),
                       onPressed: () => _deletePendidikanKepolisian(index),
                     ),
                   ],
@@ -953,28 +1153,105 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           );
         }).toList(),
-        
-        // Add button
+
+        OutlinedButton.icon(
+          onPressed: _addPendidikanKepolisian,
+          icon: Icon(Icons.add, size: 16, color: AppColors.primaryBlue),
+          label: Text(
+            'Tambah Pendidikan Pertama',
+            style: GoogleFonts.roboto(
+              fontSize: 12,
+              color: AppColors.primaryBlue,
+            ),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: AppColors.primaryBlue),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          ),
+        ),
+
+        const SizedBox(height: AppSizes.paddingL),
+        Divider(color: AppColors.darkGray.withOpacity(0.2)),
+        const SizedBox(height: AppSizes.paddingL),
+
+        // DIKBANG KEPOLISIAN - SECTION BARU
+        Text(
+          'Dikbang Kepolisian',
+          style: GoogleFonts.roboto(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.darkNavy,
+          ),
+        ),
+        const SizedBox(height: AppSizes.paddingS),
+        Text(
+          'Pendidikan pengembangan dan pembinaan karier kepolisian',
+          style: GoogleFonts.roboto(fontSize: 12, color: AppColors.darkGray),
+        ),
         const SizedBox(height: AppSizes.paddingM),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: _addPendidikanKepolisian,
-            icon: Icon(Icons.add, color: AppColors.primaryBlue),
-            label: Text(
-              'Tambah Pendidikan Pertama Kepolisian',
-              style: GoogleFonts.roboto(
-                fontWeight: FontWeight.w500,
-                color: AppColors.primaryBlue,
-              ),
+
+        ..._dikbangKepolisian.asMap().entries.map((entry) {
+          int index = entry.key;
+          DikbangKepolisian item = entry.value;
+          return Container(
+            margin: const EdgeInsets.only(bottom: AppSizes.paddingS),
+            padding: const EdgeInsets.all(AppSizes.paddingM),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(AppSizes.radiusS),
+              border: Border.all(color: Colors.green.withOpacity(0.3)),
             ),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppColors.primaryBlue),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusM),
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.dikbang,
+                        style: GoogleFonts.roboto(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.darkNavy,
+                        ),
+                      ),
+                      Text(
+                        'TMT: ${_formatDate(item.tmt)}',
+                        style: GoogleFonts.roboto(
+                          fontSize: 11,
+                          color: AppColors.darkGray,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.edit, color: Colors.green, size: 18),
+                      onPressed: () => _editDikbangKepolisian(index),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red, size: 18),
+                      onPressed: () => _deleteDikbangKepolisian(index),
+                    ),
+                  ],
+                ),
+              ],
             ),
+          );
+        }).toList(),
+
+        OutlinedButton.icon(
+          onPressed: _addDikbangKepolisian,
+          icon: Icon(Icons.add, size: 16, color: Colors.green),
+          label: Text(
+            'Tambah Dikbang Kepolisian',
+            style: GoogleFonts.roboto(fontSize: 12, color: Colors.green),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: Colors.green),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
           ),
         ),
       ],
@@ -996,13 +1273,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         const SizedBox(height: AppSizes.paddingM),
         Text(
           'Riwayat pendidikan umum dari SD hingga perguruan tinggi (opsional)',
-          style: GoogleFonts.roboto(
-            fontSize: 12,
-            color: AppColors.darkGray,
-          ),
+          style: GoogleFonts.roboto(fontSize: 12, color: AppColors.darkGray),
         ),
         const SizedBox(height: AppSizes.paddingL),
-        
+
         // List of Pendidikan Umum
         ..._pendidikanUmum.asMap().entries.map((entry) {
           int index = entry.key;
@@ -1049,7 +1323,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.edit, color: AppColors.primaryBlue, size: 20),
+                      icon: Icon(
+                        Icons.edit,
+                        color: AppColors.primaryBlue,
+                        size: 20,
+                      ),
                       onPressed: () => _editPendidikanUmum(index),
                     ),
                     IconButton(
@@ -1062,7 +1340,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           );
         }).toList(),
-        
+
         // Add button
         const SizedBox(height: AppSizes.paddingM),
         SizedBox(
@@ -1105,13 +1383,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         const SizedBox(height: AppSizes.paddingM),
         Text(
           'Riwayat perjalanan karier pangkat dan jabatan (opsional)',
-          style: GoogleFonts.roboto(
-            fontSize: 12,
-            color: AppColors.darkGray,
-          ),
+          style: GoogleFonts.roboto(fontSize: 12, color: AppColors.darkGray),
         ),
         const SizedBox(height: AppSizes.paddingL),
-        
+
         // Riwayat Pangkat Section
         Text(
           'Riwayat Pangkat',
@@ -1122,7 +1397,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
         const SizedBox(height: AppSizes.paddingM),
-        
+
         ..._riwayatPangkat.asMap().entries.map((entry) {
           int index = entry.key;
           RiwayatPangkat item = entry.value;
@@ -1161,7 +1436,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.edit, color: AppColors.primaryBlue, size: 18),
+                      icon: Icon(
+                        Icons.edit,
+                        color: AppColors.primaryBlue,
+                        size: 18,
+                      ),
                       onPressed: () => _editRiwayatPangkat(index),
                     ),
                     IconButton(
@@ -1174,22 +1453,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           );
         }).toList(),
-        
+
         OutlinedButton.icon(
           onPressed: _addRiwayatPangkat,
           icon: Icon(Icons.add, size: 16, color: AppColors.primaryBlue),
           label: Text(
             'Tambah Riwayat Pangkat',
-            style: GoogleFonts.roboto(fontSize: 12, color: AppColors.primaryBlue),
+            style: GoogleFonts.roboto(
+              fontSize: 12,
+              color: AppColors.primaryBlue,
+            ),
           ),
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: AppColors.primaryBlue, width: 1),
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
           ),
         ),
-        
+
         const SizedBox(height: AppSizes.paddingL),
-        
+
         // Riwayat Jabatan Section
         Text(
           'Riwayat Jabatan',
@@ -1200,7 +1482,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
         const SizedBox(height: AppSizes.paddingM),
-        
+
         ..._riwayatJabatan.asMap().entries.map((entry) {
           int index = entry.key;
           RiwayatJabatan item = entry.value;
@@ -1252,7 +1534,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           );
         }).toList(),
-        
+
         OutlinedButton.icon(
           onPressed: _addRiwayatJabatan,
           icon: Icon(Icons.add, size: 16, color: Colors.green),
@@ -1284,13 +1566,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         const SizedBox(height: AppSizes.paddingM),
         Text(
           'Pendidikan pengembangan, pelatihan, dan tanda kehormatan (opsional)',
-          style: GoogleFonts.roboto(
-            fontSize: 12,
-            color: AppColors.darkGray,
-          ),
+          style: GoogleFonts.roboto(fontSize: 12, color: AppColors.darkGray),
         ),
         const SizedBox(height: AppSizes.paddingL),
-        
+
         // Pendidikan Pelatihan Section
         Text(
           'Pendidikan Pengembangan & Pelatihan',
@@ -1301,7 +1580,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
         const SizedBox(height: AppSizes.paddingM),
-        
+
         ..._pendidikanPelatihan.asMap().entries.map((entry) {
           int index = entry.key;
           PendidikanPelatihan item = entry.value;
@@ -1353,7 +1632,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           );
         }).toList(),
-        
+
         OutlinedButton.icon(
           onPressed: _addPendidikanPelatihan,
           icon: Icon(Icons.add, size: 16, color: Colors.orange),
@@ -1366,9 +1645,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
           ),
         ),
-        
+
         const SizedBox(height: AppSizes.paddingL),
-        
+
         // Tanda Kehormatan Section
         Text(
           'Tanda Kehormatan',
@@ -1379,7 +1658,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
         const SizedBox(height: AppSizes.paddingM),
-        
+
         ..._tandaKehormatan.asMap().entries.map((entry) {
           int index = entry.key;
           TandaKehormatan item = entry.value;
@@ -1431,7 +1710,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           );
         }).toList(),
-        
+
         OutlinedButton.icon(
           onPressed: _addTandaKehormatan,
           icon: Icon(Icons.add, size: 16, color: Colors.purple),
@@ -1463,13 +1742,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         const SizedBox(height: AppSizes.paddingM),
         Text(
           'Kemampuan bahasa, penugasan khusus, dan informasi kontak (opsional)',
-          style: GoogleFonts.roboto(
-            fontSize: 12,
-            color: AppColors.darkGray,
-          ),
+          style: GoogleFonts.roboto(fontSize: 12, color: AppColors.darkGray),
         ),
         const SizedBox(height: AppSizes.paddingL),
-        
+
         // Kemampuan Bahasa Section
         Text(
           'Kemampuan Bahasa',
@@ -1480,7 +1756,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
         const SizedBox(height: AppSizes.paddingM),
-        
+
         ..._kemampuanBahasa.asMap().entries.map((entry) {
           int index = entry.key;
           KemampuanBahasa item = entry.value;
@@ -1508,9 +1784,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: item.status == 'AKTIF' ? Colors.green : Colors.grey,
+                          color:
+                              item.status == 'AKTIF'
+                                  ? Colors.green
+                                  : Colors.grey,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -1542,7 +1824,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           );
         }).toList(),
-        
+
         OutlinedButton.icon(
           onPressed: _addKemampuanBahasa,
           icon: Icon(Icons.add, size: 16, color: Colors.teal),
@@ -1555,9 +1837,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
           ),
         ),
-        
+
         const SizedBox(height: AppSizes.paddingL),
-        
+
         // Penugasan Luar Struktur Section
         Text(
           'Penugasan Luar Struktur',
@@ -1568,7 +1850,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
         const SizedBox(height: AppSizes.paddingM),
-        
+
         ..._penugasanLuarStruktur.asMap().entries.map((entry) {
           int index = entry.key;
           PenugasanLuarStruktur item = entry.value;
@@ -1620,7 +1902,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           );
         }).toList(),
-        
+
         OutlinedButton.icon(
           onPressed: _addPenugasanLuarStruktur,
           icon: Icon(Icons.add, size: 16, color: Colors.indigo),
@@ -1633,9 +1915,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
           ),
         ),
-        
+
         const SizedBox(height: AppSizes.paddingL),
-        
+
         // Contact Information
         Text(
           'Informasi Kontak',
@@ -1646,34 +1928,34 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
         const SizedBox(height: AppSizes.paddingM),
-        
+
         CustomTextField(
           controller: _phoneController,
           labelText: 'Nomor Telepon',
           prefixIcon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         CustomTextField(
           controller: _addressController,
           labelText: 'Alamat Lengkap',
           prefixIcon: Icons.home_outlined,
           maxLines: 3,
         ),
-        
+
         const SizedBox(height: AppSizes.paddingM),
-        
+
         CustomTextField(
           controller: _emergencyContactController,
           labelText: 'Kontak Darurat',
           prefixIcon: Icons.contact_emergency_outlined,
           keyboardType: TextInputType.phone,
         ),
-        
+
         const SizedBox(height: AppSizes.paddingL),
-        
+
         Container(
           padding: const EdgeInsets.all(AppSizes.paddingM),
           decoration: BoxDecoration(
@@ -1706,7 +1988,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   // Modal methods for all complex arrays
   void _addPendidikanKepolisian() => _showPendidikanKepolisianModal();
-  void _editPendidikanKepolisian(int index) => _showPendidikanKepolisianModal(index: index);
+  void _editPendidikanKepolisian(int index) =>
+      _showPendidikanKepolisianModal(index: index);
   void _deletePendidikanKepolisian(int index) {
     setState(() {
       _pendidikanKepolisian.removeAt(index);
@@ -1717,7 +2000,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void _showPendidikanKepolisianModal({int? index}) {
     final TextEditingController tingkatController = TextEditingController();
     final TextEditingController tahunController = TextEditingController();
-    
+
     if (index != null) {
       final item = _pendidikanKepolisian[index];
       tingkatController.text = item.tingkat;
@@ -1726,62 +2009,76 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          index == null ? 'Tambah Pendidikan Pertama Kepolisian' : 'Edit Pendidikan Pertama Kepolisian',
-          style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CustomDropdown<String>(
-              value: tingkatController.text.isEmpty ? null : tingkatController.text,
-              labelText: 'Tingkat Pendidikan',
-              prefixIcon: Icons.school_outlined,
-              items: MilitaryRank.pendidikanKepolisian.map((tingkat) => DropdownMenuItem(
-                value: tingkat,
-                child: Text(tingkat),
-              )).toList(),
-              onChanged: (value) => tingkatController.text = value ?? '',
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              index == null
+                  ? 'Tambah Pendidikan Pertama Kepolisian'
+                  : 'Edit Pendidikan Pertama Kepolisian',
+              style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: AppSizes.paddingM),
-            CustomTextField(
-              controller: tahunController,
-              labelText: 'Tahun Lulus',
-              prefixIcon: Icons.calendar_today,
-              keyboardType: TextInputType.number,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CustomDropdown<String>(
+                  value:
+                      tingkatController.text.isEmpty
+                          ? null
+                          : tingkatController.text,
+                  labelText: 'Tingkat Pendidikan',
+                  prefixIcon: Icons.school_outlined,
+                  items:
+                      MilitaryRank.pendidikanKepolisian
+                          .map(
+                            (tingkat) => DropdownMenuItem(
+                              value: tingkat,
+                              child: Text(tingkat),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (value) => tingkatController.text = value ?? '',
+                ),
+                const SizedBox(height: AppSizes.paddingM),
+                CustomTextField(
+                  controller: tahunController,
+                  labelText: 'Tahun Lulus',
+                  prefixIcon: Icons.calendar_today,
+                  keyboardType: TextInputType.number,
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (tingkatController.text.isNotEmpty && tahunController.text.isNotEmpty) {
-                final item = PendidikanKepolisian(
-                  tingkat: tingkatController.text,
-                  tahun: int.tryParse(tahunController.text) ?? DateTime.now().year,
-                );
-                
-                setState(() {
-                  if (index == null) {
-                    _pendidikanKepolisian.add(item);
-                  } else {
-                    _pendidikanKepolisian[index] = item;
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (tingkatController.text.isNotEmpty &&
+                      tahunController.text.isNotEmpty) {
+                    final item = PendidikanKepolisian(
+                      tingkat: tingkatController.text,
+                      tahun:
+                          int.tryParse(tahunController.text) ??
+                          DateTime.now().year,
+                    );
+
+                    setState(() {
+                      if (index == null) {
+                        _pendidikanKepolisian.add(item);
+                      } else {
+                        _pendidikanKepolisian[index] = item;
+                      }
+                      _hasChanges = true;
+                    });
+
+                    Navigator.pop(context);
                   }
-                  _hasChanges = true;
-                });
-                
-                Navigator.pop(context);
-              }
-            },
-            child: Text(index == null ? 'Tambah' : 'Simpan'),
+                },
+                child: Text(index == null ? 'Tambah' : 'Simpan'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -1798,7 +2095,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final TextEditingController tingkatController = TextEditingController();
     final TextEditingController institusiController = TextEditingController();
     final TextEditingController tahunController = TextEditingController();
-    
+
     if (index != null) {
       final item = _pendidikanUmum[index];
       tingkatController.text = item.tingkat;
@@ -1808,71 +2105,82 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          index == null ? 'Tambah Pendidikan Umum' : 'Edit Pendidikan Umum',
-          style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CustomDropdown<String>(
-              value: tingkatController.text.isEmpty ? null : tingkatController.text,
-              labelText: 'Tingkat Pendidikan',
-              prefixIcon: Icons.school_outlined,
-              items: MilitaryRank.educationLevels.map((tingkat) => DropdownMenuItem(
-                value: tingkat,
-                child: Text(tingkat),
-              )).toList(),
-              onChanged: (value) => tingkatController.text = value ?? '',
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              index == null ? 'Tambah Pendidikan Umum' : 'Edit Pendidikan Umum',
+              style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: AppSizes.paddingM),
-            CustomTextField(
-              controller: institusiController,
-              labelText: 'Nama Institusi',
-              prefixIcon: Icons.business_outlined,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CustomDropdown<String>(
+                  value:
+                      tingkatController.text.isEmpty
+                          ? null
+                          : tingkatController.text,
+                  labelText: 'Tingkat Pendidikan',
+                  prefixIcon: Icons.school_outlined,
+                  items:
+                      MilitaryRank.educationLevels
+                          .map(
+                            (tingkat) => DropdownMenuItem(
+                              value: tingkat,
+                              child: Text(tingkat),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (value) => tingkatController.text = value ?? '',
+                ),
+                const SizedBox(height: AppSizes.paddingM),
+                CustomTextField(
+                  controller: institusiController,
+                  labelText: 'Nama Institusi',
+                  prefixIcon: Icons.business_outlined,
+                ),
+                const SizedBox(height: AppSizes.paddingM),
+                CustomTextField(
+                  controller: tahunController,
+                  labelText: 'Tahun Lulus',
+                  prefixIcon: Icons.calendar_today,
+                  keyboardType: TextInputType.number,
+                ),
+              ],
             ),
-            const SizedBox(height: AppSizes.paddingM),
-            CustomTextField(
-              controller: tahunController,
-              labelText: 'Tahun Lulus',
-              prefixIcon: Icons.calendar_today,
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (tingkatController.text.isNotEmpty && 
-                  institusiController.text.isNotEmpty && 
-                  tahunController.text.isNotEmpty) {
-                final item = PendidikanUmum(
-                  tingkat: tingkatController.text,
-                  namaInstitusi: institusiController.text,
-                  tahun: int.tryParse(tahunController.text) ?? DateTime.now().year,
-                );
-                
-                setState(() {
-                  if (index == null) {
-                    _pendidikanUmum.add(item);
-                  } else {
-                    _pendidikanUmum[index] = item;
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (tingkatController.text.isNotEmpty &&
+                      institusiController.text.isNotEmpty &&
+                      tahunController.text.isNotEmpty) {
+                    final item = PendidikanUmum(
+                      tingkat: tingkatController.text,
+                      namaInstitusi: institusiController.text,
+                      tahun:
+                          int.tryParse(tahunController.text) ??
+                          DateTime.now().year,
+                    );
+
+                    setState(() {
+                      if (index == null) {
+                        _pendidikanUmum.add(item);
+                      } else {
+                        _pendidikanUmum[index] = item;
+                      }
+                      _hasChanges = true;
+                    });
+
+                    Navigator.pop(context);
                   }
-                  _hasChanges = true;
-                });
-                
-                Navigator.pop(context);
-              }
-            },
-            child: Text(index == null ? 'Tambah' : 'Simpan'),
+                },
+                child: Text(index == null ? 'Tambah' : 'Simpan'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -1888,7 +2196,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void _showRiwayatPangkatModal({int? index}) {
     final TextEditingController pangkatController = TextEditingController();
     DateTime? selectedTmt;
-    
+
     if (index != null) {
       final item = _riwayatPangkat[index];
       pangkatController.text = item.pangkat;
@@ -1897,85 +2205,103 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(
-            index == null ? 'Tambah Riwayat Pangkat' : 'Edit Riwayat Pangkat',
-            style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomDropdown<String>(
-                value: pangkatController.text.isEmpty ? null : pangkatController.text,
-                labelText: 'Pangkat',
-                prefixIcon: Icons.military_tech_outlined,
-                items: MilitaryRank.ranks.map((pangkat) => DropdownMenuItem(
-                  value: pangkat,
-                  child: Text(pangkat),
-                )).toList(),
-                onChanged: (value) => pangkatController.text = value ?? '',
-              ),
-              const SizedBox(height: AppSizes.paddingM),
-              InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: selectedTmt ?? DateTime.now(),
-                    firstDate: DateTime(1980),
-                    lastDate: DateTime.now(),
-                  );
-                  if (picked != null) {
-                    setState(() => selectedTmt = picked);
-                  }
-                },
-                child: Container(
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setState) => AlertDialog(
+                  title: Text(
+                    index == null
+                        ? 'Tambah Riwayat Pangkat'
+                        : 'Edit Riwayat Pangkat',
+                    style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
                   ),
-                  child: Row(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.calendar_today),
-                      SizedBox(width: 12),
-                      Text(selectedTmt != null ? _formatDate(selectedTmt!) : 'Pilih TMT'),
+                      CustomDropdown<String>(
+                        value:
+                            pangkatController.text.isEmpty
+                                ? null
+                                : pangkatController.text,
+                        labelText: 'Pangkat',
+                        prefixIcon: Icons.military_tech_outlined,
+                        items:
+                            MilitaryRank.ranks
+                                .map(
+                                  (pangkat) => DropdownMenuItem(
+                                    value: pangkat,
+                                    child: Text(pangkat),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged:
+                            (value) => pangkatController.text = value ?? '',
+                      ),
+                      const SizedBox(height: AppSizes.paddingM),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedTmt ?? DateTime.now(),
+                            firstDate: DateTime(1980),
+                            lastDate: DateTime.now(),
+                          );
+                          if (picked != null) {
+                            setState(() => selectedTmt = picked);
+                          }
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_today),
+                              SizedBox(width: 12),
+                              Text(
+                                selectedTmt != null
+                                    ? _formatDate(selectedTmt!)
+                                    : 'Pilih TMT',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Batal'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (pangkatController.text.isNotEmpty &&
+                            selectedTmt != null) {
+                          final item = RiwayatPangkat(
+                            pangkat: pangkatController.text,
+                            tmt: selectedTmt!,
+                          );
+
+                          this.setState(() {
+                            if (index == null) {
+                              _riwayatPangkat.add(item);
+                            } else {
+                              _riwayatPangkat[index] = item;
+                            }
+                            _hasChanges = true;
+                          });
+
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Text(index == null ? 'Tambah' : 'Simpan'),
+                    ),
+                  ],
                 ),
-              ),
-            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (pangkatController.text.isNotEmpty && selectedTmt != null) {
-                  final item = RiwayatPangkat(
-                    pangkat: pangkatController.text,
-                    tmt: selectedTmt!,
-                  );
-                  
-                  this.setState(() {
-                    if (index == null) {
-                      _riwayatPangkat.add(item);
-                    } else {
-                      _riwayatPangkat[index] = item;
-                    }
-                    _hasChanges = true;
-                  });
-                  
-                  Navigator.pop(context);
-                }
-              },
-              child: Text(index == null ? 'Tambah' : 'Simpan'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1991,7 +2317,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void _showRiwayatJabatanModal({int? index}) {
     final TextEditingController jabatanController = TextEditingController();
     DateTime? selectedTmt;
-    
+
     if (index != null) {
       final item = _riwayatJabatan[index];
       jabatanController.text = item.jabatan;
@@ -2000,85 +2326,95 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(
-            index == null ? 'Tambah Riwayat Jabatan' : 'Edit Riwayat Jabatan',
-            style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomTextField(
-                controller: jabatanController,
-                labelText: 'Jabatan',
-                prefixIcon: Icons.work_outline,
-              ),
-              const SizedBox(height: AppSizes.paddingM),
-              InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: selectedTmt ?? DateTime.now(),
-                    firstDate: DateTime(1980),
-                    lastDate: DateTime.now(),
-                  );
-                  if (picked != null) {
-                    setState(() => selectedTmt = picked);
-                  }
-                },
-                child: Container(
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setState) => AlertDialog(
+                  title: Text(
+                    index == null
+                        ? 'Tambah Riwayat Jabatan'
+                        : 'Edit Riwayat Jabatan',
+                    style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
                   ),
-                  child: Row(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.calendar_today),
-                      SizedBox(width: 12),
-                      Text(selectedTmt != null ? _formatDate(selectedTmt!) : 'Pilih TMT'),
+                      CustomTextField(
+                        controller: jabatanController,
+                        labelText: 'Jabatan',
+                        prefixIcon: Icons.work_outline,
+                      ),
+                      const SizedBox(height: AppSizes.paddingM),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedTmt ?? DateTime.now(),
+                            firstDate: DateTime(1980),
+                            lastDate: DateTime.now(),
+                          );
+                          if (picked != null) {
+                            setState(() => selectedTmt = picked);
+                          }
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_today),
+                              SizedBox(width: 12),
+                              Text(
+                                selectedTmt != null
+                                    ? _formatDate(selectedTmt!)
+                                    : 'Pilih TMT',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Batal'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (jabatanController.text.isNotEmpty &&
+                            selectedTmt != null) {
+                          final item = RiwayatJabatan(
+                            jabatan: jabatanController.text,
+                            tmt: selectedTmt!,
+                          );
+
+                          this.setState(() {
+                            if (index == null) {
+                              _riwayatJabatan.add(item);
+                            } else {
+                              _riwayatJabatan[index] = item;
+                            }
+                            _hasChanges = true;
+                          });
+
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Text(index == null ? 'Tambah' : 'Simpan'),
+                    ),
+                  ],
                 ),
-              ),
-            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (jabatanController.text.isNotEmpty && selectedTmt != null) {
-                  final item = RiwayatJabatan(
-                    jabatan: jabatanController.text,
-                    tmt: selectedTmt!,
-                  );
-                  
-                  this.setState(() {
-                    if (index == null) {
-                      _riwayatJabatan.add(item);
-                    } else {
-                      _riwayatJabatan[index] = item;
-                    }
-                    _hasChanges = true;
-                  });
-                  
-                  Navigator.pop(context);
-                }
-              },
-              child: Text(index == null ? 'Tambah' : 'Simpan'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
   void _addPendidikanPelatihan() => _showPendidikanPelatihanModal();
-  void _editPendidikanPelatihan(int index) => _showPendidikanPelatihanModal(index: index);
+  void _editPendidikanPelatihan(int index) =>
+      _showPendidikanPelatihanModal(index: index);
   void _deletePendidikanPelatihan(int index) {
     setState(() {
       _pendidikanPelatihan.removeAt(index);
@@ -2089,7 +2425,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void _showPendidikanPelatihanModal({int? index}) {
     final TextEditingController dikbangController = TextEditingController();
     DateTime? selectedTmt;
-    
+
     if (index != null) {
       final item = _pendidikanPelatihan[index];
       dikbangController.text = item.dikbang;
@@ -2098,85 +2434,95 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(
-            index == null ? 'Tambah Pendidikan Pelatihan' : 'Edit Pendidikan Pelatihan',
-            style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomTextField(
-                controller: dikbangController,
-                labelText: 'Nama Pelatihan/Dikbang',
-                prefixIcon: Icons.school_outlined,
-              ),
-              const SizedBox(height: AppSizes.paddingM),
-              InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: selectedTmt ?? DateTime.now(),
-                    firstDate: DateTime(1980),
-                    lastDate: DateTime.now(),
-                  );
-                  if (picked != null) {
-                    setState(() => selectedTmt = picked);
-                  }
-                },
-                child: Container(
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setState) => AlertDialog(
+                  title: Text(
+                    index == null
+                        ? 'Tambah Pendidikan Pelatihan'
+                        : 'Edit Pendidikan Pelatihan',
+                    style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
                   ),
-                  child: Row(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.calendar_today),
-                      SizedBox(width: 12),
-                      Text(selectedTmt != null ? _formatDate(selectedTmt!) : 'Pilih TMT'),
+                      CustomTextField(
+                        controller: dikbangController,
+                        labelText: 'Nama Pelatihan/Dikbang',
+                        prefixIcon: Icons.school_outlined,
+                      ),
+                      const SizedBox(height: AppSizes.paddingM),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedTmt ?? DateTime.now(),
+                            firstDate: DateTime(1980),
+                            lastDate: DateTime.now(),
+                          );
+                          if (picked != null) {
+                            setState(() => selectedTmt = picked);
+                          }
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_today),
+                              SizedBox(width: 12),
+                              Text(
+                                selectedTmt != null
+                                    ? _formatDate(selectedTmt!)
+                                    : 'Pilih TMT',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Batal'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (dikbangController.text.isNotEmpty &&
+                            selectedTmt != null) {
+                          final item = PendidikanPelatihan(
+                            dikbang: dikbangController.text,
+                            tmt: selectedTmt!,
+                          );
+
+                          this.setState(() {
+                            if (index == null) {
+                              _pendidikanPelatihan.add(item);
+                            } else {
+                              _pendidikanPelatihan[index] = item;
+                            }
+                            _hasChanges = true;
+                          });
+
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Text(index == null ? 'Tambah' : 'Simpan'),
+                    ),
+                  ],
                 ),
-              ),
-            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (dikbangController.text.isNotEmpty && selectedTmt != null) {
-                  final item = PendidikanPelatihan(
-                    dikbang: dikbangController.text,
-                    tmt: selectedTmt!,
-                  );
-                  
-                  this.setState(() {
-                    if (index == null) {
-                      _pendidikanPelatihan.add(item);
-                    } else {
-                      _pendidikanPelatihan[index] = item;
-                    }
-                    _hasChanges = true;
-                  });
-                  
-                  Navigator.pop(context);
-                }
-              },
-              child: Text(index == null ? 'Tambah' : 'Simpan'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
   void _addTandaKehormatan() => _showTandaKehormatanModal();
-  void _editTandaKehormatan(int index) => _showTandaKehormatanModal(index: index);
+  void _editTandaKehormatan(int index) =>
+      _showTandaKehormatanModal(index: index);
   void _deleteTandaKehormatan(int index) {
     setState(() {
       _tandaKehormatan.removeAt(index);
@@ -2187,7 +2533,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void _showTandaKehormatanModal({int? index}) {
     final TextEditingController tandaController = TextEditingController();
     DateTime? selectedTmt;
-    
+
     if (index != null) {
       final item = _tandaKehormatan[index];
       tandaController.text = item.tandaKehormatan;
@@ -2196,85 +2542,95 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(
-            index == null ? 'Tambah Tanda Kehormatan' : 'Edit Tanda Kehormatan',
-            style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomTextField(
-                controller: tandaController,
-                labelText: 'Tanda Kehormatan',
-                prefixIcon: Icons.emoji_events_outlined,
-              ),
-              const SizedBox(height: AppSizes.paddingM),
-              InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: selectedTmt ?? DateTime.now(),
-                    firstDate: DateTime(1980),
-                    lastDate: DateTime.now(),
-                  );
-                  if (picked != null) {
-                    setState(() => selectedTmt = picked);
-                  }
-                },
-                child: Container(
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setState) => AlertDialog(
+                  title: Text(
+                    index == null
+                        ? 'Tambah Tanda Kehormatan'
+                        : 'Edit Tanda Kehormatan',
+                    style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
                   ),
-                  child: Row(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.calendar_today),
-                      SizedBox(width: 12),
-                      Text(selectedTmt != null ? _formatDate(selectedTmt!) : 'Pilih TMT'),
+                      CustomTextField(
+                        controller: tandaController,
+                        labelText: 'Tanda Kehormatan',
+                        prefixIcon: Icons.emoji_events_outlined,
+                      ),
+                      const SizedBox(height: AppSizes.paddingM),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedTmt ?? DateTime.now(),
+                            firstDate: DateTime(1980),
+                            lastDate: DateTime.now(),
+                          );
+                          if (picked != null) {
+                            setState(() => selectedTmt = picked);
+                          }
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_today),
+                              SizedBox(width: 12),
+                              Text(
+                                selectedTmt != null
+                                    ? _formatDate(selectedTmt!)
+                                    : 'Pilih TMT',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Batal'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (tandaController.text.isNotEmpty &&
+                            selectedTmt != null) {
+                          final item = TandaKehormatan(
+                            tandaKehormatan: tandaController.text,
+                            tmt: selectedTmt!,
+                          );
+
+                          this.setState(() {
+                            if (index == null) {
+                              _tandaKehormatan.add(item);
+                            } else {
+                              _tandaKehormatan[index] = item;
+                            }
+                            _hasChanges = true;
+                          });
+
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Text(index == null ? 'Tambah' : 'Simpan'),
+                    ),
+                  ],
                 ),
-              ),
-            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (tandaController.text.isNotEmpty && selectedTmt != null) {
-                  final item = TandaKehormatan(
-                    tandaKehormatan: tandaController.text,
-                    tmt: selectedTmt!,
-                  );
-                  
-                  this.setState(() {
-                    if (index == null) {
-                      _tandaKehormatan.add(item);
-                    } else {
-                      _tandaKehormatan[index] = item;
-                    }
-                    _hasChanges = true;
-                  });
-                  
-                  Navigator.pop(context);
-                }
-              },
-              child: Text(index == null ? 'Tambah' : 'Simpan'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
   void _addKemampuanBahasa() => _showKemampuanBahasaModal();
-  void _editKemampuanBahasa(int index) => _showKemampuanBahasaModal(index: index);
+  void _editKemampuanBahasa(int index) =>
+      _showKemampuanBahasaModal(index: index);
   void _deleteKemampuanBahasa(int index) {
     setState(() {
       _kemampuanBahasa.removeAt(index);
@@ -2285,7 +2641,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void _showKemampuanBahasaModal({int? index}) {
     final TextEditingController bahasaController = TextEditingController();
     final TextEditingController statusController = TextEditingController();
-    
+
     if (index != null) {
       final item = _kemampuanBahasa[index];
       bahasaController.text = item.bahasa;
@@ -2296,71 +2652,92 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          index == null ? 'Tambah Kemampuan Bahasa' : 'Edit Kemampuan Bahasa',
-          style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CustomDropdown<String>(
-              value: bahasaController.text.isEmpty ? null : bahasaController.text,
-              labelText: 'Bahasa',
-              prefixIcon: Icons.language_outlined,
-              items: MilitaryRank.bahasaList.map((bahasa) => DropdownMenuItem(
-                value: bahasa,
-                child: Text(bahasa),
-              )).toList(),
-              onChanged: (value) => bahasaController.text = value ?? '',
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              index == null
+                  ? 'Tambah Kemampuan Bahasa'
+                  : 'Edit Kemampuan Bahasa',
+              style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: AppSizes.paddingM),
-            CustomDropdown<String>(
-              value: statusController.text.isEmpty ? null : statusController.text,
-              labelText: 'Status Kemampuan',
-              prefixIcon: Icons.check_circle_outline,
-              items: MilitaryRank.statusBahasa.map((status) => DropdownMenuItem(
-                value: status,
-                child: Text(status),
-              )).toList(),
-              onChanged: (value) => statusController.text = value ?? '',
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CustomDropdown<String>(
+                  value:
+                      bahasaController.text.isEmpty
+                          ? null
+                          : bahasaController.text,
+                  labelText: 'Bahasa',
+                  prefixIcon: Icons.language_outlined,
+                  items:
+                      MilitaryRank.bahasaList
+                          .map(
+                            (bahasa) => DropdownMenuItem(
+                              value: bahasa,
+                              child: Text(bahasa),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (value) => bahasaController.text = value ?? '',
+                ),
+                const SizedBox(height: AppSizes.paddingM),
+                CustomDropdown<String>(
+                  value:
+                      statusController.text.isEmpty
+                          ? null
+                          : statusController.text,
+                  labelText: 'Status Kemampuan',
+                  prefixIcon: Icons.check_circle_outline,
+                  items:
+                      MilitaryRank.statusBahasa
+                          .map(
+                            (status) => DropdownMenuItem(
+                              value: status,
+                              child: Text(status),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (value) => statusController.text = value ?? '',
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (bahasaController.text.isNotEmpty && statusController.text.isNotEmpty) {
-                final item = KemampuanBahasa(
-                  bahasa: bahasaController.text,
-                  status: statusController.text,
-                );
-                
-                setState(() {
-                  if (index == null) {
-                    _kemampuanBahasa.add(item);
-                  } else {
-                    _kemampuanBahasa[index] = item;
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (bahasaController.text.isNotEmpty &&
+                      statusController.text.isNotEmpty) {
+                    final item = KemampuanBahasa(
+                      bahasa: bahasaController.text,
+                      status: statusController.text,
+                    );
+
+                    setState(() {
+                      if (index == null) {
+                        _kemampuanBahasa.add(item);
+                      } else {
+                        _kemampuanBahasa[index] = item;
+                      }
+                      _hasChanges = true;
+                    });
+
+                    Navigator.pop(context);
                   }
-                  _hasChanges = true;
-                });
-                
-                Navigator.pop(context);
-              }
-            },
-            child: Text(index == null ? 'Tambah' : 'Simpan'),
+                },
+                child: Text(index == null ? 'Tambah' : 'Simpan'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   void _addPenugasanLuarStruktur() => _showPenugasanLuarStrukturModal();
-  void _editPenugasanLuarStruktur(int index) => _showPenugasanLuarStrukturModal(index: index);
+  void _editPenugasanLuarStruktur(int index) =>
+      _showPenugasanLuarStrukturModal(index: index);
   void _deletePenugasanLuarStruktur(int index) {
     setState(() {
       _penugasanLuarStruktur.removeAt(index);
@@ -2371,7 +2748,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void _showPenugasanLuarStrukturModal({int? index}) {
     final TextEditingController penugasanController = TextEditingController();
     final TextEditingController lokasiController = TextEditingController();
-    
+
     if (index != null) {
       final item = _penugasanLuarStruktur[index];
       penugasanController.text = item.penugasan;
@@ -2380,56 +2757,60 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          index == null ? 'Tambah Penugasan Luar Struktur' : 'Edit Penugasan Luar Struktur',
-          style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CustomTextField(
-              controller: penugasanController,
-              labelText: 'Jenis Penugasan',
-              prefixIcon: Icons.assignment_outlined,
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              index == null
+                  ? 'Tambah Penugasan Luar Struktur'
+                  : 'Edit Penugasan Luar Struktur',
+              style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: AppSizes.paddingM),
-            CustomTextField(
-              controller: lokasiController,
-              labelText: 'Lokasi Penugasan',
-              prefixIcon: Icons.location_on_outlined,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CustomTextField(
+                  controller: penugasanController,
+                  labelText: 'Jenis Penugasan',
+                  prefixIcon: Icons.assignment_outlined,
+                ),
+                const SizedBox(height: AppSizes.paddingM),
+                CustomTextField(
+                  controller: lokasiController,
+                  labelText: 'Lokasi Penugasan',
+                  prefixIcon: Icons.location_on_outlined,
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (penugasanController.text.isNotEmpty && lokasiController.text.isNotEmpty) {
-                final item = PenugasanLuarStruktur(
-                  penugasan: penugasanController.text,
-                  lokasi: lokasiController.text,
-                );
-                
-                setState(() {
-                  if (index == null) {
-                    _penugasanLuarStruktur.add(item);
-                  } else {
-                    _penugasanLuarStruktur[index] = item;
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (penugasanController.text.isNotEmpty &&
+                      lokasiController.text.isNotEmpty) {
+                    final item = PenugasanLuarStruktur(
+                      penugasan: penugasanController.text,
+                      lokasi: lokasiController.text,
+                    );
+
+                    setState(() {
+                      if (index == null) {
+                        _penugasanLuarStruktur.add(item);
+                      } else {
+                        _penugasanLuarStruktur[index] = item;
+                      }
+                      _hasChanges = true;
+                    });
+
+                    Navigator.pop(context);
                   }
-                  _hasChanges = true;
-                });
-                
-                Navigator.pop(context);
-              }
-            },
-            child: Text(index == null ? 'Tambah' : 'Simpan'),
+                },
+                child: Text(index == null ? 'Tambah' : 'Simpan'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -2437,9 +2818,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.primaryGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         child: SafeArea(
           child: Column(
             children: [
@@ -2449,7 +2828,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back, color: AppColors.white),
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: AppColors.white,
+                      ),
                       onPressed: () => Navigator.pop(context),
                     ),
                     Expanded(
@@ -2466,16 +2848,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                     Container(
                       width: 48,
-                      child: _hasChanges
-                          ? Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: Colors.orange,
-                                shape: BoxShape.circle,
-                              ),
-                            )
-                          : null,
+                      child:
+                          _hasChanges
+                              ? Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Colors.orange,
+                                  shape: BoxShape.circle,
+                                ),
+                              )
+                              : null,
                     ),
                   ],
                 ),
@@ -2483,7 +2866,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
               // Step indicator
               Container(
-                margin: const EdgeInsets.symmetric(horizontal: AppSizes.paddingL),
+                margin: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.paddingL,
+                ),
                 child: Row(
                   children: List.generate(_totalSteps, (index) {
                     return Expanded(
@@ -2493,9 +2878,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           right: index < _totalSteps - 1 ? 4 : 0,
                         ),
                         decoration: BoxDecoration(
-                          color: index <= _currentStep 
-                              ? AppColors.white 
-                              : AppColors.white.withOpacity(0.3),
+                          color:
+                              index <= _currentStep
+                                  ? AppColors.white
+                                  : AppColors.white.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -2503,9 +2889,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   }),
                 ),
               ),
-              
+
               const SizedBox(height: AppSizes.paddingS),
-              
+
               Text(
                 'Langkah ${_currentStep + 1} dari $_totalSteps',
                 style: GoogleFonts.roboto(
@@ -2513,7 +2899,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   color: AppColors.white.withOpacity(0.8),
                 ),
               ),
-              
+
               const SizedBox(height: AppSizes.paddingM),
 
               // Form content
@@ -2544,21 +2930,28 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         if (_currentStep == 5) _buildStep6(),
                         if (_currentStep == 6) _buildStep7(),
                         if (_currentStep == 7) _buildStep8(),
-                        
+
                         const SizedBox(height: AppSizes.paddingXL),
-                        
+
                         // Navigation buttons
                         Row(
                           children: [
                             if (_currentStep > 0)
                               Expanded(
                                 child: OutlinedButton(
-                                  onPressed: () => setState(() => _currentStep--),
+                                  onPressed:
+                                      () => setState(() => _currentStep--),
                                   style: OutlinedButton.styleFrom(
-                                    side: const BorderSide(color: AppColors.primaryBlue),
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    side: const BorderSide(
+                                      color: AppColors.primaryBlue,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                                      borderRadius: BorderRadius.circular(
+                                        AppSizes.radiusM,
+                                      ),
                                     ),
                                   ),
                                   child: Text(
@@ -2570,54 +2963,77 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   ),
                                 ),
                               ),
-                            
-                            if (_currentStep > 0) const SizedBox(width: AppSizes.paddingM),
-                            
+
+                            if (_currentStep > 0)
+                              const SizedBox(width: AppSizes.paddingM),
+
                             Expanded(
-                              child: _currentStep < _totalSteps - 1
-                                  ? ElevatedButton(
-                                      onPressed: () => setState(() => _currentStep++),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.primaryBlue,
-                                        padding: const EdgeInsets.symmetric(vertical: 16),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(AppSizes.radiusM),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'SELANJUTNYA',
-                                        style: GoogleFonts.roboto(
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.white,
-                                        ),
-                                      ),
-                                    )
-                                  : ElevatedButton(
-                                      onPressed: _isLoading || !_hasChanges ? null : _saveChanges,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: _hasChanges ? AppColors.primaryBlue : AppColors.darkGray,
-                                        padding: const EdgeInsets.symmetric(vertical: 16),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(AppSizes.radiusM),
-                                        ),
-                                      ),
-                                      child: _isLoading
-                                          ? const SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-                                              ),
-                                            )
-                                          : Text(
-                                              'SIMPAN PERUBAHAN',
-                                              style: GoogleFonts.roboto(
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.white,
-                                              ),
+                              child:
+                                  _currentStep < _totalSteps - 1
+                                      ? ElevatedButton(
+                                        onPressed:
+                                            () =>
+                                                setState(() => _currentStep++),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              AppColors.primaryBlue,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              AppSizes.radiusM,
                                             ),
-                                    ),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'SELANJUTNYA',
+                                          style: GoogleFonts.roboto(
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.white,
+                                          ),
+                                        ),
+                                      )
+                                      : ElevatedButton(
+                                        onPressed:
+                                            _isLoading || !_hasChanges
+                                                ? null
+                                                : _saveChanges,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              _hasChanges
+                                                  ? AppColors.primaryBlue
+                                                  : AppColors.darkGray,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              AppSizes.radiusM,
+                                            ),
+                                          ),
+                                        ),
+                                        child:
+                                            _isLoading
+                                                ? const SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    valueColor:
+                                                        AlwaysStoppedAnimation<
+                                                          Color
+                                                        >(AppColors.white),
+                                                  ),
+                                                )
+                                                : Text(
+                                                  'SIMPAN PERUBAHAN',
+                                                  style: GoogleFonts.roboto(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppColors.white,
+                                                  ),
+                                                ),
+                                      ),
                             ),
                           ],
                         ),

@@ -32,9 +32,10 @@ class AuthService {
   // Upload profile photo to Firebase Storage
   Future<String> uploadProfilePhoto(File imageFile, String userId) async {
     try {
-      final fileName = 'profile_${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final fileName =
+          'profile_${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final ref = _storage.ref().child('profile_photos').child(fileName);
-      
+
       // Compress and upload image
       final uploadTask = ref.putFile(
         imageFile,
@@ -49,7 +50,7 @@ class AuthService {
 
       final snapshot = await uploadTask;
       final downloadUrl = await snapshot.ref.getDownloadURL();
-      
+
       return downloadUrl;
     } catch (e) {
       throw Exception('Gagal mengupload foto profil: ${e.toString()}');
@@ -74,14 +75,14 @@ class AuthService {
     required String password,
     required String fullName,
     required String nrp,
-    
+
     // Basic info
     String? rank,
     String? jabatan,
     DateTime? jabatanTmt,
     UserRole? role,
     String? photoUrl,
-    
+
     // Personal data
     String? tempatLahir,
     DateTime? dateOfBirth,
@@ -89,16 +90,17 @@ class AuthService {
     String? suku,
     String? statusPersonel,
     DateTime? militaryJoinDate,
-    
+
     // Contact info
     String? phoneNumber,
     String? address,
     String? emergencyContact,
     String? bloodType,
     String? maritalStatus,
-    
+
     // Complex data arrays
     List<PendidikanKepolisian>? pendidikanKepolisian,
+    List<DikbangKepolisian>? dikbangKepolisian, // TAMBAHKAN INI
     List<PendidikanUmum>? pendidikanUmum,
     List<RiwayatPangkat>? riwayatPangkat,
     List<RiwayatJabatan>? riwayatJabatan,
@@ -128,7 +130,7 @@ class AuthService {
           role: role ?? UserRole.other,
           status: UserStatus.pending, // Default status
           photoUrl: photoUrl,
-          
+
           // Personal data
           tempatLahir: tempatLahir,
           dateOfBirth: dateOfBirth,
@@ -136,19 +138,20 @@ class AuthService {
           suku: suku,
           statusPersonel: statusPersonel,
           militaryJoinDate: militaryJoinDate,
-          
+
           // Contact info
           phoneNumber: phoneNumber,
           address: address,
           emergencyContact: emergencyContact,
           bloodType: bloodType,
           maritalStatus: maritalStatus,
-          
+
           // System fields
           createdAt: DateTime.now(),
-          
+
           // Complex arrays (default empty if not provided)
           pendidikanKepolisian: pendidikanKepolisian ?? [],
+          dikbangKepolisian: dikbangKepolisian ?? [], // TAMBAHKAN INI
           pendidikanUmum: pendidikanUmum ?? [],
           riwayatPangkat: riwayatPangkat ?? [],
           riwayatJabatan: riwayatJabatan ?? [],
@@ -170,10 +173,7 @@ class AuthService {
         };
       }
 
-      return {
-        'success': false,
-        'message': 'Gagal membuat akun',
-      };
+      return {'success': false, 'message': 'Gagal membuat akun'};
     } on FirebaseAuthException catch (e) {
       String errorMessage;
       switch (e.code) {
@@ -189,15 +189,9 @@ class AuthService {
         default:
           errorMessage = 'Terjadi kesalahan: ${e.message}';
       }
-      return {
-        'success': false,
-        'message': errorMessage,
-      };
+      return {'success': false, 'message': errorMessage};
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'Terjadi kesalahan: $e',
-      };
+      return {'success': false, 'message': 'Terjadi kesalahan: $e'};
     }
   }
 
@@ -216,7 +210,7 @@ class AuthService {
       if (user != null) {
         // Get user data from Firestore
         UserModel? userData = await getUserData(user.uid);
-        
+
         if (userData != null) {
           // Check if user is approved
           if (userData.status == UserStatus.approved) {
@@ -242,10 +236,7 @@ class AuthService {
         }
       }
 
-      return {
-        'success': false,
-        'message': 'Data pengguna tidak ditemukan',
-      };
+      return {'success': false, 'message': 'Data pengguna tidak ditemukan'};
     } on FirebaseAuthException catch (e) {
       String errorMessage;
       switch (e.code) {
@@ -264,15 +255,9 @@ class AuthService {
         default:
           errorMessage = 'Terjadi kesalahan: ${e.message}';
       }
-      return {
-        'success': false,
-        'message': errorMessage,
-      };
+      return {'success': false, 'message': errorMessage};
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'Terjadi kesalahan: $e',
-      };
+      return {'success': false, 'message': 'Terjadi kesalahan: $e'};
     }
   }
 
@@ -289,10 +274,7 @@ class AuthService {
   Future<Map<String, dynamic>> resetPassword(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-      return {
-        'success': true,
-        'message': 'Email reset password telah dikirim',
-      };
+      return {'success': true, 'message': 'Email reset password telah dikirim'};
     } on FirebaseAuthException catch (e) {
       String errorMessage;
       switch (e.code) {
@@ -305,15 +287,9 @@ class AuthService {
         default:
           errorMessage = 'Terjadi kesalahan: ${e.message}';
       }
-      return {
-        'success': false,
-        'message': errorMessage,
-      };
+      return {'success': false, 'message': errorMessage};
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'Terjadi kesalahan: $e',
-      };
+      return {'success': false, 'message': 'Terjadi kesalahan: $e'};
     }
   }
 
@@ -326,10 +302,7 @@ class AuthService {
       // Get current user data
       final userData = await getUserData(userId);
       if (userData == null) {
-        return {
-          'success': false,
-          'message': 'Data pengguna tidak ditemukan',
-        };
+        return {'success': false, 'message': 'Data pengguna tidak ditemukan'};
       }
 
       // Delete old photo if exists
@@ -367,7 +340,7 @@ class AuthService {
   }) async {
     try {
       Map<String, dynamic> updateData = {};
-      
+
       if (updatedUser != null) {
         updateData = updatedUser.toFirestore();
       } else if (updates != null) {
@@ -378,10 +351,7 @@ class AuthService {
 
       await _firestore.collection('users').doc(userId).update(updateData);
 
-      return {
-        'success': true,
-        'message': 'Data berhasil diperbarui',
-      };
+      return {'success': true, 'message': 'Data berhasil diperbarui'};
     } catch (e) {
       return {
         'success': false,
@@ -396,9 +366,10 @@ class AuthService {
         .collection('users')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => UserModel.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList(),
+        );
   }
 
   // Get users by status
@@ -408,9 +379,10 @@ class AuthService {
         .where('status', isEqualTo: status.name)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => UserModel.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList(),
+        );
   }
 
   // Get users by role
@@ -420,27 +392,33 @@ class AuthService {
         .where('role', isEqualTo: role.name)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => UserModel.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList(),
+        );
   }
 
   // Search users
   Future<List<UserModel>> searchUsers(String query) async {
     try {
       // Search by name
-      final nameQuery = await _firestore
-          .collection('users')
-          .where('fullName', isGreaterThanOrEqualTo: query.toUpperCase())
-          .where('fullName', isLessThanOrEqualTo: query.toUpperCase() + '\uf8ff')
-          .get();
+      final nameQuery =
+          await _firestore
+              .collection('users')
+              .where('fullName', isGreaterThanOrEqualTo: query.toUpperCase())
+              .where(
+                'fullName',
+                isLessThanOrEqualTo: query.toUpperCase() + '\uf8ff',
+              )
+              .get();
 
       // Search by NRP
-      final nrpQuery = await _firestore
-          .collection('users')
-          .where('nrp', isGreaterThanOrEqualTo: query)
-          .where('nrp', isLessThanOrEqualTo: query + '\uf8ff')
-          .get();
+      final nrpQuery =
+          await _firestore
+              .collection('users')
+              .where('nrp', isGreaterThanOrEqualTo: query)
+              .where('nrp', isLessThanOrEqualTo: query + '\uf8ff')
+              .get();
 
       // Combine results and remove duplicates
       Set<String> seenIds = {};
@@ -468,7 +446,10 @@ class AuthService {
   }
 
   // Approve user
-  Future<Map<String, dynamic>> approveUser(String userId, String adminId) async {
+  Future<Map<String, dynamic>> approveUser(
+    String userId,
+    String adminId,
+  ) async {
     try {
       await _firestore.collection('users').doc(userId).update({
         'status': UserStatus.approved.name,
@@ -477,10 +458,7 @@ class AuthService {
         'updatedAt': Timestamp.fromDate(DateTime.now()),
       });
 
-      return {
-        'success': true,
-        'message': 'User berhasil disetujui',
-      };
+      return {'success': true, 'message': 'User berhasil disetujui'};
     } catch (e) {
       return {
         'success': false,
@@ -490,7 +468,11 @@ class AuthService {
   }
 
   // Reject user
-  Future<Map<String, dynamic>> rejectUser(String userId, String adminId, String reason) async {
+  Future<Map<String, dynamic>> rejectUser(
+    String userId,
+    String adminId,
+    String reason,
+  ) async {
     try {
       await _firestore.collection('users').doc(userId).update({
         'status': UserStatus.rejected.name,
@@ -499,10 +481,7 @@ class AuthService {
         'updatedAt': Timestamp.fromDate(DateTime.now()),
       });
 
-      return {
-        'success': true,
-        'message': 'User berhasil ditolak',
-      };
+      return {'success': true, 'message': 'User berhasil ditolak'};
     } catch (e) {
       return {
         'success': false,
@@ -523,10 +502,7 @@ class AuthService {
       // Delete user document
       await _firestore.collection('users').doc(userId).delete();
 
-      return {
-        'success': true,
-        'message': 'User berhasil dihapus',
-      };
+      return {'success': true, 'message': 'User berhasil dihapus'};
     } catch (e) {
       return {
         'success': false,
