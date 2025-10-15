@@ -754,13 +754,12 @@ class MilitaryRank {
     'KOMJEN',
   ];
   static const List<String> dikbangKepolisianList = [
-    'SESPIMMEN',
+    'SESPIMTI/SEDERAJAT',
+    'SESPIMMEN/SEDERAJAT',
+    'STIK-PTIK/SEDERAJAT',
     'SESPIMMA',
-    'SESPIMPTI',
-    'LEMHANAS',
-    'SETTAF',
-    'SEKOLAH STAF PIMPINAN',
-    'PELATIHAN KHUSUS',
+    'SIP',
+    'SBP',
   ];
 
   static const List<String> bloodTypes = ['A', 'B', 'AB', 'O'];

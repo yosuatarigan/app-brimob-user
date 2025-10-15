@@ -190,7 +190,6 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
- 
   Future<void> _loadCurrentUserAndInitializeFCM() async {
     try {
       final user = _authService.currentUser;
@@ -1095,11 +1094,11 @@ class _DashboardPageState extends State<DashboardPage> {
         'imageContent': 'assets/dc/catutprasetya.png',
       },
       {
-        'title': 'Panca Prasetya',
-        'description': 'Lima prinsip khusus Korbrimob',
-        'id': 'panca_prasetya',
+        'title': 'Jati Diri Brimob',
+        'description': 'Jati diri Korbrimob Polri',
+        'id': 'jati_diri',
         'assetPath': 'assets/korpri.png',
-        'imageContent': 'assets/dc/panca.png',
+        'imageContent': 'assets/dc/jatidiri.png',
       },
       {
         'title': 'Etika Profesi',
@@ -1115,12 +1114,13 @@ class _DashboardPageState extends State<DashboardPage> {
         'assetPath': 'assets/brimob.png',
         'imageContent': 'assets/dc/ikrar.png',
       },
+
       {
-        'title': 'Jati Diri Brimob',
-        'description': 'Jati diri Korbrimob Polri',
-        'id': 'jati_diri',
+        'title': 'Panca Prasetya',
+        'description': 'Lima prinsip khusus Korbrimob',
+        'id': 'panca_prasetya',
         'assetPath': 'assets/brimob.png',
-        'imageContent': 'assets/dc/jatidiri.png',
+        'imageContent': 'assets/dc/panca.png',
       },
     ];
 

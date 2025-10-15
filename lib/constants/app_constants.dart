@@ -365,13 +365,12 @@ class MenuData {
   ];
 
   static const List<String> dikbangKepolisianList = [
-    'SESPIMMEN',
+    'SESPIMTI/SEDERAJAT',
+    'SESPIMMEN/SEDERAJAT',
+    'STIK-PTIK/SEDERAJAT',
     'SESPIMMA',
-    'SESPIMPTI',
-    'LEMHANAS',
-    'SETTAF',
-    'SEKOLAH STAF PIMPINAN',
-    'PELATIHAN KHUSUS',
+    'SIP',
+    'SBP',
   ];
 
   // Additional data for forms
