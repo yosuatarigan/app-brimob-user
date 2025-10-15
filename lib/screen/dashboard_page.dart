@@ -1098,7 +1098,7 @@ class _DashboardPageState extends State<DashboardPage> {
         'title': 'Panca Prasetya',
         'description': 'Lima prinsip khusus Korbrimob',
         'id': 'panca_prasetya',
-        'assetPath': 'assets/brimob.png',
+        'assetPath': 'assets/korpri.png',
         'imageContent': 'assets/dc/panca.png',
       },
       {
@@ -1119,7 +1119,7 @@ class _DashboardPageState extends State<DashboardPage> {
         'title': 'Jati Diri Brimob',
         'description': 'Jati diri Korbrimob Polri',
         'id': 'jati_diri',
-        'assetPath': 'assets/korpri.png',
+        'assetPath': 'assets/brimob.png',
         'imageContent': 'assets/dc/jatidiri.png',
       },
     ];
