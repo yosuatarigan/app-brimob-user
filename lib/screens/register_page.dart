@@ -58,14 +58,15 @@ class _RegisterPageState extends State<RegisterPage> {
   final int _totalSteps = 8;
 
   // Complex data lists
-  List<PendidikanKepolisian> _pendidikanKepolisian = [];
-  List<PendidikanUmum> _pendidikanUmum = [];
-  List<RiwayatPangkat> _riwayatPangkat = [];
-  List<RiwayatJabatan> _riwayatJabatan = [];
-  List<PendidikanPelatihan> _pendidikanPelatihan = [];
-  List<TandaKehormatan> _tandaKehormatan = [];
-  List<KemampuanBahasa> _kemampuanBahasa = [];
-  List<PenugasanLuarStruktur> _penugasanLuarStruktur = [];
+  final List<PendidikanKepolisian> _pendidikanKepolisian = [];
+  final List<DikbangKepolisian> _dikbangKepolisian = []; // TAMBAHKAN INI
+  final List<PendidikanUmum> _pendidikanUmum = [];
+  final List<RiwayatPangkat> _riwayatPangkat = [];
+  final List<RiwayatJabatan> _riwayatJabatan = [];
+  final List<PendidikanPelatihan> _pendidikanPelatihan = [];
+  final List<TandaKehormatan> _tandaKehormatan = [];
+  final List<KemampuanBahasa> _kemampuanBahasa = [];
+  final List<PenugasanLuarStruktur> _penugasanLuarStruktur = [];
 
   @override
   void dispose() {
@@ -132,6 +133,7 @@ class _RegisterPageState extends State<RegisterPage> {
         bloodType: _selectedBloodType,
         maritalStatus: _selectedMaritalStatus,
         pendidikanKepolisian: _pendidikanKepolisian,
+        dikbangKepolisian: _dikbangKepolisian, // T
         pendidikanUmum: _pendidikanUmum,
         riwayatPangkat: _riwayatPangkat,
         riwayatJabatan: _riwayatJabatan,
@@ -246,6 +248,126 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: AppSizes.paddingL),
               ],
             ),
+          ),
+    );
+  }
+
+  // Tambahkan method CRUD untuk Dikbang Kepolisian (tambahkan setelah method _showPendidikanKepolisianModal)
+  // CRUD Dikbang Kepolisian
+  void _addDikbangKepolisian() => _showDikbangKepolisianModal();
+  void _editDikbangKepolisian(int index) =>
+      _showDikbangKepolisianModal(index: index);
+  void _deleteDikbangKepolisian(int index) {
+    setState(() => _dikbangKepolisian.removeAt(index));
+  }
+
+  void _showDikbangKepolisianModal({int? index}) {
+    final TextEditingController dikbangController = TextEditingController();
+    DateTime? selectedTmt;
+
+    if (index != null) {
+      final item = _dikbangKepolisian[index];
+      dikbangController.text = item.dikbang;
+      selectedTmt = item.tmt;
+    }
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setState) => AlertDialog(
+                  title: Text(
+                    index == null
+                        ? 'Tambah Dikbang Kepolisian'
+                        : 'Edit Dikbang Kepolisian',
+                    style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CustomDropdown<String>(
+                        value:
+                            dikbangController.text.isEmpty
+                                ? null
+                                : dikbangController.text,
+                        labelText: 'Jenis Dikbang',
+                        prefixIcon: Icons.school_outlined,
+                        items:
+                            MilitaryRank.dikbangKepolisianList
+                                .map(
+                                  (dikbang) => DropdownMenuItem(
+                                    value: dikbang,
+                                    child: Text(dikbang),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged:
+                            (value) => dikbangController.text = value ?? '',
+                      ),
+                      const SizedBox(height: AppSizes.paddingM),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedTmt ?? DateTime.now(),
+                            firstDate: DateTime(1980),
+                            lastDate: DateTime.now(),
+                          );
+                          if (picked != null) {
+                            setState(() => selectedTmt = picked);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_today),
+                              const SizedBox(width: 12),
+                              Text(
+                                selectedTmt != null
+                                    ? _formatDate(selectedTmt!)
+                                    : 'Pilih TMT',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Batal'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (dikbangController.text.isNotEmpty &&
+                            selectedTmt != null) {
+                          final item = DikbangKepolisian(
+                            dikbang: dikbangController.text,
+                            tmt: selectedTmt!,
+                          );
+
+                          this.setState(() {
+                            if (index == null) {
+                              _dikbangKepolisian.add(item);
+                            } else {
+                              _dikbangKepolisian[index] = item;
+                            }
+                          });
+
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Text(index == null ? 'Tambah' : 'Simpan'),
+                    ),
+                  ],
+                ),
           ),
     );
   }
@@ -865,6 +987,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  // Update _buildStep4() untuk menambahkan section Dikbang (replace method _buildStep4() yang ada)
   Widget _buildStep4() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -877,23 +1000,33 @@ class _RegisterPageState extends State<RegisterPage> {
             color: AppColors.darkNavy,
           ),
         ),
-        const SizedBox(height: AppSizes.paddingM),
-        Text(
-          'Data pendidikan kepolisian yang pernah diikuti (opsional)',
-          style: GoogleFonts.roboto(fontSize: 12, color: AppColors.darkGray),
-        ),
         const SizedBox(height: AppSizes.paddingL),
 
-        // List of Pendidikan Kepolisian
+        // PENDIDIKAN PERTAMA KEPOLISIAN
+        Text(
+          'Pendidikan Pertama Kepolisian',
+          style: GoogleFonts.roboto(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.darkNavy,
+          ),
+        ),
+        const SizedBox(height: AppSizes.paddingS),
+        Text(
+          'AKPOL, SIPSS, DIKTUKBA, DIKTUKTA',
+          style: GoogleFonts.roboto(fontSize: 12, color: AppColors.darkGray),
+        ),
+        const SizedBox(height: AppSizes.paddingM),
+
         ..._pendidikanKepolisian.asMap().entries.map((entry) {
           int index = entry.key;
           PendidikanKepolisian item = entry.value;
           return Container(
-            margin: const EdgeInsets.only(bottom: AppSizes.paddingM),
+            margin: const EdgeInsets.only(bottom: AppSizes.paddingS),
             padding: const EdgeInsets.all(AppSizes.paddingM),
             decoration: BoxDecoration(
-              color: AppColors.lightGray.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(AppSizes.radiusM),
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(AppSizes.radiusS),
               border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2)),
             ),
             child: Row(
@@ -905,7 +1038,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       Text(
                         item.tingkat,
                         style: GoogleFonts.roboto(
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: AppColors.darkNavy,
                         ),
@@ -913,7 +1046,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       Text(
                         'Tahun: ${item.tahun}',
                         style: GoogleFonts.roboto(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: AppColors.darkGray,
                         ),
                       ),
@@ -926,12 +1059,12 @@ class _RegisterPageState extends State<RegisterPage> {
                       icon: Icon(
                         Icons.edit,
                         color: AppColors.primaryBlue,
-                        size: 20,
+                        size: 18,
                       ),
                       onPressed: () => _editPendidikanKepolisian(index),
                     ),
                     IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red, size: 20),
+                      icon: Icon(Icons.delete, color: Colors.red, size: 18),
                       onPressed: () => _deletePendidikanKepolisian(index),
                     ),
                   ],
@@ -941,27 +1074,104 @@ class _RegisterPageState extends State<RegisterPage> {
           );
         }).toList(),
 
-        // Add button
+        OutlinedButton.icon(
+          onPressed: _addPendidikanKepolisian,
+          icon: Icon(Icons.add, size: 16, color: AppColors.primaryBlue),
+          label: Text(
+            'Tambah Pendidikan Pertama',
+            style: GoogleFonts.roboto(
+              fontSize: 12,
+              color: AppColors.primaryBlue,
+            ),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: AppColors.primaryBlue),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          ),
+        ),
+
+        const SizedBox(height: AppSizes.paddingL),
+        Divider(color: AppColors.darkGray.withOpacity(0.2)),
+        const SizedBox(height: AppSizes.paddingL),
+
+        // DIKBANG KEPOLISIAN - SECTION BARU
+        Text(
+          'Dikbang Kepolisian',
+          style: GoogleFonts.roboto(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.darkNavy,
+          ),
+        ),
+        const SizedBox(height: AppSizes.paddingS),
+        Text(
+          'Pendidikan pengembangan dan pembinaan karier kepolisian',
+          style: GoogleFonts.roboto(fontSize: 12, color: AppColors.darkGray),
+        ),
         const SizedBox(height: AppSizes.paddingM),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: _addPendidikanKepolisian,
-            icon: Icon(Icons.add, color: AppColors.primaryBlue),
-            label: Text(
-              'Tambah Pendidikan Pertama Kepolisian',
-              style: GoogleFonts.roboto(
-                fontWeight: FontWeight.w500,
-                color: AppColors.primaryBlue,
-              ),
+
+        ..._dikbangKepolisian.asMap().entries.map((entry) {
+          int index = entry.key;
+          DikbangKepolisian item = entry.value;
+          return Container(
+            margin: const EdgeInsets.only(bottom: AppSizes.paddingS),
+            padding: const EdgeInsets.all(AppSizes.paddingM),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(AppSizes.radiusS),
+              border: Border.all(color: Colors.green.withOpacity(0.3)),
             ),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppColors.primaryBlue),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusM),
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.dikbang,
+                        style: GoogleFonts.roboto(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.darkNavy,
+                        ),
+                      ),
+                      Text(
+                        'TMT: ${_formatDate(item.tmt)}',
+                        style: GoogleFonts.roboto(
+                          fontSize: 11,
+                          color: AppColors.darkGray,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.edit, color: Colors.green, size: 18),
+                      onPressed: () => _editDikbangKepolisian(index),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red, size: 18),
+                      onPressed: () => _deleteDikbangKepolisian(index),
+                    ),
+                  ],
+                ),
+              ],
             ),
+          );
+        }).toList(),
+
+        OutlinedButton.icon(
+          onPressed: _addDikbangKepolisian,
+          icon: Icon(Icons.add, size: 16, color: Colors.green),
+          label: Text(
+            'Tambah Dikbang Kepolisian',
+            style: GoogleFonts.roboto(fontSize: 12, color: Colors.green),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: Colors.green),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
           ),
         ),
       ],
