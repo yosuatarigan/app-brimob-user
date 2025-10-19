@@ -143,7 +143,7 @@ class _AdminSendNotificationPageState extends State<AdminSendNotificationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kirim Notifikasi'),
+        title: const Text('ALARM PLB BRIMOB'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         actions: [
@@ -177,7 +177,7 @@ class _AdminSendNotificationPageState extends State<AdminSendNotificationPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Kirim Notifikasi',
+                              'ALARM PLB BRIMOB',
                               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 16),
@@ -186,7 +186,7 @@ class _AdminSendNotificationPageState extends State<AdminSendNotificationPage> {
                             TextField(
                               controller: _titleController,
                               decoration: const InputDecoration(
-                                labelText: 'Judul Notifikasi',
+                                labelText: 'NAMA PLB',
                                 border: OutlineInputBorder(),
                                 prefixIcon: Icon(Icons.title),
                               ),
@@ -197,7 +197,7 @@ class _AdminSendNotificationPageState extends State<AdminSendNotificationPage> {
                             TextField(
                               controller: _messageController,
                               decoration: const InputDecoration(
-                                labelText: 'Pesan',
+                                labelText: 'PERINTAH PLB',
                                 border: OutlineInputBorder(),
                                 prefixIcon: Icon(Icons.message),
                               ),
@@ -447,7 +447,7 @@ class _AdminSendNotificationPageState extends State<AdminSendNotificationPage> {
                           Icon(_getTypeIcon(_selectedType)),
                           const SizedBox(width: 8),
                           const Text(
-                            'KIRIM NOTIFIKASI',
+                            'ALARM PLB BRIMOB',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ],

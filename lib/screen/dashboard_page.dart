@@ -979,24 +979,24 @@ class _DashboardPageState extends State<DashboardPage> {
     final List<Map<String, dynamic>> menuItems = [
       {
         'title': 'KORBRIMOB',
-        'asset': 'assets/korbrimob.png',
+        'asset': 'assets/new3/LOGO 1.png',
         'id': 'korbrimob',
       },
-      {'title': 'BINKAR', 'asset': 'assets/binkar.png', 'id': 'binkar'},
-      {'title': 'DALPERS', 'asset': 'assets/dalpers.png', 'id': 'dalpers'},
-      {'title': 'WATPERS', 'asset': 'assets/watpress.png', 'id': 'watpers'},
+      {'title': 'BINKAR', 'asset': 'assets/new3/LOGO 2.png', 'id': 'binkar'},
+      {'title': 'DALPERS', 'asset': 'assets/new3/LOGO 3.png', 'id': 'dalpers'},
+      {'title': 'WATPERS', 'asset': 'assets/new3/LOGO 4.png', 'id': 'watpers'},
       {
         'title': 'PSIKOLOGI',
-        'asset': 'assets/psikologi.png',
+        'asset': 'assets/new3/LOGO 5.png',
         'id': 'psikologi',
       },
       {
         'title': 'PERDANKOR',
-        'asset': 'assets/perdankor.png',
+        'asset': 'assets/new3/LOGO 6.png',
         'id': 'perdankor',
       },
-      {'title': 'PERKAP', 'asset': 'assets/perkap.png', 'id': 'perkap'},
-      {'title': 'OTHER', 'asset': 'assets/other.png', 'id': 'other'},
+      {'title': 'PERKAP', 'asset': 'assets/new3/LOGO 7.png', 'id': 'perkap'},
+      {'title': 'OTHER', 'asset': 'assets/new3/LOGO 8.png', 'id': 'other'},
     ];
 
     return Container(
@@ -1034,44 +1034,27 @@ class _DashboardPageState extends State<DashboardPage> {
       behavior: HitTestBehavior.translucent,
       child: Container(
         padding: const EdgeInsets.all(8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 55,
-              height: 55,
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
-              child: Image.asset(
-                assetPath,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.folder,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.roboto(
-                fontSize: 8,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+        child: Container(
+          width: 55,
+          height: 55,
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+          child: Image.asset(
+            assetPath,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.folder,
+                  color: Colors.white,
+                  size: 30,
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -1097,7 +1080,7 @@ class _DashboardPageState extends State<DashboardPage> {
         'title': 'Jati Diri Brimob',
         'description': 'Jati diri Korbrimob Polri',
         'id': 'jati_diri',
-        'assetPath': 'assets/korpri.png',
+        'assetPath': 'assets/brimob.png',
         'imageContent': 'assets/dc/jatidiri.png',
       },
       {
@@ -1119,7 +1102,7 @@ class _DashboardPageState extends State<DashboardPage> {
         'title': 'Panca Prasetya',
         'description': 'Lima prinsip khusus Korbrimob',
         'id': 'panca_prasetya',
-        'assetPath': 'assets/brimob.png',
+        'assetPath': 'assets/korpri.png',
         'imageContent': 'assets/dc/panca.png',
       },
     ];

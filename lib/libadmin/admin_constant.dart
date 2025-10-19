@@ -102,7 +102,7 @@ class AdminMenus {
   static List<Map<String, dynamic>> adminMenus = [
     {
       'id': 'content_management',
-      'title': 'Content Management',
+      'title': 'MENU UTAMA',
       'subtitle': 'Kelola konten aplikasi',
       'icon': Icons.edit_note,
       'color': AdminColors.primaryBlue,
@@ -112,7 +112,7 @@ class AdminMenus {
     },
     {
       'id': 'user_management',
-      'title': 'User Management',
+      'title': 'ADMIN SDM',
       'subtitle': 'Kelola akun pengguna',
       'icon': Icons.manage_accounts,
       'color': AdminColors.adminGreen,
@@ -122,7 +122,7 @@ class AdminMenus {
     },
     {
       'id': 'send_notification',
-      'title': 'Send Notification',
+      'title': 'ALARM PLB',
       'subtitle': 'Kirim notifikasi ke satuan',
       'icon': Icons.send,
       'color': AdminColors.adminRed,
@@ -132,7 +132,7 @@ class AdminMenus {
     },
     {
       'id': 'notification_history',
-      'title': 'Notification History',
+      'title': 'ALARM PLB HISTORY',
       'subtitle': 'Lihat riwayat notifikasi',
       'icon': Icons.history,
       'color': AdminColors.adminRed,
@@ -142,7 +142,7 @@ class AdminMenus {
     },
     {
       'id': 'gallery_management',
-      'title': 'Gallery Management',
+      'title': 'ADMIN HUMAS',
       'subtitle': 'Kelola galeri satuan',
       'icon': Icons.collections,
       'color': AdminColors.adminGold,
@@ -152,7 +152,7 @@ class AdminMenus {
     },
     {
       'id': 'slideshow_management',
-      'title': 'SLIDESHOW',
+      'title': 'ADMIN SLIDESHOW',
       'subtitle': 'Kelola slideshow dashboard',
       'icon': Icons.slideshow,
       'color': AdminColors.adminPurple,

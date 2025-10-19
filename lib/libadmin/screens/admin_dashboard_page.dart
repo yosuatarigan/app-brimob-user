@@ -733,18 +733,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.roboto(
-                        fontSize: 10,
-                        color:
-                            imageUrl != null
-                                ? Colors.white.withOpacity(0.9)
-                                : AdminColors.darkGray,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    // Text(
+                    //   subtitle,
+                    //   style: GoogleFonts.roboto(
+                    //     fontSize: 10,
+                    //     color:
+                    //         imageUrl != null
+                    //             ? Colors.white.withOpacity(0.9)
+                    //             : AdminColors.darkGray,
+                    //   ),
+                    //   maxLines: 1,
+                    //   overflow: TextOverflow.ellipsis,
+                    // ),
                   ],
                 ),
               ),
@@ -754,7 +754,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
       ),
     );
   }
-
   Widget _buildRecentActivitySection() {
     return Padding(
       padding: const EdgeInsets.all(12),
@@ -858,13 +857,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                         color: AdminColors.adminDark,
                       ),
                     ),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.roboto(
-                        fontSize: 10,
-                        color: AdminColors.darkGray,
-                      ),
-                    ),
+                    // Text(
+                    //   subtitle,
+                    //   style: GoogleFonts.roboto(
+                    //     fontSize: 10,
+                    //     color: AdminColors.darkGray,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
