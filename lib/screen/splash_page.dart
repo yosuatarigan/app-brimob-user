@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../constants/app_constants.dart';
 import '../widgets/auth_wrapper.dart';
 
@@ -16,7 +15,6 @@ class _SplashPageState extends State<SplashPage>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
-  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
@@ -45,14 +43,6 @@ class _SplashPageState extends State<SplashPage>
     ).animate(CurvedAnimation(
       parent: _animationController,
       curve: const Interval(0.0, 0.7, curve: Curves.elasticOut),
-    ));
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
     ));
 
     _animationController.forward();
@@ -122,8 +112,6 @@ class _SplashPageState extends State<SplashPage>
                 ),
               ),
             ),
-            
-            // Additional decorative elements
             Positioned(
               top: 100,
               left: -50,
@@ -158,14 +146,14 @@ class _SplashPageState extends State<SplashPage>
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Logo section with enhanced styling
+                        // Logo section
                         FadeTransition(
                           opacity: _fadeAnimation,
                           child: ScaleTransition(
                             scale: _scaleAnimation,
                             child: Container(
-                              width: 140,
-                              height: 140,
+                              width: 200,
+                              height: 200,
                               decoration: BoxDecoration(
                                 color: AppColors.white,
                                 shape: BoxShape.circle,
@@ -184,18 +172,17 @@ class _SplashPageState extends State<SplashPage>
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(20),
-                                child: CachedNetworkImage(
-                                  imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Emblem_of_the_Indonesian_National_Police.svg/200px-Emblem_of_the_Indonesian_National_Police.svg.png',
-                                  fit: BoxFit.contain,
-                                  placeholder: (context, url) => const Icon(
-                                    Icons.security,
-                                    size: 80,
-                                    color: AppColors.primaryBlue,
-                                  ),
-                                  errorWidget: (context, url, error) => const Icon(
-                                    Icons.security,
-                                    size: 80,
-                                    color: AppColors.primaryBlue,
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    'assets/logosaja.jpeg',
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Icon(
+                                        Icons.image,
+                                        size: 80,
+                                        color: AppColors.primaryBlue,
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
@@ -203,158 +190,47 @@ class _SplashPageState extends State<SplashPage>
                           ),
                         ),
                         
-                        const SizedBox(height: AppSizes.paddingXXL * 2),
+                        const SizedBox(height: 60),
                         
-                        // Title section with enhanced typography
-                        SlideTransition(
-                          position: _slideAnimation,
-                          child: FadeTransition(
-                            opacity: _fadeAnimation,
-                            child: Column(
-                              children: [
-                                // Main title
-                                Text(
-                                  AppStrings.appName,
-                                  style: GoogleFonts.roboto(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.white,
-                                    letterSpacing: 2.0,
-                                    shadows: [
-                                      Shadow(
-                                        offset: const Offset(0, 2),
-                                        blurRadius: 4,
-                                        color: Colors.black.withOpacity(0.3),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                
-                                const SizedBox(height: AppSizes.paddingM),
-                                
-                                // Subtitle badge
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSizes.paddingL,
-                                    vertical: AppSizes.paddingS,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.goldYellow,
-                                    borderRadius: BorderRadius.circular(25),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.goldYellow.withOpacity(0.4),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 8),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Text(
-                                    AppStrings.appSubtitle,
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.darkNavy,
-                                      letterSpacing: 2.0,
+                        // Loading indicator
+                        FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: Column(
+                            children: [
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.goldYellow.withOpacity(0.2),
                                     ),
                                   ),
-                                ),
-                                
-                                const SizedBox(height: AppSizes.paddingXL),
-                                
-                                // Address with better formatting
-                                Container(
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: AppSizes.paddingL,
-                                  ),
-                                  padding: const EdgeInsets.all(AppSizes.paddingM),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.white.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(AppSizes.radiusM),
-                                    border: Border.all(
-                                      color: AppColors.white.withOpacity(0.2),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    AppStrings.appAddress,
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 13,
-                                      color: AppColors.white.withOpacity(0.9),
-                                      height: 1.6,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ),
-                                
-                                const SizedBox(height: AppSizes.paddingXXL * 2),
-                                
-                                // Loading section with enhanced animation
-                                Column(
-                                  children: [
-                                    Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        // Outer glow circle
-                                        Container(
-                                          width: 50,
-                                          height: 50,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: AppColors.goldYellow.withOpacity(0.2),
-                                          ),
-                                        ),
-                                        // Loading indicator
-                                        SizedBox(
-                                          width: 32,
-                                          height: 32,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 3,
-                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                              AppColors.goldYellow,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: AppSizes.paddingM),
-                                    Text(
-                                      AppStrings.loadingApp,
-                                      style: GoogleFonts.roboto(
-                                        fontSize: 14,
-                                        color: AppColors.white.withOpacity(0.8),
-                                        fontWeight: FontWeight.w500,
-                                        letterSpacing: 0.5,
+                                  SizedBox(
+                                    width: 32,
+                                    height: 32,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 3,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        AppColors.goldYellow,
                                       ),
                                     ),
-                                  ],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                AppStrings.loadingApp,
+                                style: GoogleFonts.roboto(
+                                  fontSize: 14,
+                                  color: AppColors.white.withOpacity(0.8),
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: 0.5,
                                 ),
-                                
-                                const SizedBox(height: AppSizes.paddingXL),
-                                
-                                // Version or additional info (optional)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSizes.paddingM,
-                                    vertical: AppSizes.paddingS,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.darkNavy.withOpacity(0.3),
-                                    borderRadius: BorderRadius.circular(AppSizes.radiusS),
-                                  ),
-                                  child: Text(
-                                    'Sistem Manajemen SDM v1.0',
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 11,
-                                      color: AppColors.white.withOpacity(0.7),
-                                      fontWeight: FontWeight.w400,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ],

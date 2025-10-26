@@ -13,7 +13,7 @@
 
     
     <application
-        android:label="PLB KORBRIMOB"
+        android:label="SI PANALUAN KORBRIMOB"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         
