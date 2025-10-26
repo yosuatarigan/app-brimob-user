@@ -1002,24 +1002,30 @@ class _DashboardPageState extends State<DashboardPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: Colors.black),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          childAspectRatio: 0.7,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 16,
-        ),
-        itemCount: menuItems.length,
-        itemBuilder: (context, index) {
-          final menu = menuItems[index];
-          return _buildMenuItem(
-            title: menu['title']!,
-            assetPath: menu['asset']!,
-            onTap: () => _handleMenuTap(menu),
-          );
-        },
+      child: Column(
+        children: [
+          _buildSectionTitle('INFORMASI SATUAN'),
+          const SizedBox(height: AppSizes.paddingM),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              childAspectRatio: 0.7,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: menuItems.length,
+            itemBuilder: (context, index) {
+              final menu = menuItems[index];
+              return _buildMenuItem(
+                title: menu['title']!,
+                assetPath: menu['asset']!,
+                onTap: () => _handleMenuTap(menu),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -1047,11 +1053,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   color: Colors.white.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
-                  Icons.folder,
-                  color: Colors.white,
-                  size: 30,
-                ),
+                child: const Icon(Icons.folder, color: Colors.white, size: 30),
               );
             },
           ),
