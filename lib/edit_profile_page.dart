@@ -11,8 +11,13 @@ import '../widgets/custom_dropdown.dart';
 
 class EditProfilePage extends StatefulWidget {
   final UserModel currentUser;
+  final bool isAdmin;
 
-  const EditProfilePage({super.key, required this.currentUser});
+  const EditProfilePage({
+    super.key,
+    required this.currentUser,
+    this.isAdmin = false,
+  });
 
   @override
   State<EditProfilePage> createState() => _EditProfilePageState();
@@ -218,6 +223,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         if (result['success']) {
           setState(() => _hasChanges = false);
           Navigator.pop(context, updatedUser);
+          widget.isAdmin ? Navigator.pop(context) : null;
         }
       }
     } catch (e) {
@@ -908,54 +914,88 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         const SizedBox(height: AppSizes.paddingM),
 
-        // Status personel (read-only for user)
-        Container(
-          padding: const EdgeInsets.all(AppSizes.paddingM),
-          decoration: BoxDecoration(
-            color: AppColors.lightGray.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(AppSizes.radiusM),
-            border: Border.all(color: AppColors.darkGray.withOpacity(0.3)),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.person_pin_outlined, color: AppColors.darkGray),
-              const SizedBox(width: AppSizes.paddingM),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Status Personel',
-                      style: GoogleFonts.roboto(
-                        fontSize: 12,
+        // Status personel - editable for admin, read-only for user
+        widget.isAdmin
+            ? CustomDropdown<String>(
+              value: _selectedStatusPersonel,
+              labelText: 'Status Personel',
+              prefixIcon: Icons.person_pin_outlined,
+              items:
+                  MilitaryRank.statusPersonel
+                      .map(
+                        (status) => DropdownMenuItem(
+                          value: status,
+                          child: Text(status),
+                        ),
+                      )
+                      .toList(),
+              onChanged:
+                  (value) => setState(() {
+                    _selectedStatusPersonel = value;
+                    _hasChanges = true;
+                  }),
+            )
+            : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSizes.paddingM),
+                  decoration: BoxDecoration(
+                    color: AppColors.lightGray.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                    border: Border.all(
+                      color: AppColors.darkGray.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.person_pin_outlined,
                         color: AppColors.darkGray,
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _selectedStatusPersonel ?? 'Belum ditentukan',
-                      style: GoogleFonts.roboto(
-                        fontSize: 14,
-                        color: AppColors.darkNavy,
-                        fontWeight: FontWeight.w500,
+                      const SizedBox(width: AppSizes.paddingM),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Status Personel',
+                              style: GoogleFonts.roboto(
+                                fontSize: 12,
+                                color: AppColors.darkGray,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _selectedStatusPersonel ?? 'Belum ditentukan',
+                              style: GoogleFonts.roboto(
+                                fontSize: 14,
+                                color: AppColors.darkNavy,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      Icon(
+                        Icons.lock_outline,
+                        color: AppColors.darkGray,
+                        size: 16,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Icon(Icons.lock_outline, color: AppColors.darkGray, size: 16),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingS),
-        Text(
-          'Status personel hanya dapat diubah oleh admin',
-          style: GoogleFonts.roboto(
-            fontSize: 11,
-            color: AppColors.darkGray,
-            fontStyle: FontStyle.italic,
-          ),
-        ),
+                const SizedBox(height: AppSizes.paddingS),
+                Text(
+                  'Status personel hanya dapat diubah oleh admin',
+                  style: GoogleFonts.roboto(
+                    fontSize: 11,
+                    color: AppColors.darkGray,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
 
         const SizedBox(height: AppSizes.paddingM),
 

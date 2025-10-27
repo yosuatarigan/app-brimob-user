@@ -202,34 +202,34 @@ class _AdminSplashPageState extends State<AdminSplashPage>
                   },
                 ),
                 
-                // Gradient overlay
+                // Dark overlay for better text visibility
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        AdminColors.adminDark.withOpacity(0.8),
-                        AdminColors.primaryBlue.withOpacity(0.9),
+                        Colors.black.withOpacity(0.3),
+                        Colors.black.withOpacity(0.5),
                       ],
                     ),
                   ),
                 ),
                 
-                // Animated background elements
+                // Animated decorative circles
                 Positioned(
                   top: -100,
                   right: -100,
                   child: AnimatedBuilder(
-                    animation: _backgroundController,
+                    animation: _backgroundOpacity,
                     builder: (context, child) {
-                      return Transform.rotate(
-                        angle: _backgroundController.value * 0.5,
+                      return Opacity(
+                        opacity: _backgroundOpacity.value * 0.1,
                         child: Container(
                           width: 300,
                           height: 300,
                           decoration: BoxDecoration(
-                            color: AdminColors.adminGold.withOpacity(0.1),
+                            color: AdminColors.adminGold,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -237,20 +237,19 @@ class _AdminSplashPageState extends State<AdminSplashPage>
                     },
                   ),
                 ),
-                
                 Positioned(
                   bottom: -150,
                   left: -100,
                   child: AnimatedBuilder(
-                    animation: _backgroundController,
+                    animation: _backgroundOpacity,
                     builder: (context, child) {
-                      return Transform.rotate(
-                        angle: -_backgroundController.value * 0.3,
+                      return Opacity(
+                        opacity: _backgroundOpacity.value * 0.1,
                         child: Container(
                           width: 400,
                           height: 400,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
+                            color: Colors.white,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -265,7 +264,7 @@ class _AdminSplashPageState extends State<AdminSplashPage>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Logo section with animation
+                        // Logo with enhanced animations
                         ScaleTransition(
                           scale: _logoScale,
                           child: RotationTransition(
@@ -291,18 +290,17 @@ class _AdminSplashPageState extends State<AdminSplashPage>
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(20),
-                                child: CachedNetworkImage(
-                                  imageUrl: AdminImages.polriLogo,
-                                  fit: BoxFit.contain,
-                                  placeholder: (context, url) => const Icon(
-                                    Icons.admin_panel_settings,
-                                    size: 80,
-                                    color: AdminColors.primaryBlue,
-                                  ),
-                                  errorWidget: (context, url, error) => const Icon(
-                                    Icons.admin_panel_settings,
-                                    size: 80,
-                                    color: AdminColors.primaryBlue,
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    'assets/logosaja.jpeg',
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Icon(
+                                        Icons.admin_panel_settings,
+                                        size: 80,
+                                        color: AdminColors.primaryBlue,
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
@@ -360,11 +358,11 @@ class _AdminSplashPageState extends State<AdminSplashPage>
                                 
                                 const SizedBox(height: AdminSizes.paddingL),
                                 
-                                // Main title
+                                // Subtitle
                                 Text(
-                                  'SDM KORBRIMOB',
+                                  'ADMIN DASHBOARD',
                                   style: GoogleFonts.roboto(
-                                    fontSize: 36,
+                                    fontSize: 28,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                     letterSpacing: 2.0,
@@ -375,37 +373,6 @@ class _AdminSplashPageState extends State<AdminSplashPage>
                                         offset: const Offset(0, 5),
                                       ),
                                     ],
-                                  ),
-                                ),
-                                
-                                const SizedBox(height: AdminSizes.paddingM),
-                                
-                                // Subtitle
-                                Text(
-                                  'ADMIN DASHBOARD',
-                                  style: GoogleFonts.roboto(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w500,
-                                    color: AdminColors.adminGold,
-                                    letterSpacing: 1.5,
-                                  ),
-                                ),
-                                
-                                const SizedBox(height: AdminSizes.paddingL),
-                                
-                                // Description
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AdminSizes.paddingXL,
-                                  ),
-                                  child: Text(
-                                    'Panel Administrasi untuk mengelola konten, pengguna, dan pengaturan aplikasi SDM Rorenminops Korbrimob Polri',
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 14,
-                                      color: Colors.white.withOpacity(0.9),
-                                      height: 1.6,
-                                    ),
                                   ),
                                 ),
                                 
@@ -440,25 +407,6 @@ class _AdminSplashPageState extends State<AdminSplashPage>
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                ),
-                
-                // Bottom branding
-                Positioned(
-                  bottom: AdminSizes.paddingL,
-                  left: 0,
-                  right: 0,
-                  child: FadeTransition(
-                    opacity: _textFade,
-                    child: Text(
-                      'Rorenminops Korbrimob Polri',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.roboto(
-                        fontSize: 12,
-                        color: Colors.white.withOpacity(0.7),
-                        letterSpacing: 1.0,
-                      ),
                     ),
                   ),
                 ),

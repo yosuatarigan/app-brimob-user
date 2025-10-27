@@ -63,6 +63,8 @@ class _ProfileSectionWidgetState extends State<ProfileSectionWidget> {
         return Colors.amber;
       case UserRole.other:
         return Colors.grey;
+        case UserRole.satlatihan:
+        return Colors.lightBlue;
     }
   }
 

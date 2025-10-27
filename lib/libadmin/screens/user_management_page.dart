@@ -1169,7 +1169,7 @@ class _UserManagementPageState extends State<UserManagementPage>
     Navigator.push<UserModel>(
       context,
       MaterialPageRoute(
-        builder: (context) => EditProfilePage(currentUser: user),
+        builder: (context) => EditProfilePage(currentUser: user, isAdmin: true),
       ),
     );
   }
@@ -1376,6 +1376,8 @@ class _UserManagementPageState extends State<UserManagementPage>
         return AppColors.info;
       case UserRole.pasbrimobIII:
         return AppColors.teal;
+      case UserRole.satlatihan:
+        return AppColors.lightBlue;
       case UserRole.other:
         return AppColors.darkGray;
     }
@@ -1632,6 +1634,9 @@ class UserDetailDialog extends StatelessWidget {
                     // Basic Information
                     _buildSection('Data Dasar', [
                       _buildDetailRow('Email', user.email),
+                      //no hp
+                      _buildDetailRow("No. Hp", user.phoneNumber ?? '-'),
+
                       _buildDetailRow('NRP', user.nrp),
                       if (user.statusPersonel != null)
                         _buildDetailRow(

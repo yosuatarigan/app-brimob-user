@@ -5,6 +5,7 @@ enum UserRole {
   admin,
   makoKor,
   other,
+  satlatihan,
   pasGegana,
   pasPelopor,
 
@@ -20,6 +21,8 @@ enum UserRole {
         return 'MAKO KORBRIMOB';
       case UserRole.other:
         return 'SAT INTEL';
+      case UserRole.satlatihan:
+        return 'SAT LATIHAN';
       case UserRole.pasGegana:
         return 'PAS GEGANA';
       case UserRole.pasPelopor:
@@ -51,6 +54,8 @@ enum UserRole {
         return 'pasbrimob_iii_users';
       case UserRole.other:
         return 'other_users';
+      case UserRole.satlatihan:
+        return 'sat_latihan_users';
     }
   }
 
