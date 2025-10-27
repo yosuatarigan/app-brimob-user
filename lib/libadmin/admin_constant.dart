@@ -158,6 +158,14 @@ class AdminMenus {
       'color': AdminColors.adminPurple,
       'imageUrl': AdminImages.slideshowManagement,
     },
+    {
+      'id': 'alarm_naik_pangkat',
+      'title': 'Alarm Naik Pangkat',
+      'subtitle': 'Notifikasi Naik Pangkat',
+      'icon': Icons.send,
+      'color': AdminColors.adminPurple,
+      'imageUrl': AdminImages.slideshowManagement,
+    },
   ];
 
   static const List<Map<String, dynamic>> contentCategories = [
