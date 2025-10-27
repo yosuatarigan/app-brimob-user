@@ -226,6 +226,8 @@ class PdfService {
 
               pw.SizedBox(height: 15),
 
+              _buildRiwayatPenugasanStrukturSection(user, font, fontBold),
+              pw.SizedBox(height: 10),
               // VIII. Penugasan Luar Struktur - full width di bawah
               _buildPenugasanLuarStrukturSection(user, font, fontBold),
 
@@ -441,6 +443,93 @@ class PdfService {
     );
   }
 
+  static pw.Widget _buildRiwayatPenugasanStrukturSection(
+    UserModel user,
+    pw.Font font,
+    pw.Font fontBold,
+  ) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Container(
+          width: double.infinity,
+          padding: const pw.EdgeInsets.all(4),
+          color: const PdfColor(0.2, 0.4, 0.7),
+          child: pw.Text(
+            'VIII. Riwayat Penugasan',
+            style: pw.TextStyle(
+              font: fontBold,
+              fontSize: 9,
+              color: PdfColors.white,
+            ),
+          ),
+        ),
+        user.riwayatPenugasan.isNotEmpty
+            ? pw.Table(
+              border: pw.TableBorder.all(color: PdfColors.black, width: 0.5),
+              children: [
+                // Header
+                pw.TableRow(
+                  decoration: const pw.BoxDecoration(
+                    color: PdfColor(0.8, 0.8, 0.8),
+                  ),
+                  children: [
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(3),
+                      child: pw.Text(
+                        'Penugasan',
+                        style: pw.TextStyle(font: fontBold, fontSize: 8),
+                      ),
+                    ),
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(3),
+                      child: pw.Text(
+                        'TMT',
+                        style: pw.TextStyle(font: fontBold, fontSize: 8),
+                      ),
+                    ),
+                  ],
+                ),
+                // Data rows
+                ...user.riwayatPenugasan.map(
+                  (item) => pw.TableRow(
+                    children: [
+                      pw.Container(
+                        padding: const pw.EdgeInsets.all(3),
+                        child: pw.Text(
+                          item.penugasan,
+                          style: pw.TextStyle(font: font, fontSize: 8),
+                        ),
+                      ),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.all(3),
+                        child: pw.Text(
+                          _formatDateTMT(item.tmt),
+                          style: pw.TextStyle(font: font, fontSize: 8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+            : pw.Container(
+              width: double.infinity,
+              padding: const pw.EdgeInsets.all(8),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.black, width: 0.5),
+              ),
+              child: pw.Center(
+                child: pw.Text(
+                  'Data penugasan luar struktur tidak ditemukan',
+                  style: pw.TextStyle(font: font, fontSize: 8),
+                ),
+              ),
+            ),
+      ],
+    );
+  }
+
   static pw.Widget _buildPenugasanLuarStrukturSection(
     UserModel user,
     pw.Font font,
@@ -454,7 +543,7 @@ class PdfService {
           padding: const pw.EdgeInsets.all(4),
           color: const PdfColor(0.2, 0.4, 0.7),
           child: pw.Text(
-            'VIII. Penugasan Luar Struktur',
+            'IX. Penugasan Luar Struktur',
             style: pw.TextStyle(
               font: fontBold,
               fontSize: 9,

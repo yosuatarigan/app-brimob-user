@@ -21,7 +21,7 @@ void main() async {
     appleProvider: AppleProvider.debug,
   );      
 
-  runApp(const AdminApp ());
+  runApp(const MyApp ());
 }
 
 class MyApp extends StatelessWidget {
