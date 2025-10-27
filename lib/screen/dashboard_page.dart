@@ -836,6 +836,89 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  Widget _buildSectionTitleMilitary(String title, Color color) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: Column(
+        children: [
+          // Garis strip atas
+          Container(
+            height: 4,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  color.withOpacity(0.3),
+                  color,
+                  color,
+                  color.withOpacity(0.3),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+
+          // Garis tipis atas
+          Container(
+            height: 2,
+            margin: const EdgeInsets.symmetric(horizontal: 40),
+            color: color.withOpacity(0.5),
+          ),
+          const SizedBox(height: 12),
+
+          // Title dengan border
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              border: Border(
+                left: BorderSide(color: color, width: 4),
+                right: BorderSide(color: color, width: 4),
+              ),
+            ),
+            child: Text(
+              title.toUpperCase(),
+              style: GoogleFonts.roboto(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: 2.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Garis tipis bawah
+          Container(
+            height: 2,
+            margin: const EdgeInsets.symmetric(horizontal: 40),
+            color: color.withOpacity(0.5),
+          ),
+          const SizedBox(height: 2),
+
+          // Garis strip bawah
+          Container(
+            height: 4,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  color.withOpacity(0.3),
+                  color,
+                  color,
+                  color.withOpacity(0.3),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSectionTitle(String title) {
     return Center(
       child: Text(
@@ -895,15 +978,7 @@ class _DashboardPageState extends State<DashboardPage> {
       decoration: BoxDecoration(color: const Color(0xFF6D4C41)),
       child: Column(
         children: [
-          Text(
-            'GALERI SATUAN',
-            style: GoogleFonts.roboto(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              letterSpacing: 1.2,
-            ),
-          ),
+       _buildSectionTitleMilitary('GALERI SATUAN', Colors.red.shade700),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -1004,7 +1079,7 @@ class _DashboardPageState extends State<DashboardPage> {
       decoration: BoxDecoration(color: Colors.black),
       child: Column(
         children: [
-          _buildSectionTitle('INFORMASI SATUAN'),
+ _buildSectionTitleMilitary('INFORMASI SATUAN', Colors.blue.shade700),
           const SizedBox(height: AppSizes.paddingM),
           GridView.builder(
             shrinkWrap: true,
