@@ -37,17 +37,48 @@ class NotificationService {
     }
   }
 
-  // Get notification history
+  // Get notification history - DIPERBAIKI: Ambil dari kedua collection
   static Stream<List<NotificationModel>> getNotificationHistory() {
     return _firestore
         .collection('role_notifications')
         .orderBy('timestamp', descending: true)
-        .limit(50)
+        .limit(30)
         .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
+        .asyncMap((roleSnapshot) async {
+      // Ambil role notifications
+      final roleNotifications = roleSnapshot.docs
           .map((doc) => NotificationModel.fromFirestore(doc))
           .toList();
+
+      // Ambil broadcast notifications
+      final broadcastSnapshot = await _firestore
+          .collection('notifications')
+          .orderBy('timestamp', descending: true)
+          .limit(30)
+          .get();
+
+      final broadcastNotifications = broadcastSnapshot.docs.map((doc) {
+        final data = doc.data();
+        return NotificationModel(
+          id: doc.id,
+          title: data['title'] ?? '',
+          message: data['message'] ?? '',
+          targetRole: UserRole.makoKor, // Broadcast ke semua
+          senderName: data['senderName'] ?? 'Admin',
+          createdAt: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          type: NotificationType.values.firstWhere(
+            (e) => e.name == data['type'],
+            orElse: () => NotificationType.general,
+          ),
+          isRead: data['isRead'] ?? false,
+        );
+      }).toList();
+
+      // Gabungkan dan sort berdasarkan waktu terbaru
+      final allNotifications = [...roleNotifications, ...broadcastNotifications];
+      allNotifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return allNotifications.take(50).toList();
     });
   }
 
@@ -177,6 +208,9 @@ class NotificationService {
         final data = doc.data();
         String type = data['type'] ?? 'general';
         byType[type] = (byType[type] ?? 0) + 1;
+        
+        // Count broadcast as sent to all roles
+        byRole['broadcast'] = (byRole['broadcast'] ?? 0) + 1;
       }
 
       return NotificationStats(

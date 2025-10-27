@@ -125,13 +125,7 @@ class _AdminNotificationHistoryPageState extends State<AdminNotificationHistoryP
           ],
         ),
       ),
-      floatingActionButton: AdminFloatingActionButton(
-        icon: Icons.notifications_active,
-        label: 'Kirim Notifikasi',
-        onPressed: () {
-          Navigator.pushNamed(context, '/admin/send_notification');
-        },
-      ),
+     
     );
   }
 
