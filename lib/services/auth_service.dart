@@ -108,6 +108,7 @@ class AuthService {
     List<TandaKehormatan>? tandaKehormatan,
     List<KemampuanBahasa>? kemampuanBahasa,
     List<PenugasanLuarStruktur>? penugasanLuarStruktur,
+    List<RiwayatPenugasan>? riwayatPenugasan,
   }) async {
     try {
       // Create user with Firebase Auth
@@ -159,6 +160,7 @@ class AuthService {
           tandaKehormatan: tandaKehormatan ?? [],
           kemampuanBahasa: kemampuanBahasa ?? [],
           penugasanLuarStruktur: penugasanLuarStruktur ?? [],
+          riwayatPenugasan: riwayatPenugasan ?? [],
         );
 
         await _firestore

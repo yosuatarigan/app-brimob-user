@@ -60,6 +60,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   List<TandaKehormatan> _tandaKehormatan = [];
   List<KemampuanBahasa> _kemampuanBahasa = [];
   List<PenugasanLuarStruktur> _penugasanLuarStruktur = [];
+  List<RiwayatPenugasan> _riwayatPenugasan = [];
 
   bool _isLoading = false;
   bool _hasChanges = false;
@@ -108,6 +109,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _tandaKehormatan = List.from(user.tandaKehormatan ?? []);
     _kemampuanBahasa = List.from(user.kemampuanBahasa ?? []);
     _penugasanLuarStruktur = List.from(user.penugasanLuarStruktur ?? []);
+    _riwayatPenugasan = List.from(user.riwayatPenugasan ?? []);
 
     _addChangeListeners();
   }
@@ -204,6 +206,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         tandaKehormatan: _tandaKehormatan,
         kemampuanBahasa: _kemampuanBahasa,
         penugasanLuarStruktur: _penugasanLuarStruktur,
+        riwayatPenugasan: _riwayatPenugasan,
         updatedAt: DateTime.now(),
       );
 
@@ -1880,6 +1883,84 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         const SizedBox(height: AppSizes.paddingL),
 
+        // Riwayat Penugasan Section (BARU)
+        Text(
+          'Riwayat Penugasan',
+          style: GoogleFonts.roboto(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.darkNavy,
+          ),
+        ),
+        const SizedBox(height: AppSizes.paddingM),
+
+        ..._riwayatPenugasan.asMap().entries.map((entry) {
+          int index = entry.key;
+          RiwayatPenugasan item = entry.value;
+          return Container(
+            margin: const EdgeInsets.only(bottom: AppSizes.paddingS),
+            padding: const EdgeInsets.all(AppSizes.paddingM),
+            decoration: BoxDecoration(
+              color: Colors.purple.shade50,
+              borderRadius: BorderRadius.circular(AppSizes.radiusS),
+              border: Border.all(color: Colors.purple.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.penugasan,
+                        style: GoogleFonts.roboto(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.darkNavy,
+                        ),
+                      ),
+                      Text(
+                        'TMT: ${_formatDate(item.tmt)}',
+                        style: GoogleFonts.roboto(
+                          fontSize: 11,
+                          color: AppColors.darkGray,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.edit, color: Colors.purple, size: 18),
+                      onPressed: () => _editRiwayatPenugasan(index),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red, size: 18),
+                      onPressed: () => _deleteRiwayatPenugasan(index),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+
+        OutlinedButton.icon(
+          onPressed: _addRiwayatPenugasan,
+          icon: Icon(Icons.add, size: 16, color: Colors.purple),
+          label: Text(
+            'Tambah Riwayat Penugasan',
+            style: GoogleFonts.roboto(fontSize: 12, color: Colors.purple),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: Colors.purple, width: 1),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          ),
+        ),
+
+        const SizedBox(height: AppSizes.paddingL),
+
         // Penugasan Luar Struktur Section
         Text(
           'Penugasan Luar Struktur',
@@ -2850,6 +2931,114 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 child: Text(index == null ? 'Tambah' : 'Simpan'),
               ),
             ],
+          ),
+    );
+  }
+
+  void _addRiwayatPenugasan() => _showRiwayatPenugasanModal();
+  void _editRiwayatPenugasan(int index) =>
+      _showRiwayatPenugasanModal(index: index);
+  void _deleteRiwayatPenugasan(int index) {
+    setState(() {
+      _riwayatPenugasan.removeAt(index);
+      _hasChanges = true;
+    });
+  }
+
+  void _showRiwayatPenugasanModal({int? index}) {
+    final TextEditingController penugasanController = TextEditingController();
+    DateTime? selectedTmt;
+
+    if (index != null) {
+      final item = _riwayatPenugasan[index];
+      penugasanController.text = item.penugasan;
+      selectedTmt = item.tmt;
+    }
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setState) => AlertDialog(
+                  title: Text(
+                    index == null
+                        ? 'Tambah Riwayat Penugasan'
+                        : 'Edit Riwayat Penugasan',
+                    style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CustomTextField(
+                        controller: penugasanController,
+                        labelText: 'Nama Penugasan',
+                        prefixIcon: Icons.work_outline,
+                      ),
+                      const SizedBox(height: AppSizes.paddingM),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedTmt ?? DateTime.now(),
+                            firstDate: DateTime(1980),
+                            lastDate: DateTime.now(),
+                          );
+                          if (picked != null) {
+                            setState(() => selectedTmt = picked);
+                          }
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_today),
+                              SizedBox(width: 12),
+                              Text(
+                                selectedTmt != null
+                                    ? _formatDate(selectedTmt!)
+                                    : 'Pilih TMT',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Batal'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (penugasanController.text.isNotEmpty &&
+                            selectedTmt != null) {
+                          final item = RiwayatPenugasan(
+                            penugasan: penugasanController.text,
+                            tmt: selectedTmt!,
+                          );
+
+                          this.setState(() {
+                            if (index == null) {
+                              _riwayatPenugasan.add(item);
+                            } else {
+                              _riwayatPenugasan[index] = item;
+                            }
+                            _hasChanges = true;
+                          });
+
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Text(index == null ? 'Tambah' : 'Simpan'),
+                    ),
+                  ],
+                ),
           ),
     );
   }

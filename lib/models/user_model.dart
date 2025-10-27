@@ -258,6 +258,28 @@ class KemampuanBahasa {
   }
 }
 
+// Model untuk Riwayat Penugasan
+class RiwayatPenugasan {
+  final String penugasan;
+  final DateTime tmt;
+
+  RiwayatPenugasan({required this.penugasan, required this.tmt});
+
+  Map<String, dynamic> toMap() {
+    return {'penugasan': penugasan, 'tmt': Timestamp.fromDate(tmt)};
+  }
+
+  factory RiwayatPenugasan.fromMap(Map<String, dynamic> map) {
+    return RiwayatPenugasan(
+      penugasan: map['penugasan'] ?? '',
+      tmt:
+          map['tmt'] != null
+              ? (map['tmt'] as Timestamp).toDate()
+              : DateTime.now(),
+    );
+  }
+}
+
 // Model untuk Penugasan Luar Struktur
 class PenugasanLuarStruktur {
   final String penugasan;
@@ -321,6 +343,7 @@ class UserModel {
   final List<TandaKehormatan> tandaKehormatan;
   final List<KemampuanBahasa> kemampuanBahasa;
   final List<PenugasanLuarStruktur> penugasanLuarStruktur;
+  final List<RiwayatPenugasan> riwayatPenugasan;
 
   UserModel({
     required this.id,
@@ -357,7 +380,10 @@ class UserModel {
     this.pendidikanPelatihan = const [],
     this.tandaKehormatan = const [],
     this.kemampuanBahasa = const [],
+
     this.penugasanLuarStruktur = const [],
+
+    this.riwayatPenugasan = const [],
   });
 
   // Calculate age from date of birth
@@ -583,6 +609,12 @@ class UserModel {
                   .map((e) => PenugasanLuarStruktur.fromMap(e))
                   .toList()
               : [],
+      riwayatPenugasan:
+          data['riwayatPenugasan'] != null
+              ? (data['riwayatPenugasan'] as List)
+                  .map((e) => RiwayatPenugasan.fromMap(e))
+                  .toList()
+              : [],
     );
   }
 
@@ -637,6 +669,7 @@ class UserModel {
       'kemampuanBahasa': kemampuanBahasa.map((e) => e.toMap()).toList(),
       'penugasanLuarStruktur':
           penugasanLuarStruktur.map((e) => e.toMap()).toList(),
+      'riwayatPenugasan': riwayatPenugasan.map((e) => e.toMap()).toList(),
     };
   }
 
@@ -677,6 +710,7 @@ class UserModel {
     List<TandaKehormatan>? tandaKehormatan,
     List<KemampuanBahasa>? kemampuanBahasa,
     List<PenugasanLuarStruktur>? penugasanLuarStruktur,
+    List<RiwayatPenugasan>? riwayatPenugasan,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -715,6 +749,7 @@ class UserModel {
       kemampuanBahasa: kemampuanBahasa ?? this.kemampuanBahasa,
       penugasanLuarStruktur:
           penugasanLuarStruktur ?? this.penugasanLuarStruktur,
+      riwayatPenugasan: riwayatPenugasan ?? this.riwayatPenugasan,
     );
   }
 
