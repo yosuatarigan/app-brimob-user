@@ -9,7 +9,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'constants/app_constants.dart';
 import 'widgets/auth_wrapper.dart';
 
-void main() async { 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await NotificationHelper.initialize();
@@ -19,9 +21,9 @@ void main() async {
     // Gunakan provider debug untuk pengembangan dan pengujian
     androidProvider: AndroidProvider.debug,
     appleProvider: AppleProvider.debug,
-  );      
+  );
 
-  runApp(const AdminApp ());
+  runApp(const AdminApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -30,6 +32,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'SI PANALUAN KORBRIMOB',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

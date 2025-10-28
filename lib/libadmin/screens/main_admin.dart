@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 // void main() async {
 //   WidgetsFlutterBinding.ensureInitialized();
 //   await Firebase.initializeApp();
@@ -19,6 +20,7 @@ class AdminApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'SDM Korbrimob Admin',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -37,17 +39,13 @@ class AdminApp extends StatelessWidget {
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
-          iconTheme: const IconThemeData(
-            color: Colors.white,
-          ),
+          iconTheme: const IconThemeData(color: Colors.white),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: AdminColors.primaryBlue,
             foregroundColor: Colors.white,
-            textStyle: GoogleFonts.roboto(
-              fontWeight: FontWeight.w600,
-            ),
+            textStyle: GoogleFonts.roboto(fontWeight: FontWeight.w600),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AdminSizes.radiusM),
             ),
@@ -59,9 +57,7 @@ class AdminApp extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             foregroundColor: AdminColors.primaryBlue,
             side: const BorderSide(color: AdminColors.primaryBlue),
-            textStyle: GoogleFonts.roboto(
-              fontWeight: FontWeight.w600,
-            ),
+            textStyle: GoogleFonts.roboto(fontWeight: FontWeight.w600),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AdminSizes.radiusM),
             ),
@@ -97,12 +93,8 @@ class AdminApp extends StatelessWidget {
           ),
           filled: true,
           fillColor: AdminColors.background,
-          labelStyle: GoogleFonts.roboto(
-            color: AdminColors.darkGray,
-          ),
-          hintStyle: GoogleFonts.roboto(
-            color: AdminColors.lightGray,
-          ),
+          labelStyle: GoogleFonts.roboto(color: AdminColors.darkGray),
+          hintStyle: GoogleFonts.roboto(color: AdminColors.lightGray),
         ),
         dialogTheme: DialogTheme(
           shape: RoundedRectangleBorder(
@@ -123,9 +115,7 @@ class AdminApp extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AdminSizes.radiusS),
           ),
-          contentTextStyle: GoogleFonts.roboto(
-            fontWeight: FontWeight.w500,
-          ),
+          contentTextStyle: GoogleFonts.roboto(fontWeight: FontWeight.w500),
         ),
         floatingActionButtonTheme: FloatingActionButtonThemeData(
           backgroundColor: AdminColors.primaryBlue,
@@ -150,9 +140,7 @@ class AdminApp extends StatelessWidget {
           labelColor: AdminColors.primaryBlue,
           unselectedLabelColor: AdminColors.darkGray,
           indicatorColor: AdminColors.primaryBlue,
-          labelStyle: GoogleFonts.roboto(
-            fontWeight: FontWeight.bold,
-          ),
+          labelStyle: GoogleFonts.roboto(fontWeight: FontWeight.bold),
           unselectedLabelStyle: GoogleFonts.roboto(
             fontWeight: FontWeight.normal,
           ),
