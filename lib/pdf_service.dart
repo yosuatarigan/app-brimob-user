@@ -226,10 +226,21 @@ class PdfService {
 
               pw.SizedBox(height: 15),
 
-              _buildRiwayatPenugasanStrukturSection(user, font, fontBold),
-              pw.SizedBox(height: 10),
-              // VIII. Penugasan Luar Struktur - full width di bawah
-              _buildPenugasanLuarStrukturSection(user, font, fontBold),
+              // VIII & IX - Riwayat Penugasan dan Penugasan Luar Struktur berdampingan
+              pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Container(
+                    width: 260,
+                    child: _buildRiwayatPenugasanStrukturSection(user, font, fontBold),
+                  ),
+                  pw.SizedBox(width: 15),
+                  pw.Container(
+                    width: 260,
+                    child: _buildPenugasanLuarStrukturSection(user, font, fontBold),
+                  ),
+                ],
+              ),
 
               pw.SizedBox(height: 5),
 
@@ -303,6 +314,7 @@ class PdfService {
           font,
           fontBold,
         ),
+        _buildInfoRow('No. Hp', user.phoneNumber ?? '', font, fontBold),
       ],
     );
   }

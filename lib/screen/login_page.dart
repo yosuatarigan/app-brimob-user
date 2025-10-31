@@ -19,7 +19,7 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
-  
+
   bool _isLoading = false;
   bool _isPasswordVisible = false;
 
@@ -58,61 +58,68 @@ class _LoginPageState extends State<LoginPage> {
 
   void _showForgotPasswordDialog() {
     final emailController = TextEditingController();
-    
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Reset Password',
-          style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Masukkan email Anda untuk menerima link reset password',
-              style: GoogleFonts.roboto(),
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              'Reset Password',
+              style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: AppSizes.paddingM),
-            CustomTextField(
-              controller: emailController,
-              labelText: 'Email',
-              prefixIcon: Icons.email_outlined,
-              keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value?.isEmpty ?? true) return 'Email tidak boleh kosong';
-                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
-                  return 'Format email tidak valid';
-                }
-                return null;
-              },
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Masukkan email Anda untuk menerima link reset password',
+                  style: GoogleFonts.roboto(),
+                ),
+                const SizedBox(height: AppSizes.paddingM),
+                CustomTextField(
+                  controller: emailController,
+                  labelText: 'Email',
+                  prefixIcon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value?.isEmpty ?? true)
+                      return 'Email tidak boleh kosong';
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value!)) {
+                      return 'Format email tidak valid';
+                    }
+                    return null;
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Batal'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (emailController.text.isNotEmpty) {
+                    Navigator.pop(context);
+                    final result = await _authService.resetPassword(
+                      emailController.text.trim(),
+                    );
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(result['message']),
+                          backgroundColor:
+                              result['success'] ? Colors.green : Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: Text('Kirim'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () async {
-              if (emailController.text.isNotEmpty) {
-                Navigator.pop(context);
-                final result = await _authService.resetPassword(emailController.text.trim());
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(result['message']),
-                      backgroundColor: result['success'] ? Colors.green : Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            child: Text('Kirim'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -124,10 +131,7 @@ class _LoginPageState extends State<LoginPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppColors.primaryBlue,
-              AppColors.darkNavy,
-            ],
+            colors: [AppColors.primaryBlue, AppColors.darkNavy],
           ),
         ),
         child: SafeArea(
@@ -138,43 +142,24 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 children: [
                   const SizedBox(height: AppSizes.paddingXL),
-                  
+
                   // Logo section
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: CachedNetworkImage(
-                        imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Emblem_of_the_Indonesian_National_Police.svg/200px-Emblem_of_the_Indonesian_National_Police.svg.png',
-                        fit: BoxFit.contain,
-                        placeholder: (context, url) => const Icon(
-                          Icons.security,
-                          size: 60,
+                  ClipOval(
+                    child: Image.asset(
+                      'assets/logosaja.jpeg',
+                      height: 120,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.image,
+                          size: 80,
                           color: AppColors.primaryBlue,
-                        ),
-                        errorWidget: (context, url, error) => const Icon(
-                          Icons.security,
-                          size: 60,
-                          color: AppColors.primaryBlue,
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   ),
-                  
                   const SizedBox(height: AppSizes.paddingXL),
-                  
+
                   // Title
                   Text(
                     'MASUK',
@@ -185,7 +170,7 @@ class _LoginPageState extends State<LoginPage> {
                       letterSpacing: 2.0,
                     ),
                   ),
-                  
+
                   Text(
                     'SDM KORBRIMOB POLRI',
                     style: GoogleFonts.roboto(
@@ -195,9 +180,9 @@ class _LoginPageState extends State<LoginPage> {
                       letterSpacing: 1.0,
                     ),
                   ),
-                  
+
                   const SizedBox(height: AppSizes.paddingXL * 2),
-                  
+
                   // Login Form Card
                   Container(
                     padding: const EdgeInsets.all(AppSizes.paddingXL),
@@ -221,16 +206,19 @@ class _LoginPageState extends State<LoginPage> {
                           prefixIcon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) {
-                            if (value?.isEmpty ?? true) return 'Email tidak boleh kosong';
-                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+                            if (value?.isEmpty ?? true)
+                              return 'Email tidak boleh kosong';
+                            if (!RegExp(
+                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                            ).hasMatch(value!)) {
                               return 'Format email tidak valid';
                             }
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: AppSizes.paddingL),
-                        
+
                         // Password Field
                         CustomTextField(
                           controller: _passwordController,
@@ -239,21 +227,27 @@ class _LoginPageState extends State<LoginPage> {
                           obscureText: !_isPasswordVisible,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                              _isPasswordVisible
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
                             ),
                             onPressed: () {
-                              setState(() => _isPasswordVisible = !_isPasswordVisible);
+                              setState(
+                                () => _isPasswordVisible = !_isPasswordVisible,
+                              );
                             },
                           ),
                           validator: (value) {
-                            if (value?.isEmpty ?? true) return 'Password tidak boleh kosong';
-                            if (value!.length < 6) return 'Password minimal 6 karakter';
+                            if (value?.isEmpty ?? true)
+                              return 'Password tidak boleh kosong';
+                            if (value!.length < 6)
+                              return 'Password minimal 6 karakter';
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: AppSizes.paddingM),
-                        
+
                         // Forgot Password
                         Align(
                           alignment: Alignment.centerRight,
@@ -268,18 +262,18 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: AppSizes.paddingL),
-                        
+
                         // Login Button
                         CustomButton(
                           onPressed: _isLoading ? null : _login,
                           text: _isLoading ? 'Memuat...' : 'MASUK',
                           isLoading: _isLoading,
                         ),
-                        
+
                         const SizedBox(height: AppSizes.paddingXL),
-                        
+
                         // Register Link
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,

@@ -15,6 +15,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await NotificationHelper.initialize();
+  await NotificationHelper.requestPermissions();
   await FCMService.initialize();
 
   await FirebaseAppCheck.instance.activate(
@@ -23,7 +24,7 @@ void main() async {
     appleProvider: AppleProvider.debug,
   );
 
-  runApp(const AdminApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
