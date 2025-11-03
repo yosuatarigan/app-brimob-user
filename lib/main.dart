@@ -1,5 +1,5 @@
 import 'package:app_brimob_user/libadmin/screens/main_admin.dart';
-import 'package:app_brimob_user/percobaannotif/fcm_service.dart';
+import 'package:app_brimob_user/percobaannotif/fcm_service.dart' as fcms;
 import 'package:app_brimob_user/screen/splash_page.dart';
 import 'package:app_brimob_user/services/notification_helper.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -9,14 +9,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'constants/app_constants.dart';
 import 'widgets/auth_wrapper.dart';
 
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await NotificationHelper.initialize();
   await NotificationHelper.requestPermissions();
-  await FCMService.initialize();
+  await fcms.FCMService.initialize();
 
   await FirebaseAppCheck.instance.activate(
     // Gunakan provider debug untuk pengembangan dan pengujian
@@ -33,7 +32,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorKey: navigatorKey,
+      navigatorKey: fcms.navigatorKey ,
       title: 'SI PANALUAN KORBRIMOB',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

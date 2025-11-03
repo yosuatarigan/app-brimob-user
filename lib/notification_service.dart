@@ -25,10 +25,13 @@ class NotificationService {
         type: type,
       );
 
-      // Save to Firestore - Cloud Function akan auto trigger
-      await _firestore.collection('role_notifications').add(
-        notification.toMap()..['targetTopic'] = targetRole.topicName,
-      );
+      // TAMBAHAN: Include type di data untuk FCM
+      await _firestore.collection('role_notifications').add({
+        ...notification.toMap(),
+        'targetTopic': targetRole.topicName,
+        'type': type.name, // ← TAMBAHAN INI
+        'targetRole': targetRole.displayName, // ← TAMBAHAN INI untuk tampilan
+      });
 
       return true;
     } catch (e) {
@@ -45,41 +48,49 @@ class NotificationService {
         .limit(30)
         .snapshots()
         .asyncMap((roleSnapshot) async {
-      // Ambil role notifications
-      final roleNotifications = roleSnapshot.docs
-          .map((doc) => NotificationModel.fromFirestore(doc))
-          .toList();
+          // Ambil role notifications
+          final roleNotifications =
+              roleSnapshot.docs
+                  .map((doc) => NotificationModel.fromFirestore(doc))
+                  .toList();
 
-      // Ambil broadcast notifications
-      final broadcastSnapshot = await _firestore
-          .collection('notifications')
-          .orderBy('timestamp', descending: true)
-          .limit(30)
-          .get();
+          // Ambil broadcast notifications
+          final broadcastSnapshot =
+              await _firestore
+                  .collection('notifications')
+                  .orderBy('timestamp', descending: true)
+                  .limit(30)
+                  .get();
 
-      final broadcastNotifications = broadcastSnapshot.docs.map((doc) {
-        final data = doc.data();
-        return NotificationModel(
-          id: doc.id,
-          title: data['title'] ?? '',
-          message: data['message'] ?? '',
-          targetRole: UserRole.makoKor, // Broadcast ke semua
-          senderName: data['senderName'] ?? 'Admin',
-          createdAt: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-          type: NotificationType.values.firstWhere(
-            (e) => e.name == data['type'],
-            orElse: () => NotificationType.general,
-          ),
-          isRead: data['isRead'] ?? false,
-        );
-      }).toList();
+          final broadcastNotifications =
+              broadcastSnapshot.docs.map((doc) {
+                final data = doc.data();
+                return NotificationModel(
+                  id: doc.id,
+                  title: data['title'] ?? '',
+                  message: data['message'] ?? '',
+                  targetRole: UserRole.makoKor, // Broadcast ke semua
+                  senderName: data['senderName'] ?? 'Admin',
+                  createdAt:
+                      (data['timestamp'] as Timestamp?)?.toDate() ??
+                      DateTime.now(),
+                  type: NotificationType.values.firstWhere(
+                    (e) => e.name == data['type'],
+                    orElse: () => NotificationType.general,
+                  ),
+                  isRead: data['isRead'] ?? false,
+                );
+              }).toList();
 
-      // Gabungkan dan sort berdasarkan waktu terbaru
-      final allNotifications = [...roleNotifications, ...broadcastNotifications];
-      allNotifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          // Gabungkan dan sort berdasarkan waktu terbaru
+          final allNotifications = [
+            ...roleNotifications,
+            ...broadcastNotifications,
+          ];
+          allNotifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-      return allNotifications.take(50).toList();
-    });
+          return allNotifications.take(50).toList();
+        });
   }
 
   // Send to all users (broadcast)
@@ -90,14 +101,14 @@ class NotificationService {
     String senderName = 'Admin',
   }) async {
     try {
-      // Send to general notifications collection (all users)
       await _firestore.collection('notifications').add({
         'title': title,
         'message': message,
         'timestamp': FieldValue.serverTimestamp(),
         'senderName': senderName,
-        'type': type.name,
+        'type': type.name, // ← TAMBAHAN INI
         'targetTopic': 'all_users',
+        'targetRole': 'Semua Satuan', // ← TAMBAHAN INI
       });
 
       return true;
@@ -108,7 +119,9 @@ class NotificationService {
   }
 
   // Get user notifications (for specific role)
-  static Stream<List<NotificationModel>> getUserNotifications(UserRole userRole) {
+  static Stream<List<NotificationModel>> getUserNotifications(
+    UserRole userRole,
+  ) {
     return _firestore
         .collection('role_notifications')
         .where('targetRole', isEqualTo: userRole.name)
@@ -116,14 +129,16 @@ class NotificationService {
         .limit(30)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => NotificationModel.fromFirestore(doc))
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => NotificationModel.fromFirestore(doc))
+              .toList();
+        });
   }
 
   // Get all notifications (broadcast + role specific)
-  static Stream<List<NotificationModel>> getAllUserNotifications(UserRole userRole) {
+  static Stream<List<NotificationModel>> getAllUserNotifications(
+    UserRole userRole,
+  ) {
     // Combine broadcast notifications and role-specific notifications
     return _firestore
         .collection('notifications')
@@ -131,45 +146,57 @@ class NotificationService {
         .limit(20)
         .snapshots()
         .asyncMap((broadcastSnapshot) async {
-      // Get broadcast notifications
-      final broadcastNotifications = broadcastSnapshot.docs.map((doc) {
-        final data = doc.data();
-        return NotificationModel(
-          id: doc.id,
-          title: data['title'] ?? '',
-          message: data['message'] ?? '',
-          targetRole: UserRole.makoKor, // Broadcast doesn't have specific role
-          senderName: data['senderName'] ?? 'Admin',
-          createdAt: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-          type: NotificationType.values.firstWhere(
-            (e) => e.name == data['type'],
-            orElse: () => NotificationType.general,
-          ),
-        );
-      }).toList();
+          // Get broadcast notifications
+          final broadcastNotifications =
+              broadcastSnapshot.docs.map((doc) {
+                final data = doc.data();
+                return NotificationModel(
+                  id: doc.id,
+                  title: data['title'] ?? '',
+                  message: data['message'] ?? '',
+                  targetRole:
+                      UserRole.makoKor, // Broadcast doesn't have specific role
+                  senderName: data['senderName'] ?? 'Admin',
+                  createdAt:
+                      (data['timestamp'] as Timestamp?)?.toDate() ??
+                      DateTime.now(),
+                  type: NotificationType.values.firstWhere(
+                    (e) => e.name == data['type'],
+                    orElse: () => NotificationType.general,
+                  ),
+                );
+              }).toList();
 
-      // Get role-specific notifications
-      final roleSnapshot = await _firestore
-          .collection('role_notifications')
-          .where('targetRole', isEqualTo: userRole.name)
-          .orderBy('timestamp', descending: true)
-          .limit(10)
-          .get();
+          // Get role-specific notifications
+          final roleSnapshot =
+              await _firestore
+                  .collection('role_notifications')
+                  .where('targetRole', isEqualTo: userRole.name)
+                  .orderBy('timestamp', descending: true)
+                  .limit(10)
+                  .get();
 
-      final roleNotifications = roleSnapshot.docs
-          .map((doc) => NotificationModel.fromFirestore(doc))
-          .toList();
+          final roleNotifications =
+              roleSnapshot.docs
+                  .map((doc) => NotificationModel.fromFirestore(doc))
+                  .toList();
 
-      // Combine and sort by timestamp
-      final allNotifications = [...broadcastNotifications, ...roleNotifications];
-      allNotifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          // Combine and sort by timestamp
+          final allNotifications = [
+            ...broadcastNotifications,
+            ...roleNotifications,
+          ];
+          allNotifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-      return allNotifications.take(30).toList();
-    });
+          return allNotifications.take(30).toList();
+        });
   }
 
   // Mark notification as read
-  static Future<void> markAsRead(String notificationId, String collection) async {
+  static Future<void> markAsRead(
+    String notificationId,
+    String collection,
+  ) async {
     try {
       await _firestore.collection(collection).doc(notificationId).update({
         'isRead': true,
@@ -183,9 +210,11 @@ class NotificationService {
   static Future<NotificationStats> getNotificationStats() async {
     try {
       // Get role notifications
-      final roleSnapshot = await _firestore.collection('role_notifications').get();
-      final broadcastSnapshot = await _firestore.collection('notifications').get();
-      
+      final roleSnapshot =
+          await _firestore.collection('role_notifications').get();
+      final broadcastSnapshot =
+          await _firestore.collection('notifications').get();
+
       int totalSent = roleSnapshot.docs.length + broadcastSnapshot.docs.length;
       int totalRead = 0;
       Map<String, int> byRole = {};
@@ -195,10 +224,10 @@ class NotificationService {
       for (var doc in roleSnapshot.docs) {
         final data = doc.data();
         if (data['isRead'] == true) totalRead++;
-        
+
         String role = data['targetRole'] ?? 'other';
         byRole[role] = (byRole[role] ?? 0) + 1;
-        
+
         String type = data['type'] ?? 'general';
         byType[type] = (byType[type] ?? 0) + 1;
       }
@@ -208,7 +237,7 @@ class NotificationService {
         final data = doc.data();
         String type = data['type'] ?? 'general';
         byType[type] = (byType[type] ?? 0) + 1;
-        
+
         // Count broadcast as sent to all roles
         byRole['broadcast'] = (byRole['broadcast'] ?? 0) + 1;
       }
