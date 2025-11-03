@@ -1,3 +1,4 @@
+import 'package:app_brimob_user/constants/app_constants.dart';
 import 'package:app_brimob_user/libadmin/admin_constant.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -226,41 +227,20 @@ class _AdminLoginPageState extends State<AdminLoginPage>
     return Column(
       children: [
         // Logo with animation
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            color: AdminColors.primaryBlue,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AdminColors.primaryBlue.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(15),
-            child: CachedNetworkImage(
-              imageUrl: AdminImages.polriLogo,
-              fit: BoxFit.contain,
-              placeholder:
-                  (context, url) => const Icon(
-                    Icons.admin_panel_settings,
-                    size: 50,
-                    color: Colors.white,
-                  ),
-              errorWidget:
-                  (context, url, error) => const Icon(
-                    Icons.admin_panel_settings,
-                    size: 50,
-                    color: Colors.white,
-                  ),
-            ),
+        ClipOval(
+          child: Image.asset(
+            'assets/logosaja.jpeg',
+            height: 120,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const Icon(
+                Icons.image,
+                size: 80,
+                color: AppColors.primaryBlue,
+              );
+            },
           ),
         ),
-
         const SizedBox(height: AdminSizes.paddingL),
 
         // Admin badge

@@ -12,9 +12,7 @@ class NotificationHelper {
   static Future<void> initialize() async {
     // Android initialization dengan custom sound
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings(
-          '@mipmap/ic_launcher',
-        );
+        AndroidInitializationSettings('@mipmap/launcher_icon');
 
     // iOS initialization dengan custom sound
     const DarwinInitializationSettings initializationSettingsIOS =
@@ -33,7 +31,19 @@ class NotificationHelper {
           iOS: initializationSettingsIOS,
         );
 
-    await _notificationsPlugin.initialize(initializationSettings);
+    // Handle notification tap dan action buttons
+    await _notificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) async {
+        // Handle tap notifikasi atau action button
+        if (response.actionId == 'dismiss') {
+          // Dismiss notification
+          final int notificationId =
+              int.tryParse(response.id?.toString() ?? '0') ?? 0;
+          await _notificationsPlugin.cancel(notificationId);
+        }
+      },
+    );
 
     // Create notification channels for Android
     await _createNotificationChannels();
@@ -50,7 +60,7 @@ class NotificationHelper {
       enableVibration: true,
       playSound: true,
       showBadge: true,
-      sound: RawResourceAndroidNotificationSound('audionotif'), // tanpa extension
+      sound: RawResourceAndroidNotificationSound('audionotif'),
     );
 
     // Channel untuk bypass silent mode
@@ -62,7 +72,7 @@ class NotificationHelper {
       enableVibration: true,
       playSound: true,
       showBadge: true,
-      sound: RawResourceAndroidNotificationSound('audionotif'), // tanpa extension
+      sound: RawResourceAndroidNotificationSound('audionotif'),
     );
 
     // Channel untuk high importance
@@ -74,55 +84,89 @@ class NotificationHelper {
       enableVibration: true,
       playSound: true,
       showBadge: true,
-      sound: RawResourceAndroidNotificationSound('audionotif'), // tanpa extension
+      sound: RawResourceAndroidNotificationSound('audionotif'),
+    );
+
+    // Channel untuk critical alarm
+    const AndroidNotificationChannel criticalAlarmChannel = AndroidNotificationChannel(
+      'critical_alarm_channel',
+      'Critical Alarm',
+      description: 'Alarm kritis yang harus dibaca',
+      importance: Importance.max,
+      enableVibration: true,
+      playSound: true,
+      showBadge: true,
+      sound: RawResourceAndroidNotificationSound('audionotif'),
     );
 
     final androidImplementation = _notificationsPlugin
         .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
+            AndroidFlutterLocalNotificationsPlugin>();
 
     if (androidImplementation != null) {
       await androidImplementation.createNotificationChannel(mainChannel);
       await androidImplementation.createNotificationChannel(bypassChannel);
-      await androidImplementation.createNotificationChannel(highImportanceChannel);
+      await androidImplementation
+          .createNotificationChannel(highImportanceChannel);
+      await androidImplementation
+          .createNotificationChannel(criticalAlarmChannel);
     }
   }
 
   // Show local notification (for foreground) dengan custom sound
   static Future<void> showNotification(RemoteMessage message) async {
-    // Android notification details dengan custom sound
-     AndroidNotificationDetails androidPlatformChannelSpecifics =
+    // Android notification details dengan fullscreen dan ongoing
+    AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-          'brimob_main_channel',
-          'Brimob Notifications',
-          channelDescription: 'Notifikasi utama aplikasi Brimob',
-          importance: Importance.max,
-          priority: Priority.high,
-          showWhen: true,
-          playSound: true,
-          enableVibration: true,
-          sound: RawResourceAndroidNotificationSound('audionotif'), // custom sound
-          icon: '@mipmap/ic_launcher',
-          largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
-          styleInformation: BigTextStyleInformation(
-            message.notification?.body ?? '',
-            contentTitle: message.notification?.title ?? '',
-            summaryText: 'SDM Korbrimob',
-          ),
-        );
+      'brimob_main_channel',
+      'Brimob Notifications',
+      channelDescription: 'Notifikasi utama aplikasi Brimob',
+      importance: Importance.max,
+      priority: Priority.max,
+      
+      // Full screen - muncul penuh di lockscreen
+      fullScreenIntent: true,
+      
+      // Ongoing - tidak bisa di-swipe, harus klik button
+      ongoing: true,
+      autoCancel: false,
+      
+      showWhen: true,
+      playSound: true,
+      enableVibration: true,
+      sound: const RawResourceAndroidNotificationSound('audionotif'),
+      icon: '@mipmap/launcher_icon',
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'),
+      
+      styleInformation: BigTextStyleInformation(
+        message.notification?.body ?? '',
+        contentTitle: message.notification?.title ?? '',
+        summaryText: 'SDM Korbrimob',
+      ),
+      
+      // Tombol dismiss
+      actions: const <AndroidNotificationAction>[
+        AndroidNotificationAction(
+          'dismiss',
+          'TUTUP NOTIFIKASI',
+          showsUserInterface: true,
+          cancelNotification: true,
+        ),
+      ],
+    );
 
     // iOS notification details dengan custom sound
     const DarwinNotificationDetails iOSPlatformChannelSpecifics =
         DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          sound: 'audionotif.mp3', // custom sound dengan extension untuk iOS
-          badgeNumber: 1,
-        );
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      sound: 'audionotif.mp3',
+      badgeNumber: 1,
+      interruptionLevel: InterruptionLevel.critical,
+    );
 
-     NotificationDetails platformChannelSpecifics = NotificationDetails(
+    NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
       iOS: iOSPlatformChannelSpecifics,
     );
@@ -138,41 +182,61 @@ class NotificationHelper {
 
   // Show notification dengan channel bypass silent
   static Future<void> showBypassSilentNotification(RemoteMessage message) async {
-     AndroidNotificationDetails androidPlatformChannelSpecifics =
+    AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-          'bypass_silent_channel',
-          'Bypass Silent Notifications',
-          channelDescription: 'Notifikasi yang bypass silent mode',
-          importance: Importance.max,
-          priority: Priority.high,
-          showWhen: true,
-          playSound: true,
-          enableVibration: true,
-          sound: RawResourceAndroidNotificationSound('audionotif'),
-          icon: '@mipmap/ic_launcher',
-          largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
-          styleInformation: BigTextStyleInformation(
-            message.notification?.body ?? '',
-            contentTitle: message.notification?.title ?? '',
-            summaryText: 'SDM Korbrimob - Penting',
-          ),
-          // Tambahan untuk bypass silent mode
-          audioAttributesUsage: AudioAttributesUsage.alarm,
-          enableLights: true,
-          ledColor: const Color.fromARGB(255, 255, 0, 0),
-          ledOnMs: 1000,
-          ledOffMs: 500,
-        );
+      'bypass_silent_channel',
+      'Bypass Silent Notifications',
+      channelDescription: 'Notifikasi yang bypass silent mode',
+      importance: Importance.max,
+      priority: Priority.max,
+      
+      // Full screen - muncul penuh di lockscreen
+      fullScreenIntent: true,
+      
+      // Ongoing - tidak bisa di-swipe
+      ongoing: true,
+      autoCancel: false,
+      
+      showWhen: true,
+      playSound: true,
+      enableVibration: true,
+      sound: const RawResourceAndroidNotificationSound('audionotif'),
+      icon: '@mipmap/launcher_icon',
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'),
+      
+      styleInformation: BigTextStyleInformation(
+        message.notification?.body ?? '',
+        contentTitle: message.notification?.title ?? '',
+        summaryText: 'SDM Korbrimob - Penting',
+      ),
+      
+      // Tambahan untuk bypass silent mode
+      audioAttributesUsage: AudioAttributesUsage.alarm,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+      ledOnMs: 1000,
+      ledOffMs: 500,
+      
+      // Tombol dismiss
+      actions: const <AndroidNotificationAction>[
+        AndroidNotificationAction(
+          'dismiss',
+          'TUTUP ALARM',
+          showsUserInterface: true,
+          cancelNotification: true,
+        ),
+      ],
+    );
 
     const DarwinNotificationDetails iOSPlatformChannelSpecifics =
         DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          sound: 'audionotif.mp3',
-          badgeNumber: 1,
-          interruptionLevel: InterruptionLevel.critical, // Untuk bypass silent mode iOS
-        );
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      sound: 'audionotif.mp3',
+      badgeNumber: 1,
+      interruptionLevel: InterruptionLevel.critical,
+    );
 
     NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
@@ -196,49 +260,70 @@ class NotificationHelper {
     String? payload,
     bool isCritical = false,
   }) async {
-    final channelId = isCritical ? 'bypass_silent_channel' : 'brimob_main_channel';
-    final channelName = isCritical ? 'Bypass Silent Notifications' : 'Brimob Notifications';
-    
+    final channelId =
+        isCritical ? 'bypass_silent_channel' : 'brimob_main_channel';
+    final channelName =
+        isCritical ? 'Bypass Silent Notifications' : 'Brimob Notifications';
+
     final AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-          channelId,
-          channelName,
-          channelDescription: isCritical 
-            ? 'Notifikasi yang bypass silent mode'
-            : 'Notifikasi utama aplikasi Brimob',
-          importance: Importance.max,
-          priority: Priority.high,
-          showWhen: true,
-          playSound: true,
-          enableVibration: true,
-          sound: const RawResourceAndroidNotificationSound('audionotif'),
-          icon: '@mipmap/ic_launcher',
-          largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
-          styleInformation: BigTextStyleInformation(
-            body,
-            contentTitle: title,
-            summaryText: isCritical ? 'SDM Korbrimob - Penting' : 'SDM Korbrimob',
-          ),
-          audioAttributesUsage: isCritical 
-            ? AudioAttributesUsage.alarm 
-            : AudioAttributesUsage.notification,
-          enableLights: isCritical,
-          ledColor: isCritical ? const Color.fromARGB(255, 255, 0, 0) : null,
-          ledOnMs: isCritical ? 1000 : null,
-          ledOffMs: isCritical ? 500 : null,
-        );
+      channelId,
+      channelName,
+      channelDescription: isCritical
+          ? 'Notifikasi yang bypass silent mode'
+          : 'Notifikasi utama aplikasi Brimob',
+      importance: Importance.max,
+      priority: Priority.max,
+      
+      // Full screen - muncul penuh di lockscreen
+      fullScreenIntent: true,
+      
+      // Ongoing - tidak bisa di-swipe
+      ongoing: true,
+      autoCancel: false,
+      
+      showWhen: true,
+      playSound: true,
+      enableVibration: true,
+      sound: const RawResourceAndroidNotificationSound('audionotif'),
+      icon: '@mipmap/launcher_icon',
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'),
+      
+      styleInformation: BigTextStyleInformation(
+        body,
+        contentTitle: title,
+        summaryText: isCritical ? 'SDM Korbrimob - Penting' : 'SDM Korbrimob',
+      ),
+      
+      audioAttributesUsage: isCritical
+          ? AudioAttributesUsage.alarm
+          : AudioAttributesUsage.notification,
+      enableLights: isCritical,
+      ledColor: isCritical ? const Color.fromARGB(255, 255, 0, 0) : null,
+      ledOnMs: isCritical ? 1000 : null,
+      ledOffMs: isCritical ? 500 : null,
+      
+      // Tombol dismiss
+      actions: <AndroidNotificationAction>[
+        AndroidNotificationAction(
+          'dismiss',
+          isCritical ? 'TUTUP ALARM' : 'TUTUP NOTIFIKASI',
+          showsUserInterface: true,
+          cancelNotification: true,
+        ),
+      ],
+    );
 
     final DarwinNotificationDetails iOSPlatformChannelSpecifics =
         DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          sound: 'audionotif.mp3',
-          badgeNumber: 1,
-          interruptionLevel: isCritical 
-            ? InterruptionLevel.critical 
-            : InterruptionLevel.active,
-        );
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      sound: 'audionotif.mp3',
+      badgeNumber: 1,
+      interruptionLevel:
+          isCritical ? InterruptionLevel.critical : InterruptionLevel.active,
+    );
 
     final NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
@@ -268,13 +353,12 @@ class NotificationHelper {
   static Future<bool> areNotificationsEnabled() async {
     final androidImplementation = _notificationsPlugin
         .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
-    
+            AndroidFlutterLocalNotificationsPlugin>();
+
     if (androidImplementation != null) {
       return await androidImplementation.areNotificationsEnabled() ?? false;
     }
-    
+
     return false;
   }
 
@@ -282,27 +366,28 @@ class NotificationHelper {
   static Future<bool> requestPermissions() async {
     final androidImplementation = _notificationsPlugin
         .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
-    
+            AndroidFlutterLocalNotificationsPlugin>();
+
     if (androidImplementation != null) {
-      return await androidImplementation.requestNotificationsPermission() ?? false;
+      // Request full screen intent permission (Android 14+)
+      await androidImplementation.requestNotificationsPermission();
+      return await androidImplementation.areNotificationsEnabled() ?? false;
     }
 
     final iOSImplementation = _notificationsPlugin
         .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
-        >();
-    
+            IOSFlutterLocalNotificationsPlugin>();
+
     if (iOSImplementation != null) {
       return await iOSImplementation.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-        critical: true, // Untuk critical notifications iOS
-      ) ?? false;
+            alert: true,
+            badge: true,
+            sound: true,
+            critical: true,
+          ) ??
+          false;
     }
-    
+
     return false;
   }
 }
