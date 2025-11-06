@@ -40,6 +40,71 @@ class NotificationService {
     }
   }
 
+  static Future<bool> deleteNotification(
+    String notificationId,
+    bool isBroadcast,
+  ) async {
+    try {
+      final collection = isBroadcast ? 'notifications' : 'role_notifications';
+      await _firestore.collection(collection).doc(notificationId).delete();
+      return true;
+    } catch (e) {
+      print('Error deleting notification: $e');
+      return false;
+    }
+  }
+
+  // DELETE MULTIPLE NOTIFICATIONS - TAMBAHAN BARU
+  static Future<bool> deleteMultipleNotifications(
+    List<String> notificationIds,
+    bool isBroadcast,
+  ) async {
+    try {
+      final collection = isBroadcast ? 'notifications' : 'role_notifications';
+      final batch = _firestore.batch();
+
+      for (String id in notificationIds) {
+        batch.delete(_firestore.collection(collection).doc(id));
+      }
+
+      await batch.commit();
+      return true;
+    } catch (e) {
+      print('Error deleting multiple notifications: $e');
+      return false;
+    }
+  }
+
+  // lib/services/notification_service.dart
+  // Tambahkan method ini di NotificationService
+
+  // DELETE ALL NOTIFICATIONS - TAMBAHAN BARU
+  static Future<bool> deleteAllNotifications() async {
+    try {
+      final batch = _firestore.batch();
+
+      // Get all role notifications
+      final roleSnapshot =
+          await _firestore.collection('role_notifications').get();
+      for (var doc in roleSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // Get all broadcast notifications
+      final broadcastSnapshot =
+          await _firestore.collection('notifications').get();
+      for (var doc in broadcastSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      await batch.commit();
+      return true;
+    } catch (e) {
+      print('Error deleting all notifications: $e');
+      return false;
+    }
+  }
+
   // Get notification history - DIPERBAIKI: Ambil dari kedua collection
   static Stream<List<NotificationModel>> getNotificationHistory() {
     return _firestore

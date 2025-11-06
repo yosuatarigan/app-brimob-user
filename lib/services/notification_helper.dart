@@ -191,7 +191,8 @@ class NotificationHelper {
           channelDescription: 'Notifikasi utama aplikasi Brimob',
           importance: Importance.max,
           priority: Priority.max,
-
+          color: const Color(0xFFFF0000), // Merah
+          colorized: true, // Aktifkan colorization
           // Full screen - muncul penuh di lockscreen
           fullScreenIntent: true,
 
@@ -265,7 +266,8 @@ class NotificationHelper {
           channelDescription: 'Notifikasi yang bypass silent mode',
           importance: Importance.max,
           priority: Priority.max,
-
+          color: const Color(0xFFFF0000), // Merah
+          colorized: true, // Aktifkan colorization
           // Full screen - muncul penuh di lockscreen
           fullScreenIntent: true,
 
@@ -353,7 +355,8 @@ class NotificationHelper {
               : 'Notifikasi utama aplikasi Brimob',
       importance: Importance.max,
       priority: Priority.max,
-
+      color: const Color(0xFFFF0000), // Merah
+      colorized: true, // Aktifkan colorization
       // Full screen - muncul penuh di lockscreen
       fullScreenIntent: true,
 

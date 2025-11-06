@@ -34,6 +34,8 @@ class NotificationModel {
     this.actionData,
   });
 
+    bool get isBroadcast => targetRole == UserRole.makoKor && actionData == null;
+
   factory NotificationModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return NotificationModel(
